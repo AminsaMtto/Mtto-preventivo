@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mantenimientos Preventivos — AMINSA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@400;500;600;700&family=Inconsolata:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --blanco: #ffffff;
+      --negro: #0a0a0a;
+      --rojo: #8b0000;
+      --rojo-clar: #b22222;
+      --gris: #555555;
+      --gris-clar: #888888;
+      --fondo: #f5f5f5;
+      --fondo-alt: #eeeeee;
+      --texto: #1a1a1a;
+      --texto-sec: #444444;
+      --texto-ter: #777777;
+      --borde: #d0d0d0;
+      --exito: #228b22;
+      --alerta: #ff8c00;
+      --info: #1e90ff;
+      --azul: #1a3a7a;
+      --naranja: #b55a00;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Cormorant SC', Georgia, serif;
+      background: var(--fondo);
+      color: var(--texto);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      border-bottom: 1px solid var(--borde);
+      background: var(--blanco);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--borde);
+    }
+    .header-text h1 {
+      font-family: 'Cormorant SC', serif;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      margin-bottom: 2px;
+    }
+    .header-text span {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      color: var(--texto-ter);
+      letter-spacing: 1.5px;
+    }
+    .header-doc-ref {
+      font-family: 'Inconsolata', monospace;
+      font-size: 9px;
+      color: var(--texto-ter);
+      background: var(--fondo-alt);
+      padding: 4px 12px;
+      border: 1px solid var(--borde);
+      letter-spacing: 1px;
+    }
+    .header-nav {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .nav-link {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      color: var(--texto-sec);
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 1px solid var(--borde);
+      transition: all 0.2s;
+    }
+    .nav-link:hover {
+      background: var(--negro);
+      color: var(--blanco);
+    }
+    .nav-link.active {
+      background: var(--negro);
+      color: var(--blanco);
+    }
+
+    /* ── CONTROLS ── */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 24px 48px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: var(--negro);
+      color: var(--blanco);
+      border: 1px solid var(--negro);
+    }
+    .btn-primary:hover {
+      background: var(--gris);
+    }
+    .filtros {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--borde);
+    }
+    .filtro-btn {
+      padding: 7px 16px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-right: 1px solid var(--borde);
+      background: transparent;
+      color: var(--texto-ter);
+      transition: all 0.2s;
+    }
+    .filtro-btn:last-child { border-right: none; }
+    .filtro-btn.activo { background: var(--negro); color: var(--blanco); }
+    .filtro-btn:hover:not(.activo) { background: var(--fondo-alt); color: var(--negro); }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 12px;
+      width: 14px;
+      height: 14px;
+      color: var(--texto-ter);
+    }
+    .search-input {
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid var(--borde);
+      background: var(--blanco);
+      width: 280px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--negro); }
+
+    /* ── STATS ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 0 48px 24px;
+    }
+    .stat-card {
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--fondo-alt);
+      border: 1px solid var(--borde);
+    }
+    .stat-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--texto-sec);
+    }
+    .stat-info h3 {
+      font-family: 'Inconsolata', monospace;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--negro);
+    }
+    .stat-info span {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      color: var(--texto-ter);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      margin: 0 48px;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead {
+      background: var(--fondo-alt);
+      border-bottom: 2px solid var(--borde);
+    }
+    th {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--texto-sec);
+      padding: 12px 16px;
+      text-align: left;
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--borde);
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+    }
+    tbody tr:hover {
+      background: var(--fondo-alt);
+    }
+    .estado-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .estado-pendiente {
+      background: var(--alerta);
+      color: var(--blanco);
+    }
+    .estado-vencido {
+      background: var(--rojo);
+      color: var(--blanco);
+    }
+    .estado-realizado {
+      background: var(--exito);
+      color: var(--blanco);
+    }
+    .estado-proximo {
+      background: var(--info);
+      color: var(--blanco);
+    }
+
+    /* ── MODALS ── */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.visible {
+      display: flex;
+    }
+    .modal-content {
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 4px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--borde);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 {
+      font-family: 'Cormorant SC', serif;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      color: var(--texto-ter);
+    }
+    .modal-close:hover {
+      color: var(--negro);
+    }
+    .modal-body {
+      padding: 24px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--texto-sec);
+      margin-bottom: 8px;
+    }
+    .form-control {
+      width: 100%;
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--borde);
+      background: var(--blanco);
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--negro);
+    }
+    select.form-control {
+      cursor: pointer;
+    }
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--borde);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .btn-secondary {
+      background: var(--fondo-alt);
+      color: var(--texto);
+      border: 1px solid var(--borde);
+    }
+    .btn-secondary:hover {
+      background: var(--borde);
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 4px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      z-index: 2000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+    .toast.show {
+      transform: translateX(0);
+    }
+    .toast.success {
+      background: var(--exito);
+      color: var(--blanco);
+    }
+    .toast.error {
+      background: var(--rojo);
+      color: var(--blanco);
+    }
+    .toast.info {
+      background: var(--info);
+      color: var(--blanco);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-input {
+        width: 100%;
+      }
+      .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .table-wrap {
+        margin: 0 24px;
+      }
+      th, td {
+        padding: 8px 12px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ── HEADER ──────────────────────────────────────────────────────── -->
+  <header>
+    <div class="header-brand">
+      <div class="header-text">
+        <h1>MANTENIMIENTOS PREVENTIVOS</h1>
+        <span>SISTEMA DE GESTIÓN</span>
+      </div>
+      <div class="header-divider"></div>
+      <div class="header-doc-ref">DOC-PRV-001</div>
+    </div>
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link">Órdenes</a>
+      <a href="preventivo_nuevo.html" class="nav-link active">Preventivos</a>
+      <a href="#" class="nav-link">Cerrar Sesión</a>
+    </nav>
+  </header>
+
+  <!-- ── CONTROLS ───────────────────────────────────────────────────── -->
+  <div class="controls">
+    <div class="filtros">
+      <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
+      <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
+      <button class="filtro-btn" onclick="filtrar('proximo', this)">Próximos</button>
+      <button class="filtro-btn" onclick="filtrar('vencido', this)">Vencidos</button>
+      <button class="filtro-btn" onclick="filtrar('realizado', this)">Realizados</button>
+    </div>
+    
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" class="search-input" placeholder="Buscar por equipo, centro o técnico..." onkeyup="buscar(this.value)">
+    </div>
+    
+    <button class="btn btn-primary" onclick="abrirModalNuevo()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Nuevo Preventivo
+    </button>
+  </div>
+
+  <!-- ── STATS ─────────────────────────────────────────────────────── -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-total">0</h3>
+        <span>Total Preventivos</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-pendientes">0</h3>
+        <span>Pendientes</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-proximos">0</h3>
+        <span>Próximos 7 días</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-vencidos">0</h3>
+        <span>Vencidos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TABLE ─────────────────────────────────────────────────────── -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Equipo</th>
+          <th>Centro</th>
+          <th>Frecuencia</th>
+          <th>Último Mantenimiento</th>
+          <th>Próximo Mantenimiento</th>
+          <th>Técnico</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-preventivos">
+        <!-- Las filas se generarán dinámicamente -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── MODAL NUEVO ───────────────────────────────────────────────── -->
+  <div class="modal" id="modal-nuevo">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nuevo Mantenimiento Preventivo</h2>
+        <button class="modal-close" onclick="cerrarModal('modal-nuevo')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="p-equipo">Equipo *</label>
+          <input type="text" id="p-equipo" class="form-control" placeholder="Nombre del equipo">
+        </div>
+        <div class="form-group">
+          <label for="p-centro">Centro de Negocio *</label>
+          <select id="p-centro" class="form-control">
+            <option value="">Seleccionar...</option>
+            <option value="Zinc">Zinc</option>
+            <option value="Cromo">Cromo</option>
+            <option value="Doblado">Doblado</option>
+            <option value="Oficinas">Oficinas</option>
+            <option value="Pretratamiento">Pretratamiento</option>
+            <option value="Tratamiento">Tratamiento</option>
+            <option value="Andenes">Andenes</option>
+            <option value="Laboratorio">Laboratorio</option>
+            <option value="Obra Civil">Obra Civil</option>
+            <option value="Área Periférica">Área Periférica</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="p-frecuencia">Frecuencia *</label>
+          <select id="p-frecuencia" class="form-control">
+            <option value="">Seleccionar...</option>
+            <option value="Semanal">Semanal</option>
+            <option value="Quincenal">Quincenal</option>
+            <option value="Mensual">Mensual</option>
+            <option value="Bimestral">Bimestral</option>
+            <option value="Trimestral">Trimestral</option>
+            <option value="Semestral">Semestral</option>
+            <option value="Anual">Anual</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="p-ultimo">Último Mantenimiento *</label>
+          <input type="date" id="p-ultimo" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="p-tecnico">Técnico Asignado</label>
+          <input type="text" id="p-tecnico" class="form-control" placeholder="Nombre del técnico">
+        </div>
+        <div class="form-group">
+          <label for="p-observaciones">Observaciones</label>
+          <textarea id="p-observaciones" class="form-control" placeholder="Notas adicionales..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modal-nuevo')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarPreventivo()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL COMPLETAR ───────────────────────────────────────────── -->
+  <div class="modal" id="modal-completar">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Completar Mantenimiento</h2>
+        <button class="modal-close" onclick="cerrarModal('modal-completar')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="c-fecha-realizado">Fecha de Realización *</label>
+          <input type="date" id="c-fecha-realizado" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="c-trabajo">Trabajo Realizado *</label>
+          <textarea id="c-trabajo" class="form-control" placeholder="Descripción del trabajo realizado..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="c-proximo-calculado">Próximo Mantenimiento (Calculado)</label>
+          <input type="date" id="c-proximo-calculado" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label for="c-proximo-manual">Próximo Mantenimiento (Manual)</label>
+          <input type="date" id="c-proximo-manual" class="form-control" placeholder="Sobrescribir fecha calculada...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modal-completar')">Cancelar</button>
+        <button class="btn btn-primary" onclick="completarPreventivo()">Completar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ─────────────────────────────────────────────────────── -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ── SCRIPTS ───────────────────────────────────────────────────── -->
+  <script src="preventivo_nuevo.js"></script>
+</body>
+</html>
