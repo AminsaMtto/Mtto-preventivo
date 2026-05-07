@@ -726,19 +726,11 @@
     
     <div class="charts-grid">
       <div class="chart-container">
-        <h3 class="chart-title">Mantenimientos por Mes</h3>
+        <h3 class="chart-title">Mantenimientos Cerrados vs Pendientes por Mes</h3>
         <div class="chart-wrapper">
           <canvas id="chart-mensual"></canvas>
         </div>
         <div class="chart-legend" id="legend-mensual"></div>
-      </div>
-      
-      <div class="chart-container">
-        <h3 class="chart-title">Distribución por Centro</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-centros"></canvas>
-        </div>
-        <div class="chart-legend" id="legend-centros"></div>
       </div>
     </div>
   </div>
@@ -931,6 +923,8 @@ const CONFIG = {
     CENTROS: ['Zinc', 'Cromo', 'Doblado', 'Gral'],
     // Colores para gráficas
     COLORES_GRAFICAS: {
+        'Cerrados': '#1e6b35',  // Verde para realizados
+        'Pendientes': '#b55a00',  // Naranja para pendientes
         'Zinc': '#FF6B6B',
         'Cromo': '#4ECDC4', 
         'Doblado': '#45B7D1',
@@ -947,7 +941,6 @@ let mantenimientoActual = null;
 
 // Variables para gráficas
 let chartMensual = null;
-let chartCentros = null;
 
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -1569,14 +1562,31 @@ function inicializarGraficas() {
     Chart.defaults.font.family = "'Cormorant Garamond', serif";
     Chart.defaults.color = '#2e2e2e';
     
-    // Inicializar gráfica mensual
+    // Inicializar gráfica mensual comparativa
     const ctxMensual = document.getElementById('chart-mensual');
     if (ctxMensual) {
         chartMensual = new Chart(ctxMensual, {
             type: 'bar',
             data: {
                 labels: obtenerMesesAnio(),
-                datasets: []
+                datasets: [
+                    {
+                        label: 'Cerrados',
+                        data: [],
+                        backgroundColor: CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
+                        borderColor: CONFIG.COLORES_GRAFICAS['Cerrados'],
+                        borderWidth: 2,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Pendientes',
+                        data: [],
+                        backgroundColor: CONFIG.COLORES_GRAFICAS['Pendientes'] + '80',
+                        borderColor: CONFIG.COLORES_GRAFICAS['Pendientes'],
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -1625,36 +1635,6 @@ function inicializarGraficas() {
         });
     }
     
-    // Inicializar gráfica de centros
-    const ctxCentros = document.getElementById('chart-centros');
-    if (ctxCentros) {
-        chartCentros = new Chart(ctxCentros, {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: []
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleFont: {
-                            family: "'Inconsolata', monospace"
-                        },
-                        bodyFont: {
-                            family: "'Inconsolata', monospace"
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
     // Actualizar gráficas con datos iniciales
     setTimeout(() => actualizarGraficas(), 500);
 }
@@ -1673,13 +1653,16 @@ function obtenerMesesAnio() {
 }
 
 function calcularDatosMensuales(centroSeleccionado) {
-    const datosMensuales = {};
+    const datosCerrados = {};
+    const datosPendientes = {};
     const meses = obtenerMesesAnio();
     const añoActual = new Date().getFullYear();
+    const hoy = new Date();
     
     // Inicializar todos los meses en 0
     meses.forEach(mes => {
-        datosMensuales[mes] = 0;
+        datosCerrados[mes] = 0;
+        datosPendientes[mes] = 0;
     });
     
     // Filtrar mantenimientos por centro si es necesario
@@ -1690,19 +1673,27 @@ function calcularDatosMensuales(centroSeleccionado) {
         );
     }
     
-    // Contar mantenimientos por mes
+    // Contar mantenimientos por mes y estado
     mantenimientosFiltrados.forEach(mantenimiento => {
         if (mantenimiento.ultimoMantenimiento) {
             const fecha = new Date(mantenimiento.ultimoMantenimiento);
             if (fecha.getFullYear() === añoActual) {
                 const mesIndex = fecha.getMonth();
                 const mesNombre = obtenerMesesAnio()[mesIndex];
-                datosMensuales[mesNombre]++;
+                
+                if (mantenimiento.estado === 'realizado') {
+                    datosCerrados[mesNombre]++;
+                } else {
+                    datosPendientes[mesNombre]++;
+                }
             }
         }
     });
     
-    return datosMensuales;
+    return {
+        cerrados: datosCerrados,
+        pendientes: datosPendientes
+    };
 }
 
 function calcularDatosCentros() {
@@ -1726,58 +1717,32 @@ function calcularDatosCentros() {
 function actualizarGraficas() {
     const centroSeleccionado = document.getElementById('centro-filter').value;
     
-    // Actualizar gráfica mensual
+    // Actualizar gráfica mensual comparativa
     if (chartMensual) {
-        const datosMensuales = calcularDatosMensuales(centroSeleccionado);
-        const color = CONFIG.COLORES_GRAFICAS[centroSeleccionado === 'todos' ? 'Todos' : centroSeleccionado];
+        const datos = calcularDatosMensuales(centroSeleccionado);
+        const meses = obtenerMesesAnio();
         
-        chartMensual.data.datasets = [{
-            label: centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado,
-            data: Object.values(datosMensuales),
-            backgroundColor: color + '80',
-            borderColor: color,
-            borderWidth: 2,
-            borderRadius: 4
-        }];
+        chartMensual.data.datasets[0].data = meses.map(mes => datos.cerrados[mes] || 0);
+        chartMensual.data.datasets[1].data = meses.map(mes => datos.pendientes[mes] || 0);
+        
+        // Actualizar etiquetas según el centro seleccionado
+        const tituloCentro = centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado;
+        chartMensual.data.datasets[0].label = `Cerrados - ${tituloCentro}`;
+        chartMensual.data.datasets[1].label = `Pendientes - ${tituloCentro}`;
         
         chartMensual.update();
         
         // Actualizar leyenda
-        actualizarLeyenda('legend-mensual', [{
-            label: centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado,
-            color: color
-        }]);
-    }
-    
-    // Actualizar gráfica de centros (solo cuando se selecciona "todos")
-    if (chartCentros && centroSeleccionado === 'todos') {
-        const datosCentros = calcularDatosCentros();
-        const labels = Object.keys(datosCentros);
-        const data = Object.values(datosCentros);
-        const colors = labels.map(centro => CONFIG.COLORES_GRAFICAS[centro]);
-        
-        chartCentros.data.datasets = [{
-            data: data,
-            backgroundColor: colors.map(color => color + '80'),
-            borderColor: colors,
-            borderWidth: 2
-        }];
-        
-        chartCentros.data.labels = labels;
-        chartCentros.update();
-        
-        // Actualizar leyenda
-        const legendData = labels.map((centro, index) => ({
-            label: centro,
-            color: colors[index]
-        }));
-        actualizarLeyenda('legend-centros', legendData);
-    } else if (chartCentros && centroSeleccionado !== 'todos') {
-        // Ocultar gráfica de centros cuando se selecciona un centro específico
-        chartCentros.data.datasets = [];
-        chartCentros.data.labels = [];
-        chartCentros.update();
-        document.getElementById('legend-centros').innerHTML = '';
+        actualizarLeyenda('legend-mensual', [
+            {
+                label: `Cerrados - ${tituloCentro}`,
+                color: CONFIG.COLORES_GRAFICAS['Cerrados']
+            },
+            {
+                label: `Pendientes - ${tituloCentro}`,
+                color: CONFIG.COLORES_GRAFICAS['Pendientes']
+            }
+        ]);
     }
 }
 
