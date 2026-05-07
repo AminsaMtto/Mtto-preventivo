@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Mantenimiento Preventivo</title>
+<title></title>
 
 <style>
 
@@ -14,31 +14,25 @@
     body{
         font-family: Arial, sans-serif;
         margin:0;
-        padding:10px;
+        padding:20px;
         background:white;
     }
 
-    .contenedor-hoja{
-        width:100%;
-    }
-
     .formato{
-        width:95%;
-        height:48vh;
+        width:90%;
+        margin:auto;
         border:2px solid black;
-        margin:0 auto 10px auto;
-        padding:8px;
+        padding:15px;
         box-sizing:border-box;
-        page-break-inside:avoid;
     }
 
     .titulo{
         border:2px solid black;
         text-align:center;
         font-weight:bold;
-        font-size:18px;
-        padding:8px;
-        margin-bottom:10px;
+        font-size:24px;
+        padding:12px;
+        margin-bottom:20px;
     }
 
     table{
@@ -48,8 +42,8 @@
 
     td{
         border:1px solid black;
-        padding:4px;
-        font-size:11px;
+        padding:6px;
+        font-size:14px;
     }
 
     .sin-borde{
@@ -61,26 +55,26 @@
     }
 
     .espacio{
-        height:140px;
+        height:350px;
         vertical-align:top;
     }
 
     .firmas{
-        margin-top:10px;
+        margin-top:30px;
         display:flex;
         justify-content:space-around;
     }
 
     .firma-box{
         text-align:center;
-        font-size:11px;
+        font-size:14px;
     }
 
     .firma-linea{
-        width:140px;
-        height:25px;
+        width:220px;
+        height:45px;
         border:1px solid black;
-        margin-bottom:4px;
+        margin-bottom:8px;
     }
 
     @media print{
@@ -95,10 +89,6 @@
             print-color-adjust: exact;
         }
 
-        .formato{
-            break-inside:avoid;
-        }
-
     }
 
 </style>
@@ -106,88 +96,27 @@
 
 <body>
 
-<div class="contenedor-hoja">
+<div class="formato">
 
-    <!-- FORMATO 1 -->
-    <div class="formato">
-
-        <div class="titulo">
-            MANTENIMIENTO PREVENTIVO
-        </div>
-
-        <table>
-            <tr>
-                <td width="65%">
-                    TECNICO:
-                </td>
-
-                <td width="35%">
-                    FECHA:
-                </td>
-            </tr>
-
-            <tr>
-                <td>
-                    MAQUINA / EQUIPO:
-                </td>
-
-                <td>
-                    <span class="campo-rojo">
-                        TIEMPO REQUERIDO:
-                    </span>
-                </td>
-            </tr>
-
-            <tr>
-                <td>
-                    ÁREA:
-                </td>
-
-                <td class="sin-borde"></td>
-            </tr>
-        </table>
-
-        <br>
-
-        <table>
-            <tr>
-                <td width="50%" style="text-align:center;font-weight:bold;">
-                    CONDICION INICIAL DEL EQUIPO
-                </td>
-
-                <td width="50%" style="text-align:center;font-weight:bold;">
-                    CONDICION FINAL DEL EQUIPO Y OBSERVACIONES
-                </td>
-            </tr>
-
-            <tr>
-                <td class="espacio"></td>
-
-                <td class="espacio"></td>
-            </tr>
-        </table>
-
-        <div class="firmas">
-
-            <div class="firma-box">
-                <div class="firma-linea"></div>
-                Firma de Técnico
-            </div>
-
-            <div class="firma-box">
-                <div class="firma-linea"></div>
-                Firma Jefe de Área
-            </div>
-
-        </div>
-
+    <div class="titulo">
+        MANTENIMIENTO PREVENTIVO
     </div>
 
+    <table>
+        <tr>
+            <td width="65%">
+                TECNICO:
+            </td>
 
-    <!-- FORMATO 2 -->
-    <div class="formato">
+            <td width="35%">
+                FECHA:
+            </td>
+        </tr>
 
-        <div class="titulo">
+        <tr>
+            <td>
+                MAQUINA / EQUIPO:
+            </td>
             MANTENIMIENTO PREVENTIVO
         </div>
 
