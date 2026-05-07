@@ -419,7 +419,24 @@
       align-items: center;
     }
     
-    .charts-filter select {
+    .chart-filters {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--fondo);
+      border: 1px solid var(--borde);
+      border-radius: 4px;
+    }
+    
+    .chart-filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .charts-filter select,
+    .chart-filters select {
       padding: 8px 16px;
       border: 1px solid var(--borde);
       background: var(--blanco);
@@ -429,7 +446,8 @@
       cursor: pointer;
     }
     
-    .charts-filter select:focus {
+    .charts-filter select:focus,
+    .chart-filters select:focus {
       outline: none;
       border-color: var(--negro);
     }
@@ -732,6 +750,44 @@
         </div>
         <div class="chart-legend" id="legend-mensual"></div>
       </div>
+      
+      <div class="chart-container">
+        <h3 class="chart-title">Porcentaje de Mantenimientos por Estado</h3>
+        <div class="chart-filters">
+          <div class="chart-filter-group">
+            <label for="mes-filter" style="font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--texto-sec);">Mes:</label>
+            <select id="mes-filter" onchange="actualizarGraficaPorcentajes()">
+              <option value="todos">Todos los meses</option>
+              <option value="0">Enero</option>
+              <option value="1">Febrero</option>
+              <option value="2">Marzo</option>
+              <option value="3">Abril</option>
+              <option value="4">Mayo</option>
+              <option value="5">Junio</option>
+              <option value="6">Julio</option>
+              <option value="7">Agosto</option>
+              <option value="8">Septiembre</option>
+              <option value="9">Octubre</option>
+              <option value="10">Noviembre</option>
+              <option value="11">Diciembre</option>
+            </select>
+          </div>
+          <div class="chart-filter-group">
+            <label for="centro-filter-2" style="font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--texto-sec);">Centro:</label>
+            <select id="centro-filter-2" onchange="actualizarGraficaPorcentajes()">
+              <option value="todos">Todos</option>
+              <option value="Zinc">Zinc</option>
+              <option value="Cromo">Cromo</option>
+              <option value="Doblado">Doblado</option>
+              <option value="Gral">Gral</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-porcentajes"></canvas>
+        </div>
+        <div class="chart-legend" id="legend-porcentajes"></div>
+      </div>
     </div>
   </div>
 
@@ -941,6 +997,7 @@ let mantenimientoActual = null;
 
 // Variables para gráficas
 let chartMensual = null;
+let chartPorcentajes = null;
 
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
@@ -1635,8 +1692,61 @@ function inicializarGraficas() {
         });
     }
     
+    // Inicializar gráfica de porcentajes
+    const ctxPorcentajes = document.getElementById('chart-porcentajes');
+    if (ctxPorcentajes) {
+        chartPorcentajes = new Chart(ctxPorcentajes, {
+            type: 'doughnut',
+            data: {
+                labels: ['Cerrados', 'Pendientes'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: [
+                        CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
+                        CONFIG.COLORES_GRAFICAS['Pendientes'] + '80'
+                    ],
+                    borderColor: [
+                        CONFIG.COLORES_GRAFICAS['Cerrados'],
+                        CONFIG.COLORES_GRAFICAS['Pendientes']
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: {
+                            family: "'Inconsolata', monospace"
+                        },
+                        bodyFont: {
+                            family: "'Inconsolata', monospace"
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
     // Actualizar gráficas con datos iniciales
-    setTimeout(() => actualizarGraficas(), 500);
+    setTimeout(() => {
+        actualizarGraficas();
+        actualizarGraficaPorcentajes();
+    }, 500);
 }
 
 function obtenerMesesAnio() {
@@ -1679,7 +1789,10 @@ function calcularDatosMensuales(centroSeleccionado) {
             const fecha = new Date(mantenimiento.ultimoMantenimiento);
             if (fecha.getFullYear() === añoActual) {
                 const mesIndex = fecha.getMonth();
-                const mesNombre = obtenerMesesAnio()[mesIndex];
+                // Usar el array de meses estándar, no el reordenado
+                const mesesEstandard = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                const mesNombre = mesesEstandard[mesIndex];
                 
                 if (mantenimiento.estado === 'realizado') {
                     datosCerrados[mesNombre]++;
@@ -1768,10 +1881,80 @@ function actualizarLeyenda(legendId, items) {
     });
 }
 
+function calcularPorcentajes(mesSeleccionado, centroSeleccionado) {
+    let mantenimientosFiltrados = mantenimientos;
+    
+    // Filtrar por centro si es necesario
+    if (centroSeleccionado !== 'todos') {
+        mantenimientosFiltrados = mantenimientosFiltrados.filter(m => 
+            m.centro === centroSeleccionado
+        );
+    }
+    
+    // Filtrar por mes si es necesario
+    if (mesSeleccionado !== 'todos') {
+        const añoActual = new Date().getFullYear();
+        mantenimientosFiltrados = mantenimientosFiltrados.filter(m => {
+            if (m.ultimoMantenimiento) {
+                const fecha = new Date(m.ultimoMantenimiento);
+                return fecha.getFullYear() === añoActual && fecha.getMonth() === parseInt(mesSeleccionado);
+            }
+            return false;
+        });
+    }
+    
+    // Contar por estado
+    let cerrados = 0;
+    let pendientes = 0;
+    
+    mantenimientosFiltrados.forEach(mantenimiento => {
+        if (mantenimiento.estado === 'realizado') {
+            cerrados++;
+        } else {
+            pendientes++;
+        }
+    });
+    
+    return { cerrados, pendientes };
+}
+
+function actualizarGraficaPorcentajes() {
+    if (!chartPorcentajes) return;
+    
+    const mesSeleccionado = document.getElementById('mes-filter').value;
+    const centroSeleccionado = document.getElementById('centro-filter-2').value;
+    
+    const datos = calcularPorcentajes(mesSeleccionado, centroSeleccionado);
+    
+    // Actualizar datos de la gráfica
+    chartPorcentajes.data.datasets[0].data = [datos.cerrados, datos.pendientes];
+    chartPorcentajes.update();
+    
+    // Actualizar leyenda
+    const mesTexto = mesSeleccionado === 'todos' ? 'Todos los meses' : 
+                    ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][parseInt(mesSeleccionado)];
+    const centroTexto = centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado;
+    
+    actualizarLeyenda('legend-porcentajes', [
+        {
+            label: `Cerrados - ${mesTexto} - ${centroTexto}`,
+            color: CONFIG.COLORES_GRAFICAS['Cerrados']
+        },
+        {
+            label: `Pendientes - ${mesTexto} - ${centroTexto}`,
+            color: CONFIG.COLORES_GRAFICAS['Pendientes']
+        }
+    ]);
+}
+
 // Actualizar gráficas automáticamente cuando cambien los datos
 function actualizarGraficasConDatos() {
-    if (chartMensual || chartCentros) {
-        setTimeout(() => actualizarGraficas(), 100);
+    if (chartMensual || chartPorcentajes) {
+        setTimeout(() => {
+            actualizarGraficas();
+            actualizarGraficaPorcentajes();
+        }, 100);
     }
 }
 
@@ -1788,6 +1971,7 @@ window.imprimirFormato = imprimirFormato;
 window.imprimirFormatoIndividual = imprimirFormatoIndividual;
 window.cargarMantenimientos = cargarMantenimientos;
 window.actualizarGraficas = actualizarGraficas;
+window.actualizarGraficaPorcentajes = actualizarGraficaPorcentajes;
   </script>
 </body>
 </html>
