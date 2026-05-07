@@ -1329,6 +1329,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="cerrarModal('modal-historial-equipo')">Cerrar</button>
+        <button class="btn btn-primary" onclick="imprimirFormatosEquipo()">Imprimir Formatos</button>
       </div>
     </div>
   </div>
@@ -1827,22 +1828,23 @@ function cerrarModal(modalId) {
 }
 
 function cargarHistorial() {
-    // Agrupar mantenimientos por equipo
+    // Agrupar mantenimientos por equipo (solo los realizados)
     const historialPorEquipo = {};
     
     mantenimientos.forEach(mantenimiento => {
-        if (!historialPorEquipo[mantenimiento.equipo]) {
-            historialPorEquipo[mantenimiento.equipo] = {
-                fechaRealizacion: null,
-                mantenimientos: []
-            };
-        }
-        
-        const equipo = historialPorEquipo[mantenimiento.equipo];
-        equipo.mantenimientos.push(mantenimiento);
-        
-        // Solo guardar la fecha de realización más reciente
+        // Solo considerar mantenimientos realizados
         if (mantenimiento.estado === 'realizado') {
+            if (!historialPorEquipo[mantenimiento.equipo]) {
+                historialPorEquipo[mantenimiento.equipo] = {
+                    fechaRealizacion: null,
+                    mantenimientos: []
+                };
+            }
+            
+            const equipo = historialPorEquipo[mantenimiento.equipo];
+            equipo.mantenimientos.push(mantenimiento);
+            
+            // Guardar la fecha de realización más reciente
             if (!equipo.fechaRealizacion || new Date(mantenimiento.ultimoMantenimiento) > new Date(equipo.fechaRealizacion)) {
                 equipo.fechaRealizacion = mantenimiento.ultimoMantenimiento;
             }
@@ -2026,6 +2028,43 @@ function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
     
     // Mostrar el modal
     document.getElementById('modal-historial-equipo').classList.add('visible');
+}
+
+function imprimirFormatosEquipo() {
+    const equipo = document.getElementById('nombre-equipo-modal').textContent;
+    const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo && m.estado === 'realizado');
+    
+    if (mantenimientosEquipo.length === 0) {
+        mostrarToast('No hay mantenimientos realizados para imprimir', 'error');
+        return;
+    }
+    
+    // Abrir múltiples ventanas para cada formato
+    mantenimientosEquipo.forEach((mantenimiento, index) => {
+        setTimeout(() => {
+            const params = new URLSearchParams({
+                equipo: mantenimiento.equipo,
+                centro: mantenimiento.centro,
+                frecuencia: mantenimiento.frecuencia,
+                tecnico: mantenimiento.tecnico || '',
+                trabajoRealizado: mantenimiento.trabajoRealizado || ''
+            });
+            
+            const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, `_blank`);
+            
+            ventanaImpresion.onload = function() {
+                setTimeout(() => {
+                    ventanaImpresion.print();
+                    // Cerrar la ventana después de imprimir
+                    setTimeout(() => {
+                        ventanaImpresion.close();
+                    }, 1000);
+                }, 500);
+            };
+        }, index * 200); // Abrir cada ventana con 200ms de diferencia
+    });
+    
+    mostrarToast(`Abriendo ${mantenimientosEquipo.length} formato(s) para impresión...`, 'success');
 }
 
 function limpiarFormularioNuevo() {
