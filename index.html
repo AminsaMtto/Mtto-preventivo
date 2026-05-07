@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -124,6 +124,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      border: none;
     }
     .btn-primary {
       background: var(--negro);
@@ -132,6 +133,14 @@
     }
     .btn-primary:hover {
       background: var(--gris);
+    }
+    .btn-secondary {
+      background: var(--fondo-alt);
+      color: var(--texto);
+      border: 1px solid var(--borde);
+    }
+    .btn-secondary:hover {
+      background: var(--borde);
     }
     .filtros {
       display: flex;
@@ -150,6 +159,7 @@
       background: transparent;
       color: var(--texto-ter);
       transition: all 0.2s;
+      border: none;
     }
     .filtro-btn:last-child { border-right: none; }
     .filtro-btn.activo { background: var(--negro); color: var(--blanco); }
@@ -372,14 +382,6 @@
       display: flex;
       justify-content: flex-end;
       gap: 12px;
-    }
-    .btn-secondary {
-      background: var(--fondo-alt);
-      color: var(--texto);
-      border: 1px solid var(--borde);
-    }
-    .btn-secondary:hover {
-      background: var(--borde);
     }
 
     /* ── TOAST ── */
@@ -658,6 +660,448 @@
   <div class="toast" id="toast"></div>
 
   <!-- ── SCRIPTS ───────────────────────────────────────────────────── -->
-  <script src="preventivo_nuevo.js"></script>
+  <script>
+// ===== CONFIGURACIÓN =====
+const CONFIG = {
+    STORAGE_KEY: 'mantenimientos_preventivos',
+    // Mapeo de frecuencia a días
+    FRECUENCIAS: {
+        'Semanal': 7,
+        'Quincenal': 15,
+        'Mensual': 30,
+        'Bimestral': 60,
+        'Trimestral': 90,
+        'Semestral': 180,
+        'Anual': 365
+    }
+};
+
+// ===== ESTADO GLOBAL =====
+let mantenimientos = [];
+let filtroActual = 'todos';
+let terminoBusqueda = '';
+let mantenimientoActual = null;
+
+// ===== INICIALIZACIÓN =====
+document.addEventListener('DOMContentLoaded', function() {
+    cargarMantenimientos();
+    actualizarEstadisticas();
+    renderizarTabla();
+    
+    // Configurar listeners
+    configurarListeners();
+    
+    // Establecer fecha actual por defecto en modales
+    const fechaActual = new Date().toISOString().split('T')[0];
+    const fechaRealizado = document.getElementById('c-fecha-realizado');
+    if (fechaRealizado) {
+        fechaRealizado.value = fechaActual;
+    }
+});
+
+// ===== FUNCIONES DE ALMACENAMIENTO =====
+function cargarMantenimientos() {
+    const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (stored) {
+        mantenimientos = JSON.parse(stored);
+    } else {
+        // Datos de ejemplo para iniciar
+        mantenimientos = [
+            {
+                id: 1,
+                equipo: 'Compresor de Aire Principal',
+                centro: 'Zinc',
+                frecuencia: 'Mensual',
+                ultimoMantenimiento: '2024-01-15',
+                proximoMantenimiento: '2024-02-15',
+                tecnico: 'Juan Pérez',
+                observaciones: 'Revisión general y cambio de filtros',
+                estado: 'pendiente'
+            },
+            {
+                id: 2,
+                equipo: 'Sistema de Bombeo',
+                centro: 'Cromo',
+                frecuencia: 'Trimestral',
+                ultimoMantenimiento: '2024-01-10',
+                proximoMantenimiento: '2024-04-10',
+                tecnico: 'María López',
+                observaciones: 'Inspección de sellos y lubricación',
+                estado: 'proximo'
+            },
+            {
+                id: 3,
+                equipo: 'Torre de Enfriamiento',
+                centro: 'Doblado',
+                frecuencia: 'Semestral',
+                ultimoMantenimiento: '2023-08-20',
+                proximoMantenimiento: '2024-02-20',
+                tecnico: 'Carlos Rodríguez',
+                observaciones: 'Limpieza de tuberías y revisión de bombas',
+                estado: 'vencido'
+            }
+        ];
+        guardarMantenimientos();
+    }
+}
+
+function guardarMantenimientos() {
+    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(mantenimientos));
+}
+
+// ===== FUNCIONES DE CÁLCULO =====
+function calcularProximoMantenimiento(fechaUltimo, frecuencia) {
+    const dias = CONFIG.FRECUENCIAS[frecuencia];
+    if (!dias) return null;
+    
+    const fecha = new Date(fechaUltimo);
+    fecha.setDate(fecha.getDate() + dias);
+    return fecha.toISOString().split('T')[0];
+}
+
+function determinarEstado(fechaProximo) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    const proximo = new Date(fechaProximo);
+    proximo.setHours(0, 0, 0, 0);
+    
+    const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
+    
+    if (diasDiff < 0) {
+        return 'vencido';
+    } else if (diasDiff <= 7) {
+        return 'proximo';
+    } else {
+        return 'pendiente';
+    }
+}
+
+function obtenerEstadoBadge(estado) {
+    const badges = {
+        'pendiente': '<span class="estado-badge estado-pendiente">Pendiente</span>',
+        'proximo': '<span class="estado-badge estado-proximo">Próximo</span>',
+        'vencido': '<span class="estado-badge estado-vencido">Vencido</span>',
+        'realizado': '<span class="estado-badge estado-realizado">Realizado</span>'
+    };
+    return badges[estado] || badges['pendiente'];
+}
+
+// ===== FUNCIONES DE FILTRADO Y BÚSQUEDA =====
+function filtrar(tipo, boton) {
+    filtroActual = tipo;
+    
+    // Actualizar botones
+    document.querySelectorAll('.filtro-btn').forEach(btn => {
+        btn.classList.remove('activo');
+    });
+    boton.classList.add('activo');
+    
+    renderizarTabla();
+}
+
+function buscar(termino) {
+    terminoBusqueda = termino.toLowerCase();
+    renderizarTabla();
+}
+
+function obtenerMantenimientosFiltrados() {
+    let filtrados = [...mantenimientos];
+    
+    // Aplicar filtro de estado
+    if (filtroActual !== 'todos') {
+        filtrados = filtrados.filter(m => m.estado === filtroActual);
+    }
+    
+    // Aplicar búsqueda
+    if (terminoBusqueda) {
+        filtrados = filtrados.filter(m => 
+            m.equipo.toLowerCase().includes(terminoBusqueda) ||
+            m.centro.toLowerCase().includes(terminoBusqueda) ||
+            (m.tecnico && m.tecnico.toLowerCase().includes(terminoBusqueda))
+        );
+    }
+    
+    // Ordenar por fecha de próximo mantenimiento
+    filtrados.sort((a, b) => new Date(a.proximoMantenimiento) - new Date(b.proximoMantenimiento));
+    
+    return filtrados;
+}
+
+// ===== FUNCIONES DE RENDERIZADO =====
+function renderizarTabla() {
+    const tbody = document.getElementById('tabla-preventivos');
+    const filtrados = obtenerMantenimientosFiltrados();
+    
+    if (filtrados.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: var(--texto-ter);">
+                    No se encontraron mantenimientos${filtroActual !== 'todos' ? ' con el filtro seleccionado' : ''}${terminoBusqueda ? ' para la búsqueda "' + terminoBusqueda + '"' : ''}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = filtrados.map(mantenimiento => `
+        <tr>
+            <td><strong>${mantenimiento.equipo}</strong></td>
+            <td>${mantenimiento.centro}</td>
+            <td>${mantenimiento.frecuencia}</td>
+            <td>${formatearFecha(mantenimiento.ultimoMantenimiento)}</td>
+            <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
+            <td>${mantenimiento.tecnico || '-'}</td>
+            <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
+            <td>
+                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 10px;" onclick="abrirModalCompletar(${mantenimiento.id})">
+                    Completar
+                </button>
+                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 10px; margin-left: 4px;" onclick="eliminarMantenimiento(${mantenimiento.id})">
+                    Eliminar
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function actualizarEstadisticas() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    const stats = {
+        total: mantenimientos.length,
+        pendientes: 0,
+        proximos: 0,
+        vencidos: 0
+    };
+    
+    mantenimientos.forEach(m => {
+        const proximo = new Date(m.proximoMantenimiento);
+        proximo.setHours(0, 0, 0, 0);
+        const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
+        
+        if (diasDiff < 0) {
+            stats.vencidos++;
+        } else if (diasDiff <= 7) {
+            stats.proximos++;
+        } else if (m.estado === 'pendiente') {
+            stats.pendientes++;
+        }
+    });
+    
+    document.getElementById('stat-total').textContent = stats.total;
+    document.getElementById('stat-pendientes').textContent = stats.pendientes;
+    document.getElementById('stat-proximos').textContent = stats.proximos;
+    document.getElementById('stat-vencidos').textContent = stats.vencidos;
+}
+
+// ===== FUNCIONES DE MODALES =====
+function abrirModalNuevo() {
+    document.getElementById('modal-nuevo').classList.add('visible');
+    limpiarFormularioNuevo();
+}
+
+function abrirModalCompletar(id) {
+    mantenimientoActual = mantenimientos.find(m => m.id === id);
+    if (!mantenimientoActual) return;
+    
+    // Limpiar formulario
+    document.getElementById('c-trabajo').value = '';
+    document.getElementById('c-proximo-manual').value = '';
+    
+    // Calcular próximo mantenimiento
+    const proximoCalculado = calcularProximoMantenimiento(
+        document.getElementById('c-fecha-realizado').value,
+        mantenimientoActual.frecuencia
+    );
+    document.getElementById('c-proximo-calculado').value = proximoCalculado;
+    
+    document.getElementById('modal-completar').classList.add('visible');
+}
+
+function cerrarModal(modalId) {
+    document.getElementById(modalId).classList.remove('visible');
+    mantenimientoActual = null;
+}
+
+function limpiarFormularioNuevo() {
+    document.getElementById('p-equipo').value = '';
+    document.getElementById('p-centro').value = '';
+    document.getElementById('p-frecuencia').value = '';
+    document.getElementById('p-ultimo').value = '';
+    document.getElementById('p-tecnico').value = '';
+    document.getElementById('p-observaciones').value = '';
+}
+
+// ===== FUNCIONES DE CRUD =====
+function guardarPreventivo() {
+    const equipo = document.getElementById('p-equipo').value.trim();
+    const centro = document.getElementById('p-centro').value;
+    const frecuencia = document.getElementById('p-frecuencia').value;
+    const ultimo = document.getElementById('p-ultimo').value;
+    const tecnico = document.getElementById('p-tecnico').value.trim();
+    const observaciones = document.getElementById('p-observaciones').value.trim();
+    
+    // Validaciones
+    if (!equipo || !centro || !frecuencia || !ultimo) {
+        mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+        return;
+    }
+    
+    // Calcular próximo mantenimiento
+    const proximo = calcularProximoMantenimiento(ultimo, frecuencia);
+    const estado = determinarEstado(proximo);
+    
+    // Crear nuevo mantenimiento
+    const nuevoMantenimiento = {
+        id: Date.now(),
+        equipo,
+        centro,
+        frecuencia,
+        ultimoMantenimiento: ultimo,
+        proximoMantenimiento: proximo,
+        tecnico,
+        observaciones,
+        estado
+    };
+    
+    mantenimientos.push(nuevoMantenimiento);
+    guardarMantenimientos();
+    
+    // Actualizar UI
+    renderizarTabla();
+    actualizarEstadisticas();
+    cerrarModal('modal-nuevo');
+    
+    mostrarToast('Mantenimiento preventivo creado exitosamente', 'success');
+}
+
+function completarPreventivo() {
+    if (!mantenimientoActual) return;
+    
+    const fechaRealizado = document.getElementById('c-fecha-realizado').value;
+    const trabajo = document.getElementById('c-trabajo').value.trim();
+    const proximoManual = document.getElementById('c-proximo-manual').value;
+    
+    // Validaciones
+    if (!fechaRealizado || !trabajo) {
+        mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+        return;
+    }
+    
+    // Actualizar mantenimiento
+    const index = mantenimientos.findIndex(m => m.id === mantenimientoActual.id);
+    if (index === -1) return;
+    
+    mantenimientos[index].ultimoMantenimiento = fechaRealizado;
+    mantenimientos[index].observaciones += '\n\n' + new Date().toLocaleDateString('es-ES') + ' - Trabajo realizado: ' + trabajo;
+    
+    if (proximoManual) {
+        mantenimientos[index].proximoMantenimiento = proximoManual;
+    } else {
+        mantenimientos[index].proximoMantenimiento = calcularProximoMantenimiento(
+            fechaRealizado,
+            mantenimientoActual.frecuencia
+        );
+    }
+    
+    mantenimientos[index].estado = determinarEstado(mantenimientos[index].proximoMantenimiento);
+    
+    guardarMantenimientos();
+    
+    // Actualizar UI
+    renderizarTabla();
+    actualizarEstadisticas();
+    cerrarModal('modal-completar');
+    
+    mostrarToast('Mantenimiento completado exitosamente', 'success');
+}
+
+function eliminarMantenimiento(id) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este mantenimiento preventivo?')) {
+        return;
+    }
+    
+    const index = mantenimientos.findIndex(m => m.id === id);
+    if (index === -1) return;
+    
+    mantenimientos.splice(index, 1);
+    guardarMantenimientos();
+    
+    // Actualizar UI
+    renderizarTabla();
+    actualizarEstadisticas();
+    
+    mostrarToast('Mantenimiento eliminado exitosamente', 'info');
+}
+
+// ===== FUNCIONES AUXILIARES =====
+function formatearFecha(fechaISO) {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+function mostrarToast(mensaje, tipo = 'info') {
+    const toast = document.getElementById('toast');
+    toast.textContent = mensaje;
+    toast.className = `toast ${tipo}`;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+function configurarListeners() {
+    // Listener para calcular fecha cuando cambia la fecha de realización
+    const fechaRealizado = document.getElementById('c-fecha-realizado');
+    if (fechaRealizado) {
+        fechaRealizado.addEventListener('change', function() {
+            if (mantenimientoActual) {
+                const proximoCalculado = calcularProximoMantenimiento(
+                    this.value,
+                    mantenimientoActual.frecuencia
+                );
+                document.getElementById('c-proximo-calculado').value = proximoCalculado;
+            }
+        });
+    }
+    
+    // Cerrar modales con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.visible').forEach(modal => {
+                modal.classList.remove('visible');
+            });
+            mantenimientoActual = null;
+        }
+    });
+    
+    // Cerrar modals al hacer clic fuera
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('visible');
+                mantenimientoActual = null;
+            }
+        });
+    });
+}
+
+// ===== EXPORTAR FUNCIONES =====
+window.filtrar = filtrar;
+window.buscar = buscar;
+window.abrirModalNuevo = abrirModalNuevo;
+window.abrirModalCompletar = abrirModalCompletar;
+window.cerrarModal = cerrarModal;
+window.guardarPreventivo = guardarPreventivo;
+window.completarPreventivo = completarPreventivo;
+window.eliminarMantenimiento = eliminarMantenimiento;
+  </script>
 </body>
 </html>
