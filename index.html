@@ -585,6 +585,52 @@
       margin-top: 8px;
       background: var(--fondo);
     }
+    
+    /* ── TABS ── */
+    .tabs-container {
+      background: var(--blanco);
+      border-bottom: 1px solid var(--borde);
+      margin: 0 0 24px 0;
+    }
+    
+    .tabs-nav {
+      display: flex;
+      border-bottom: 2px solid var(--borde);
+    }
+    
+    .tab-button {
+      background: none;
+      border: none;
+      padding: 16px 24px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--texto-sec);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .tab-button:hover {
+      color: var(--texto);
+      background: var(--fondo-alt);
+    }
+    
+    .tab-button.active {
+      color: var(--negro);
+      border-bottom-color: var(--negro);
+      background: var(--blanco);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
     .modal-header {
       background: var(--negro);
       color: var(--blanco);
@@ -850,8 +896,18 @@
     </div>
   </div>
 
-  <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
-  <div class="toolbar">
+  <!-- ── TABS ───────────────────────────────────────────────────── -->
+  <div class="tabs-container">
+    <div class="tabs-nav">
+      <button class="tab-button active" onclick="cambiarTab('preventivos', this)">Preventivos</button>
+      <button class="tab-button" onclick="cambiarTab('historial', this)">Historial por Equipo</button>
+    </div>
+  </div>
+
+  <!-- ── TAB CONTENT: PREVENTIVOS ───────────────────────────────────── -->
+  <div id="tab-preventivos" class="tab-content active">
+    <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
+    <div class="toolbar">
     <div class="toolbar-left">
       <div class="filtros">
         <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
@@ -906,6 +962,47 @@
         <!-- Las filas se generarán dinámicamente -->
       </tbody>
     </table>
+  </div>
+  </div>
+
+  <!-- ── TAB CONTENT: HISTORIAL ───────────────────────────────────── -->
+  <div id="tab-historial" class="tab-content">
+    <!-- ── TOOLBAR HISTORIAL ───────────────────────────────────── -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="search-input" type="text" placeholder="BUSCAR EQUIPO..." id="buscar-equipo" oninput="filtrarHistorial()">
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <select id="filtro-equipo-historial" onchange="filtrarHistorial()">
+          <option value="">Todos los equipos</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── TABLA HISTORIAL ───────────────────────────────────── -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Equipo</th>
+            <th>Total Mantenimientos</th>
+            <th>Realizados</th>
+            <th>Pendientes</th>
+            <th>Último Realizado</th>
+            <th>Próximo Programado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-historial">
+          <!-- Las filas se generarán dinámicamente -->
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ── MODAL NUEVO ───────────────────────────────────────────────── -->
@@ -1200,6 +1297,40 @@
     </div>
   </div>
 
+  <!-- ── MODAL HISTORIAL EQUIPO ───────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-historial-equipo">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h2>Historial de Mantenimientos - <span id="nombre-equipo-modal"></span></h2>
+        <button class="modal-close" onclick="cerrarModal('modal-historial-equipo')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Centro</th>
+                <th>Frecuencia</th>
+                <th>Último Mantenimiento</th>
+                <th>Próximo Mantenimiento</th>
+                <th>Técnico</th>
+                <th>Estado</th>
+                <th>Trabajo Realizado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-historial-equipo">
+              <!-- Las filas se generarán dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-historial-equipo')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── TOAST ─────────────────────────────────────────────── -->
   <div class="toast" id="toast"></div>
 
@@ -1384,7 +1515,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
             ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
             proximoMantenimiento: mantenimiento.proximoMantenimiento,
             tecnico: mantenimiento.tecnico,
-            observaciones: mantenimiento.observaciones,
+            trabajoRealizado: mantenimiento.trabajoRealizado || '',
             estado: mantenimiento.estado
         });
         
@@ -1669,9 +1800,187 @@ function abrirModalVer(id) {
     document.getElementById('modal-ver').classList.add('visible');
 }
 
+function cambiarTab(tabName, button) {
+    // Ocultar todos los contenidos de pestañas
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Desactivar todos los botones de pestaña
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Mostrar la pestaña seleccionada
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    button.classList.add('active');
+    
+    // Si es la pestaña de historial, cargar los datos
+    if (tabName === 'historial') {
+        cargarHistorial();
+    }
+}
+
 function cerrarModal(modalId) {
     document.getElementById(modalId).classList.remove('visible');
     mantenimientoActual = null;
+}
+
+function cargarHistorial() {
+    // Agrupar mantenimientos por equipo
+    const historialPorEquipo = {};
+    
+    mantenimientos.forEach(mantenimiento => {
+        if (!historialPorEquipo[mantenimiento.equipo]) {
+            historialPorEquipo[mantenimiento.equipo] = {
+                total: 0,
+                realizados: 0,
+                pendientes: 0,
+                ultimoRealizado: null,
+                proximoProgramado: null,
+                mantenimientos: []
+            };
+        }
+        
+        const equipo = historialPorEquipo[mantenimiento.equipo];
+        equipo.total++;
+        equipo.mantenimientos.push(mantenimiento);
+        
+        if (mantenimiento.estado === 'realizado') {
+            equipo.realizados++;
+            if (!equipo.ultimoRealizado || new Date(mantenimiento.ultimoMantenimiento) > new Date(equipo.ultimoRealizado)) {
+                equipo.ultimoRealizado = mantenimiento.ultimoMantenimiento;
+            }
+        } else {
+            equipo.pendientes++;
+            if (!equipo.proximoProgramado || new Date(mantenimiento.proximoMantenimiento) < new Date(equipo.proximoProgramado)) {
+                equipo.proximoProgramado = mantenimiento.proximoMantenimiento;
+            }
+        }
+    });
+    
+    // Actualizar filtro de equipos
+    actualizarFiltroEquipos(Object.keys(historialPorEquipo));
+    
+    // Renderizar tabla de historial
+    renderizarTablaHistorial(historialPorEquipo);
+}
+
+function actualizarFiltroEquipos(equipos) {
+    const filtro = document.getElementById('filtro-equipo-historial');
+    const valorActual = filtro.value;
+    
+    filtro.innerHTML = '<option value="">Todos los equipos</option>';
+    equipos.sort().forEach(equipo => {
+        filtro.innerHTML += `<option value="${equipo}">${equipo}</option>`;
+    });
+    
+    filtro.value = valorActual;
+}
+
+function renderizarTablaHistorial(historialPorEquipo) {
+    const tbody = document.getElementById('tabla-historial');
+    const terminoBusqueda = document.getElementById('buscar-equipo').value.toLowerCase();
+    const filtroEquipo = document.getElementById('filtro-equipo-historial').value;
+    
+    let historialFiltrado = Object.entries(historialPorEquipo);
+    
+    // Aplicar filtros
+    if (terminoBusqueda) {
+        historialFiltrado = historialFiltrado.filter(([equipo]) => 
+            equipo.toLowerCase().includes(terminoBusqueda)
+        );
+    }
+    
+    if (filtroEquipo) {
+        historialFiltrado = historialFiltrado.filter(([equipo]) => equipo === filtroEquipo);
+    }
+    
+    if (historialFiltrado.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>No se encontraron equipos</p>
+                        <small>${terminoBusqueda || filtroEquipo ? 'CON LOS FILTROS SELECCIONADOS' : 'NO HAY MANTENIMIENTOS REGISTRADOS'}</small>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = historialFiltrado.map(([equipo, datos]) => `
+        <tr>
+            <td><strong>${equipo}</strong></td>
+            <td>${datos.total}</td>
+            <td><span class="badge estado-realizado">${datos.realizados}</span></td>
+            <td><span class="badge estado-pendiente">${datos.pendientes}</span></td>
+            <td>${datos.ultimoRealizado ? formatearFecha(datos.ultimoRealizado) : '-'}</td>
+            <td>${datos.proximoProgramado ? formatearFecha(datos.proximoProgramado) : '-'}</td>
+            <td>
+              <div class="acciones">
+                <button class="btn btn-info btn-sm" onclick="verDetallesEquipo('${equipo}')">Ver Detalles</button>
+              </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filtrarHistorial() {
+    // Volver a cargar y renderizar el historial con los filtros aplicados
+    cargarHistorial();
+}
+
+function verDetallesEquipo(equipo) {
+    // Filtrar mantenimientos del equipo seleccionado
+    const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo);
+    
+    // Abrir modal con todos los mantenimientos del equipo
+    abrirModalHistorialEquipo(equipo, mantenimientosEquipo);
+}
+
+function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
+    // Mostrar nombre del equipo en el título
+    document.getElementById('nombre-equipo-modal').textContent = equipo;
+    
+    // Ordenar mantenimientos por fecha (más reciente primero)
+    mantenimientosEquipo.sort((a, b) => new Date(b.ultimoMantenimiento) - new Date(a.ultimoMantenimiento));
+    
+    // Renderizar tabla con todos los mantenimientos del equipo
+    const tbody = document.getElementById('tabla-historial-equipo');
+    
+    if (mantenimientosEquipo.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8">
+                    <div class="empty-state">
+                        <p>No hay mantenimientos registrados para este equipo</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = mantenimientosEquipo.map(mantenimiento => `
+        <tr>
+            <td><strong>${mantenimiento.id}</strong></td>
+            <td>${mantenimiento.centro}</td>
+            <td>${mantenimiento.frecuencia}</td>
+            <td>${formatearFecha(mantenimiento.ultimoMantenimiento)}</td>
+            <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
+            <td>${mantenimiento.tecnico || '-'}</td>
+            <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
+            <td>${mantenimiento.trabajoRealizado || mantenimiento.observaciones || '-'}</td>
+        </tr>
+    `).join('');
+    
+    // Mostrar el modal
+    document.getElementById('modal-historial-equipo').classList.add('visible');
 }
 
 function limpiarFormularioNuevo() {
@@ -1847,6 +2156,7 @@ function imprimirFormatoIndividual(id) {
         tecnico: mantenimiento.tecnico || '',
         observaciones: mantenimiento.observaciones || ''
     });
+    params.append('trabajoRealizado', mantenimiento.trabajoRealizado || '');
     
     const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, '_blank');
     
@@ -2274,6 +2584,10 @@ window.actualizarGraficas = actualizarGraficas;
 window.actualizarGraficaPorcentajes = actualizarGraficaPorcentajes;
 window.abrirModalModificar = abrirModalModificar;
 window.abrirModalVer = abrirModalVer;
+window.cambiarTab = cambiarTab;
+window.cargarHistorial = cargarHistorial;
+window.filtrarHistorial = filtrarHistorial;
+window.verDetallesEquipo = verDetallesEquipo;
   </script>
 </body>
 </html>
