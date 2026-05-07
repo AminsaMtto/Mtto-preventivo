@@ -274,7 +274,8 @@
         const centro = getParameterByName('centro');
         const frecuencia = getParameterByName('frecuencia');
         const tecnico = getParameterByName('tecnico');
-        const trabajoRealizado = getParameterByName('trabajoRealizado');
+        const condicionInicial = getParameterByName('condicionInicial');
+        const condicionFinal = getParameterByName('condicionFinal');
 
         // Autocompletar campos en ambos formatos
         const formatos = document.querySelectorAll('.formato');
@@ -314,11 +315,35 @@
                 }
             }
 
-            // TRABAJO REALIZADO en el segundo formato
-            if (trabajoRealizado && index === 1) {
-                const trabajoCell = formato.querySelector('tr:last-child td:last-child');
-                if (trabajoCell) {
-                    trabajoCell.innerHTML = `<strong>TRABAJO REALIZADO:</strong><br>${trabajoRealizado}`;
+            // CONDICIÓN INICIAL en el primer formato
+            if (condicionInicial && index === 0) {
+                const condicionInicialCell = formato.querySelector('tr:nth-child(3) td:last-child div');
+                if (condicionInicialCell) {
+                    condicionInicialCell.innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
+                }
+            }
+            
+            // CONDICIÓN FINAL en el primer formato
+            if (condicionFinal && index === 0) {
+                const condicionFinalCell = formato.querySelector('tr:nth-child(4) td:last-child div');
+                if (condicionFinalCell) {
+                    condicionFinalCell.innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
+                }
+            }
+            
+            // CONDICIÓN INICIAL en el segundo formato
+            if (condicionInicial && index === 1) {
+                const condicionInicialCell = formato.querySelector('tr:nth-child(3) td:last-child div');
+                if (condicionInicialCell) {
+                    condicionInicialCell.innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
+                }
+            }
+            
+            // CONDICIÓN FINAL en el segundo formato
+            if (condicionFinal && index === 1) {
+                const condicionFinalCell = formato.querySelector('tr:nth-child(4) td:last-child div');
+                if (condicionFinalCell) {
+                    condicionFinalCell.innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
                 }
             }
         });
