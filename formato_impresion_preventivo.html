@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mantenimiento Preventivo</title>
+
+<style>
+
+    body{
+        font-family: Arial, sans-serif;
+        margin:0;
+        padding:10px;
+        background:white;
+    }
+
+    .contenedor-hoja{
+        width:100%;
+    }
+
+    .formato{
+        width:95%;
+        height:48vh;
+        border:2px solid black;
+        margin:0 auto 10px auto;
+        padding:8px;
+        box-sizing:border-box;
+        page-break-inside:avoid;
+    }
+
+    .titulo{
+        border:2px solid black;
+        text-align:center;
+        font-weight:bold;
+        font-size:18px;
+        padding:8px;
+        margin-bottom:10px;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+    }
+
+    td{
+        border:1px solid black;
+        padding:4px;
+        font-size:11px;
+    }
+
+    .sin-borde{
+        border:none;
+    }
+
+    .campo-rojo{
+        color:red;
+    }
+
+    .espacio{
+        height:140px;
+        vertical-align:top;
+    }
+
+    .firmas{
+        margin-top:10px;
+        display:flex;
+        justify-content:space-around;
+    }
+
+    .firma-box{
+        text-align:center;
+        font-size:11px;
+    }
+
+    .firma-linea{
+        width:140px;
+        height:25px;
+        border:1px solid black;
+        margin-bottom:4px;
+    }
+
+    @media print{
+        body{
+            margin:0;
+            padding:0;
+        }
+
+        .formato{
+            break-inside:avoid;
+        }
+    }
+
+</style>
+</head>
+
+<body>
+
+<div class="contenedor-hoja">
+
+    <!-- FORMATO 1 -->
+    <div class="formato">
+
+        <div class="titulo">
+            MANTENIMIENTO PREVENTIVO
+        </div>
+
+        <table>
+            <tr>
+                <td width="65%">
+                    TECNICO: {{tecnico}}
+                </td>
+
+                <td width="35%">
+                    FECHA: {{fecha}}
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    MAQUINA / EQUIPO: {{equipo}}
+                </td>
+
+                <td>
+                    <span class="campo-rojo">
+                        TIEMPO REQUERIDO:
+                    </span>
+                    {{tiempo}}
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    ÁREA: {{area}}
+                </td>
+
+                <td class="sin-borde"></td>
+            </tr>
+        </table>
+
+        <br>
+
+        <table>
+            <tr>
+                <td width="50%" style="text-align:center;font-weight:bold;">
+                    CONDICION INICIAL DEL EQUIPO
+                </td>
+
+                <td width="50%" style="text-align:center;font-weight:bold;">
+                    CONDICION FINAL DEL EQUIPO Y OBSERVACIONES
+                </td>
+            </tr>
+
+            <tr>
+                <td class="espacio">
+                    {{condicion_inicial}}
+                </td>
+
+                <td class="espacio">
+                    {{observaciones}}
+                </td>
+            </tr>
+        </table>
+
+        <div class="firmas">
+
+            <div class="firma-box">
+                <div class="firma-linea"></div>
+                Firma de Técnico
+            </div>
+
+            <div class="firma-box">
+                <div class="firma-linea"></div>
+                Firma Jefe de Área
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FORMATO 2 -->
+    <div class="formato">
+
+        <div class="titulo">
+            MANTENIMIENTO PREVENTIVO
+        </div>
+
+        <table>
+            <tr>
+                <td width="65%">
+                    TECNICO: {{tecnico}}
+                </td>
+
+                <td width="35%">
+                    FECHA: {{fecha}}
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    MAQUINA / EQUIPO: {{equipo}}
+                </td>
+
+                <td>
+                    <span class="campo-rojo">
+                        TIEMPO REQUERIDO:
+                    </span>
+                    {{tiempo}}
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    ÁREA: {{area}}
+                </td>
+
+                <td class="sin-borde"></td>
+            </tr>
+        </table>
+
+        <br>
+
+        <table>
+            <tr>
+                <td width="50%" style="text-align:center;font-weight:bold;">
+                    CONDICION INICIAL DEL EQUIPO
+                </td>
+
+                <td width="50%" style="text-align:center;font-weight:bold;">
+                    CONDICION FINAL DEL EQUIPO Y OBSERVACIONES
+                </td>
+            </tr>
+
+            <tr>
+                <td class="espacio">
+                    {{condicion_inicial}}
+                </td>
+
+                <td class="espacio">
+                    {{observaciones}}
+                </td>
+            </tr>
+        </table>
+
+        <div class="firmas">
+
+            <div class="firma-box">
+                <div class="firma-linea"></div>
+                Firma de Técnico
+            </div>
+
+            <div class="firma-box">
+                <div class="firma-linea"></div>
+                Firma Jefe de Área
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
