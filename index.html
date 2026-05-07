@@ -3,34 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mantenimientos Preventivos — AMINSA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@400;500;600;700&family=Inconsolata:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Sistema de Mantenimientos Preventivos - AMINSA</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="icon" type="image/png" href="LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cormorant+SC:wght@300;400;500;600;700&family=IM+Fell+DW+Pica&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --blanco: #ffffff;
-      --negro: #0a0a0a;
-      --rojo: #8b0000;
-      --rojo-clar: #b22222;
-      --gris: #555555;
-      --gris-clar: #888888;
-      --fondo: #f5f5f5;
-      --fondo-alt: #eeeeee;
-      --texto: #1a1a1a;
-      --texto-sec: #444444;
-      --texto-ter: #777777;
-      --borde: #d0d0d0;
-      --exito: #228b22;
-      --alerta: #ff8c00;
-      --info: #1e90ff;
-      --azul: #1a3a7a;
-      --naranja: #b55a00;
+      --negro:       #0e0e0e;
+      --carbono:     #111111;
+      --gris-osc:    #1a1a1a;
+      --gris:        #2e2e2e;
+      --gris-med:    #4a4a4a;
+      --gris-clar:   #7a7a7a;
+      --borde:       #d8d4ce;
+      --borde-suave: #e8e4de;
+      --fondo:       #faf9f7;
+      --fondo-alt:   #f4f2ee;
+      --blanco:      #ffffff;
+      --acento:      #1a1a1a;
+      --acento2:     #8b1a1a;
+      --rojo:        #8b1a1a;
+      --rojo-clar:   #b52020;
+      --verde:       #1a4a2a;
+      --verde-clar:  #1e6b35;
+      --texto:       #1a1a1a;
+      --texto-sec:   #4a4a4a;
+      --texto-ter:   #7a7a7a;
+      --exito:       #1e6b35;
+      --alerta:      #b55a00;
+      --info:        #1a3a7a;
+      --naranja:     #b55a00;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Cormorant SC', Georgia, serif;
+      font-family: 'Cormorant Garamond', serif;
       background: var(--fondo);
       color: var(--texto);
       min-height: 100vh;
@@ -38,134 +47,213 @@
 
     /* ── HEADER ── */
     header {
+      background: var(--negro);
+      padding: 0 48px;
+      height: 72px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 48px;
-      border-bottom: 1px solid var(--borde);
-      background: var(--blanco);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      border-bottom: 1px solid #2e2e2e;
+      position: relative;
     }
     .header-brand {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
+    }
+    .header-logo {
+      width: 42px;
+      height: 42px;
+      background: var(--blanco);
+      color: var(--negro);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant SC', serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 1px;
+      flex-shrink: 0;
     }
     .header-divider {
       width: 1px;
-      height: 40px;
-      background: var(--borde);
+      height: 32px;
+      background: rgba(255,255,255,0.2);
     }
     .header-text h1 {
       font-family: 'Cormorant SC', serif;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      margin-bottom: 2px;
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      color: #ffffff;
+      margin-bottom: 3px;
     }
     .header-text span {
       font-family: 'Inconsolata', monospace;
       font-size: 10px;
-      color: var(--texto-ter);
-      letter-spacing: 1.5px;
+      color: #666;
+      letter-spacing: 1px;
     }
     .header-doc-ref {
       font-family: 'Inconsolata', monospace;
-      font-size: 9px;
-      color: var(--texto-ter);
-      background: var(--fondo-alt);
-      padding: 4px 12px;
-      border: 1px solid var(--borde);
-      letter-spacing: 1px;
+      font-size: 10px;
+      color: #555;
+      border: 1px solid #333;
+      padding: 4px 10px;
+      letter-spacing: 1.5px;
     }
     .header-nav {
       display: flex;
-      gap: 12px;
-      align-items: center;
+      gap: 0;
+      border: 1px solid var(--borde);
     }
     .nav-link {
       font-family: 'Inconsolata', monospace;
-      font-size: 11px;
-      color: var(--texto-sec);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
       text-decoration: none;
       padding: 8px 16px;
-      border: 1px solid var(--borde);
+      color: var(--texto-ter);
+      border-right: 1px solid var(--borde);
       transition: all 0.2s;
     }
+    .nav-link:last-child { border-right: none; }
     .nav-link:hover {
-      background: var(--negro);
-      color: var(--blanco);
+      background: var(--fondo-alt);
+      color: var(--negro);
     }
     .nav-link.active {
       background: var(--negro);
       color: var(--blanco);
     }
 
-    /* ── CONTROLS ── */
-    .controls {
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--blanco);
+      padding: 0 48px;
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--borde);
+    }
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 40px 18px 0;
+      margin-right: 40px;
+      border-right: 1px solid var(--borde-suave);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-icon {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--fondo-alt);
+      border: 1px solid var(--borde);
+    }
+    .stat-icon svg { width: 15px; height: 15px; color: var(--gris-med); }
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px;
+      font-weight: 600;
+      color: var(--negro);
+      line-height: 1;
+    }
+    .stat-num.amarillo { color: #7a5500; }
+    .stat-num.rojo     { color: var(--rojo-clar); }
+    .stat-num.verde    { color: var(--verde-clar); }
+    .stat-label {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      color: var(--texto-ter);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 400;
+    }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      padding: 18px 48px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 24px 48px;
-      gap: 16px;
+      gap: 12px;
       flex-wrap: wrap;
+      background: var(--fondo-alt);
+      border-bottom: 1px solid var(--borde);
     }
+    .toolbar-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
     .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--negro);
+      color: var(--blanco);
+      border-color: var(--negro);
+    }
+    .btn-primary:hover {
+      background: #333;
+      border-color: #333;
+    }
+    .btn-danger {
+      background: transparent;
+      color: var(--rojo-clar);
+      border: 1px solid var(--rojo);
+    }
+    .btn-danger:hover { background: var(--rojo); color: var(--blanco); }
+    .btn-success {
+      background: transparent;
+      color: var(--verde-clar);
+      border: 1px solid var(--verde);
+    }
+    .btn-success:hover { background: var(--verde); color: var(--blanco); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--texto-sec);
+      border: 1px solid var(--borde);
+    }
+    .btn-ghost:hover { background: var(--blanco); border-color: #aaa; color: var(--negro); }
+
+    /* Filtros */
+    .filtros { display: flex; gap: 0; align-items: center; border: 1px solid var(--borde); }
+    .filtro-btn {
+      padding: 7px 18px;
       font-family: 'Inconsolata', monospace;
       font-size: 11px;
       font-weight: 500;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      padding: 10px 20px;
       cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
       border: none;
-    }
-    .btn-primary {
-      background: var(--negro);
-      color: var(--blanco);
-      border: 1px solid var(--negro);
-    }
-    .btn-primary:hover {
-      background: var(--gris);
-    }
-    .btn-secondary {
-      background: var(--fondo-alt);
-      color: var(--texto);
-      border: 1px solid var(--borde);
-    }
-    .btn-secondary:hover {
-      background: var(--borde);
-    }
-    .filtros {
-      display: flex;
-      gap: 0;
-      border: 1px solid var(--borde);
-    }
-    .filtro-btn {
-      padding: 7px 16px;
-      font-family: 'Inconsolata', monospace;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      cursor: pointer;
       border-right: 1px solid var(--borde);
       background: transparent;
       color: var(--texto-ter);
       transition: all 0.2s;
-      border: none;
     }
     .filtro-btn:last-child { border-right: none; }
-    .filtro-btn.activo { background: var(--negro); color: var(--blanco); }
-    .filtro-btn:hover:not(.activo) { background: var(--fondo-alt); color: var(--negro); }
+    .filtro-btn.activo {
+      background: var(--negro);
+      color: var(--blanco);
+    }
+    .filtro-btn:hover:not(.activo) { background: var(--blanco); color: var(--negro); }
 
-    /* ── SEARCH ── */
     .search-wrap {
       position: relative;
       display: flex;
@@ -174,250 +262,261 @@
     .search-wrap svg {
       position: absolute;
       left: 12px;
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
       color: var(--texto-ter);
+      pointer-events: none;
     }
     .search-input {
+      padding: 8px 14px 8px 34px;
+      border: 1px solid var(--borde);
+      background: var(--blanco);
       font-family: 'Inconsolata', monospace;
-      font-size: 11px;
-      padding: 8px 12px 8px 36px;
-      border: 1px solid var(--borde);
-      background: var(--blanco);
+      font-size: 12px;
       width: 280px;
-      outline: none;
+      color: var(--negro);
+      letter-spacing: 0.5px;
+      transition: border-color 0.2s;
     }
-    .search-input:focus { border-color: var(--negro); }
+    .search-input::placeholder { color: var(--texto-ter); }
+    .search-input:focus { outline: none; border-color: var(--negro); }
 
-    /* ── STATS ── */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin: 0 48px 24px;
-    }
-    .stat-card {
-      background: var(--blanco);
+    /* ── FILTROS DE TABLA ── */
+    .filtros-tabla {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 40px;
+      margin: 0 auto;
+      max-width: 1200px;
+      background: var(--fondo);
       border: 1px solid var(--borde);
-      padding: 16px 20px;
+      border-radius: 4px;
+      gap: 20px;
+    }
+    
+    .filtros-tabla-left {
       display: flex;
       align-items: center;
       gap: 12px;
-    }
-    .stat-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
+      flex: 1;
       justify-content: center;
-      background: var(--fondo-alt);
-      border: 1px solid var(--borde);
-    }
-    .stat-icon svg {
-      width: 20px;
-      height: 20px;
-      color: var(--texto-sec);
-    }
-    .stat-info h3 {
-      font-family: 'Inconsolata', monospace;
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--negro);
-    }
-    .stat-info span {
-      font-family: 'Inconsolata', monospace;
-      font-size: 10px;
-      color: var(--texto-ter);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
-    /* ── TABLE ── */
+    /* ── TABLA ── */
     .table-wrap {
-      margin: 0 48px;
+      margin: 28px 48px;
       background: var(--blanco);
       border: 1px solid var(--borde);
-      overflow: hidden;
+      overflow: auto;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    thead {
-      background: var(--fondo-alt);
-      border-bottom: 2px solid var(--borde);
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead tr {
+      background: var(--negro);
     }
     th {
+      padding: 13px 18px;
+      text-align: left;
       font-family: 'Inconsolata', monospace;
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.6);
+      white-space: nowrap;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    th:last-child { border-right: none; }
+    td {
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--borde-suave);
+      border-right: 1px solid rgba(216,212,206,0.4);
+      vertical-align: middle;
+      color: var(--texto);
+      font-size: 14px;
+      font-family: 'Cormorant Garamond', serif;
+    }
+    td:last-child { border-right: none; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--fondo-alt); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: var(--texto-sec);
-      padding: 12px 16px;
-      text-align: left;
-    }
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--borde);
-      font-family: 'Inconsolata', monospace;
-      font-size: 11px;
-    }
-    tbody tr:hover {
-      background: var(--fondo-alt);
-    }
-    .estado-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-size: 9px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      border: 1px solid;
     }
     .estado-pendiente {
-      background: var(--alerta);
-      color: var(--blanco);
-    }
-    .estado-vencido {
-      background: var(--rojo);
-      color: var(--blanco);
-    }
-    .estado-realizado {
-      background: var(--exito);
-      color: var(--blanco);
+      background: #fdf6e3;
+      color: #7a5500;
+      border-color: #e0c870;
     }
     .estado-proximo {
-      background: var(--info);
-      color: var(--blanco);
+      background: #f0f4fd;
+      color: #1a3a7a;
+      border-color: #a0b8e0;
+    }
+    .estado-vencido {
+      background: #fdf0f0;
+      color: var(--rojo);
+      border-color: #e0a0a0;
+    }
+    .estado-realizado {
+      background: #f0faf4;
+      color: #1a5c30;
+      border-color: #a0d8b0;
     }
 
-    /* ── MODALS ── */
-    .modal {
+    .acciones { display: flex; gap: 5px; }
+    .btn-sm {
+      padding: 4px 12px;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 32px;
+      color: var(--texto-ter);
+    }
+    .empty-state svg { width: 36px; height: 36px; margin-bottom: 16px; opacity: 0.25; color: var(--negro); }
+    .empty-state p { font-family: 'Cormorant SC', serif; font-size: 18px; letter-spacing: 2px; color: var(--texto-sec); margin-bottom: 8px; }
+    .empty-state small { font-family: 'Inconsolata', monospace; font-size: 11px; color: var(--texto-ter); letter-spacing: 1px; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
+      inset: 0;
+      background: rgba(10,10,10,0.6);
       z-index: 1000;
       align-items: center;
       justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(3px);
     }
-    .modal.visible {
-      display: flex;
-    }
-    .modal-content {
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
       background: var(--blanco);
       border: 1px solid var(--borde);
-      border-radius: 4px;
-      width: 90%;
-      max-width: 600px;
+      width: 100%;
+      max-width: 620px;
       max-height: 90vh;
       overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.2);
     }
     .modal-header {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--borde);
+      background: var(--negro);
+      color: var(--blanco);
+      padding: 18px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .modal-header h2 {
       font-family: 'Cormorant SC', serif;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 1px;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      color: #fff;
+    }
+    .modal-header h2 span {
+      color: rgba(255,255,255,0.5);
+      font-family: 'Inconsolata', monospace;
+      font-size: 13px;
     }
     .modal-close {
       background: none;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.5);
       cursor: pointer;
-      padding: 8px;
+      width: 28px;
+      height: 28px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.4); }
+    .modal-body { padding: 28px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid.full { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.span2 { grid-column: span 2; }
+    label {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      font-weight: 500;
       color: var(--texto-ter);
-    }
-    .modal-close:hover {
-      color: var(--negro);
-    }
-    .modal-body {
-      padding: 24px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    .form-group label {
-      display: block;
-      font-family: 'Inconsolata', monospace;
-      font-size: 11px;
-      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--texto-sec);
-      margin-bottom: 8px;
+      letter-spacing: 2px;
     }
-    .form-control {
-      width: 100%;
-      font-family: 'Inconsolata', monospace;
-      font-size: 12px;
-      padding: 10px 12px;
+    input[type="text"], input[type="date"], input[type="time"], textarea, select {
+      padding: 9px 25px;
       border: 1px solid var(--borde);
-      background: var(--blanco);
+      font-size: 14px;
+      font-family: 'Cormorant Garamond', serif;
+      background: var(--fondo);
+      color: var(--negro);
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
       outline: none;
-    }
-    .form-control:focus {
       border-color: var(--negro);
+      background: var(--blanco);
     }
-    select.form-control {
-      cursor: pointer;
-    }
-    textarea.form-control {
-      resize: vertical;
-      min-height: 80px;
-    }
+    textarea { resize: vertical; min-height: 80px; }
+
     .modal-footer {
-      padding: 20px 24px;
-      border-top: 1px solid var(--borde);
+      padding: 16px 24px;
+      border-top: 1px solid var(--borde-suave);
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
+      gap: 10px;
+      background: var(--fondo-alt);
     }
 
     /* ── TOAST ── */
     .toast {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 12px 20px;
-      border-radius: 4px;
+      bottom: 28px;
+      right: 28px;
+      background: var(--negro);
+      color: var(--blanco);
+      padding: 12px 20px 12px 16px;
       font-family: 'Inconsolata', monospace;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 500;
-      letter-spacing: 0.5px;
-      z-index: 2000;
-      transform: translateX(400px);
-      transition: transform 0.3s ease;
+      letter-spacing: 1px;
+      border-left: 3px solid rgba(255,255,255,0.3);
+      transform: translateX(120%);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      max-width: 340px;
     }
-    .toast.show {
-      transform: translateX(0);
-    }
-    .toast.success {
-      background: var(--exito);
-      color: var(--blanco);
-    }
-    .toast.error {
-      background: var(--rojo);
-      color: var(--blanco);
-    }
-    .toast.info {
-      background: var(--info);
-      color: var(--blanco);
-    }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast.error   { border-left-color: var(--rojo-clar); }
+    .toast.success { border-left-color: var(--verde-clar); }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--fondo); }
+    ::-webkit-scrollbar-thumb { background: var(--borde); }
+    ::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-      .controls {
+      .toolbar {
         flex-direction: column;
         align-items: stretch;
       }
@@ -425,7 +524,13 @@
         width: 100%;
       }
       .stats-bar {
-        grid-template-columns: repeat(2, 1fr);
+        flex-wrap: wrap;
+      }
+      .stat {
+        flex: 1 1 50%;
+        margin-right: 0;
+        border-right: none;
+        border-bottom: 1px solid var(--borde-suave);
       }
       .table-wrap {
         margin: 0 24px;
@@ -441,95 +546,115 @@
   <!-- ── HEADER ──────────────────────────────────────────────────────── -->
   <header>
     <div class="header-brand">
+      <img src="LOGO.png" style="width:70px;height:70px;object-fit:contain;">
+      <div class="header-divider"></div>
       <div class="header-text">
-        <h1>MANTENIMIENTOS PREVENTIVOS</h1>
+        <h1>Mantenimientos Preventivos</h1>
         <span>SISTEMA DE GESTIÓN</span>
       </div>
-      <div class="header-divider"></div>
-      <div class="header-doc-ref">DOC-PRV-001</div>
     </div>
-    <nav class="header-nav">
-      <a href="https://aminsamtto.github.io/Orden-de-trabajo/index.html" class="nav-link">Órdenes</a>
-      <a href="index.html" class="nav-link active">Preventivos</a>
-      <a href="#" class="nav-link">Cerrar Sesión</a>
-    </nav>
+    <div class="header-right">
+      <div class="header-nav">
+        <a href="https://aminsamtto.github.io/Orden-de-trabajo/index.html" class="nav-link">Órdenes</a>
+        <a href="index.html" class="nav-link active">Preventivos</a>
+      </div>
+      <div class="header-doc-ref">AM-MA-FO-7.1.3.-08</div>
+    </div>
   </header>
 
-  <!-- ── CONTROLS ───────────────────────────────────────────────────── -->
-  <div class="controls">
-    <div class="filtros">
-      <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
-      <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
-      <button class="filtro-btn" onclick="filtrar('proximo', this)">Próximos</button>
-      <button class="filtro-btn" onclick="filtrar('vencido', this)">Vencidos</button>
-      <button class="filtro-btn" onclick="filtrar('realizado', this)">Realizados</button>
-    </div>
-    
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/>
-        <path d="m21 21-4.35-4.35"/>
-      </svg>
-      <input type="text" class="search-input" placeholder="Buscar por equipo, centro o técnico..." onkeyup="buscar(this.value)">
-    </div>
-    
-    <button class="btn btn-primary" onclick="abrirModalNuevo()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      Nuevo Preventivo
-    </button>
-  </div>
-
-  <!-- ── STATS ─────────────────────────────────────────────────────── -->
+  <!-- ── STATS BAR ───────────────────────────────────────────────────── -->
   <div class="stats-bar">
-    <div class="stat-card">
+    <div class="stat">
       <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 11l3 3L22 4"/>
-          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
       </div>
-      <div class="stat-info">
-        <h3 id="stat-total">0</h3>
-        <span>Total Preventivos</span>
+      <div class="stat-data">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Total</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat">
       <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9"/><path d="M12 8v4l2 2"/>
         </svg>
       </div>
-      <div class="stat-info">
-        <h3 id="stat-pendientes">0</h3>
-        <span>Pendientes</span>
+      <div class="stat-data">
+        <div class="stat-num amarillo" id="stat-pendientes">0</div>
+        <div class="stat-label">Pendientes</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat">
       <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M12 2L2 7l10 5 10-5-10-5z"/>
           <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
         </svg>
       </div>
-      <div class="stat-info">
-        <h3 id="stat-proximos">0</h3>
-        <span>Próximos 7 días</span>
+      <div class="stat-data">
+        <div class="stat-num verde" id="stat-proximos">0</div>
+        <div class="stat-label">Próximos 7 días</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat">
       <div class="stat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
           <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
       </div>
-      <div class="stat-info">
-        <h3 id="stat-vencidos">0</h3>
-        <span>Vencidos</span>
+      <div class="stat-data">
+        <div class="stat-num rojo" id="stat-vencidos">0</div>
+        <div class="stat-label">Vencidos</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="filtros">
+        <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
+        <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
+        <button class="filtro-btn" onclick="filtrar('proximo', this)">Próximos</button>
+        <button class="filtro-btn" onclick="filtrar('vencido', this)">Vencidos</button>
+        <button class="filtro-btn" onclick="filtrar('realizado', this)">Realizados</button>
+      </div>
+    </div>
+    
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
+    </div>
+    
+    <a href="#" class="btn btn-primary" onclick="abrirModalNuevo()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Nuevo Preventivo
+    </a>
+  </div>
+
+  <!-- ── FILTROS DE TABLA ───────────────────────────────────────────── -->
+  <div class="filtros-tabla">
+    <div class="filtros-tabla-left">
+      <div class="filtros">
+        <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
+        <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
+        <button class="filtro-btn" onclick="filtrar('proximo', this)">Próximos</button>
+        <button class="filtro-btn" onclick="filtrar('vencido', this)">Vencidos</button>
+        <button class="filtro-btn" onclick="filtrar('realizado', this)">Realizados</button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
     </div>
   </div>
 
@@ -555,103 +680,109 @@
   </div>
 
   <!-- ── MODAL NUEVO ───────────────────────────────────────────────── -->
-  <div class="modal" id="modal-nuevo">
-    <div class="modal-content">
+  <div class="modal-overlay" id="modal-nuevo">
+    <div class="modal">
       <div class="modal-header">
         <h2>Nuevo Mantenimiento Preventivo</h2>
-        <button class="modal-close" onclick="cerrarModal('modal-nuevo')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
+        <button class="modal-close" onclick="cerrarModal('modal-nuevo')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <label for="p-equipo">Equipo *</label>
-          <input type="text" id="p-equipo" class="form-control" placeholder="Nombre del equipo">
-        </div>
-        <div class="form-group">
-          <label for="p-centro">Centro de Negocio *</label>
-          <select id="p-centro" class="form-control">
-            <option value="">Seleccionar...</option>
-            <option value="Zinc">Zinc</option>
-            <option value="Cromo">Cromo</option>
-            <option value="Doblado">Doblado</option>
-            <option value="Oficinas">Oficinas</option>
-            <option value="Pretratamiento">Pretratamiento</option>
-            <option value="Tratamiento">Tratamiento</option>
-            <option value="Andenes">Andenes</option>
-            <option value="Laboratorio">Laboratorio</option>
-            <option value="Obra Civil">Obra Civil</option>
-            <option value="Área Periférica">Área Periférica</option>
-            <option value="Otros">Otros</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="p-frecuencia">Frecuencia *</label>
-          <select id="p-frecuencia" class="form-control">
-            <option value="">Seleccionar...</option>
-            <option value="Semanal">Semanal</option>
-            <option value="Quincenal">Quincenal</option>
-            <option value="Mensual">Mensual</option>
-            <option value="Bimestral">Bimestral</option>
-            <option value="Trimestral">Trimestral</option>
-            <option value="Semestral">Semestral</option>
-            <option value="Anual">Anual</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="p-ultimo">Último Mantenimiento *</label>
-          <input type="date" id="p-ultimo" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="p-tecnico">Técnico Asignado</label>
-          <input type="text" id="p-tecnico" class="form-control" placeholder="Nombre del técnico">
-        </div>
-        <div class="form-group">
-          <label for="p-observaciones">Observaciones</label>
-          <textarea id="p-observaciones" class="form-control" placeholder="Notas adicionales..."></textarea>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="p-equipo">Equipo *</label>
+            <input type="text" id="p-equipo" placeholder="Nombre del equipo">
+          </div>
+          <div class="form-group">
+            <label for="p-centro">Centro de Negocio *</label>
+            <select id="p-centro">
+              <option value="">Seleccionar...</option>
+              <option value="Zinc">Zinc</option>
+              <option value="Cromo">Cromo</option>
+              <option value="Doblado">Doblado</option>
+              <option value="Oficinas">Oficinas</option>
+              <option value="Pretratamiento">Pretratamiento</option>
+              <option value="Tratamiento">Tratamiento</option>
+              <option value="Andenes">Andenes</option>
+              <option value="Laboratorio">Laboratorio</option>
+              <option value="Obra Civil">Obra Civil</option>
+              <option value="Área Periférica">Área Periférica</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="p-frecuencia">Frecuencia *</label>
+            <select id="p-frecuencia">
+              <option value="">Seleccionar...</option>
+              <option value="Semanal">Semanal</option>
+              <option value="Quincenal">Quincenal</option>
+              <option value="Mensual">Mensual</option>
+              <option value="Bimestral">Bimestral</option>
+              <option value="Trimestral">Trimestral</option>
+              <option value="Semestral">Semestral</option>
+              <option value="Anual">Anual</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="p-ultimo">Último Mantenimiento *</label>
+            <input type="date" id="p-ultimo">
+          </div>
+          <div class="form-group">
+            <label for="p-tecnico">Técnico Asignado</label>
+            <input type="text" id="p-tecnico" placeholder="Nombre del técnico">
+          </div>
+          <div class="form-group span2">
+            <label for="p-observaciones">Observaciones</label>
+            <textarea id="p-observaciones" placeholder="Notas adicionales..."></textarea>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="cerrarModal('modal-nuevo')">Cancelar</button>
-        <button class="btn btn-primary" onclick="guardarPreventivo()">Guardar</button>
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-nuevo')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarPreventivo()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Guardar
+        </button>
       </div>
     </div>
   </div>
 
   <!-- ── MODAL COMPLETAR ───────────────────────────────────────────── -->
-  <div class="modal" id="modal-completar">
-    <div class="modal-content">
+  <div class="modal-overlay" id="modal-completar">
+    <div class="modal">
       <div class="modal-header">
         <h2>Completar Mantenimiento</h2>
-        <button class="modal-close" onclick="cerrarModal('modal-completar')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        </button>
+        <button class="modal-close" onclick="cerrarModal('modal-completar')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <label for="c-fecha-realizado">Fecha de Realización *</label>
-          <input type="date" id="c-fecha-realizado" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="c-trabajo">Trabajo Realizado *</label>
-          <textarea id="c-trabajo" class="form-control" placeholder="Descripción del trabajo realizado..."></textarea>
-        </div>
-        <div class="form-group">
-          <label for="c-proximo-calculado">Próximo Mantenimiento (Calculado)</label>
-          <input type="date" id="c-proximo-calculado" class="form-control" readonly>
-        </div>
-        <div class="form-group">
-          <label for="c-proximo-manual">Próximo Mantenimiento (Manual)</label>
-          <input type="date" id="c-proximo-manual" class="form-control" placeholder="Sobrescribir fecha calculada...">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="c-fecha-realizado">Fecha de Realización *</label>
+            <input type="date" id="c-fecha-realizado">
+          </div>
+          <div class="form-group">
+            <label for="c-proximo-calculado">Próximo Mantenimiento (Calculado)</label>
+            <input type="date" id="c-proximo-calculado" readonly>
+          </div>
+          <div class="form-group span2">
+            <label for="c-trabajo">Trabajo Realizado *</label>
+            <textarea id="c-trabajo" placeholder="Descripción del trabajo realizado..."></textarea>
+          </div>
+          <div class="form-group span2">
+            <label for="c-proximo-manual">Próximo Mantenimiento (Manual)</label>
+            <input type="date" id="c-proximo-manual" placeholder="Sobrescribir fecha calculada...">
+          </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="cerrarModal('modal-completar')">Cancelar</button>
-        <button class="btn btn-primary" onclick="completarPreventivo()">Completar</button>
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-completar')">Cancelar</button>
+        <button class="btn btn-success" onclick="completarPreventivo()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Completar
+        </button>
       </div>
     </div>
   </div>
@@ -779,10 +910,10 @@ function determinarEstado(fechaProximo) {
 
 function obtenerEstadoBadge(estado) {
     const badges = {
-        'pendiente': '<span class="estado-badge estado-pendiente">Pendiente</span>',
-        'proximo': '<span class="estado-badge estado-proximo">Próximo</span>',
-        'vencido': '<span class="estado-badge estado-vencido">Vencido</span>',
-        'realizado': '<span class="estado-badge estado-realizado">Realizado</span>'
+        'pendiente': '<span class="badge estado-pendiente">Pendiente</span>',
+        'proximo': '<span class="badge estado-proximo">Próximo</span>',
+        'vencido': '<span class="badge estado-vencido">Vencido</span>',
+        'realizado': '<span class="badge estado-realizado">Realizado</span>'
     };
     return badges[estado] || badges['pendiente'];
 }
@@ -836,8 +967,14 @@ function renderizarTabla() {
     if (filtrados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align: center; padding: 40px; color: var(--texto-ter);">
-                    No se encontraron mantenimientos${filtroActual !== 'todos' ? ' con el filtro seleccionado' : ''}${terminoBusqueda ? ' para la búsqueda "' + terminoBusqueda + '"' : ''}
+                <td colspan="8">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>No se encontraron mantenimientos</p>
+                        <small>${filtroActual !== 'todos' ? 'CON EL FILTRO SELECCIONADO' : 'HAZ CLIC EN "NUEVO PREVENTIVO" PARA COMENZAR'}${terminoBusqueda ? ' PARA LA BÚSQUEDA "' + terminoBusqueda + '"' : ''}</small>
+                    </div>
                 </td>
             </tr>
         `;
@@ -854,12 +991,10 @@ function renderizarTabla() {
             <td>${mantenimiento.tecnico || '-'}</td>
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
-                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 10px;" onclick="abrirModalCompletar(${mantenimiento.id})">
-                    Completar
-                </button>
-                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 10px; margin-left: 4px;" onclick="eliminarMantenimiento(${mantenimiento.id})">
-                    Eliminar
-                </button>
+              <div class="acciones">
+                <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar(${mantenimiento.id})">Completar</button>
+                <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento(${mantenimiento.id})">Eliminar</button>
+              </div>
             </td>
         </tr>
     `).join('');
