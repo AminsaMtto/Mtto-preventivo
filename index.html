@@ -785,7 +785,7 @@
 // ===== CONFIGURACIÓN =====
 const CONFIG = {
     // Reemplazar con tu URL de Google Apps Script Web App
-    GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxcv-vkktmTyKZPGRdMcUCo46P0tz-MwfC_vC4tq961mOb7nmIp2HosMkK1qskomTJvOQ/exec',
+    GOOGLE_APPS_SCRIPT_URL: 'TU_WEB_APP_URL_AQUI',
     // Mapeo de frecuencia a días
     FRECUENCIAS: {
         'Semanal': 7,
@@ -824,14 +824,32 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===== FUNCIONES DE GOOGLE APPS SCRIPT =====
 async function cargarMantenimientos() {
     try {
+        // Verificar que la URL esté configurada
+        if (CONFIG.GOOGLE_APPS_SCRIPT_URL === 'TU_WEB_APP_URL_AQUI') {
+            mostrarToast('Por favor configura tu Google Apps Script URL primero', 'warning');
+            console.log('URL no configurada. Reemplaza "TU_WEB_APP_URL_AQUI" con tu URL real');
+            mantenimientos = [];
+            renderizarTabla();
+            actualizarEstadisticas();
+            return;
+        }
+        
+        console.log('Intentando cargar desde:', CONFIG.GOOGLE_APPS_SCRIPT_URL);
         const url = `${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getAll`;
+        console.log('URL completa:', url);
+        
         const response = await fetch(url);
+        console.log('Respuesta status:', response.status);
+        console.log('Respuesta ok:', response.ok);
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
         }
         
         const result = await response.json();
+        console.log('Respuesta JSON:', result);
         
         if (result.success) {
             // Convertir datos de Google Apps Script al formato del sistema
@@ -847,6 +865,7 @@ async function cargarMantenimientos() {
                 estado: row.Estado || 'pendiente'
             }));
             
+            console.log('Mantenimientos cargados:', mantenimientos.length);
             renderizarTabla();
             actualizarEstadisticas();
             mostrarToast(`Se cargaron ${mantenimientos.length} mantenimientos desde Google Sheets`, 'success');
@@ -854,8 +873,14 @@ async function cargarMantenimientos() {
             throw new Error(result.error || 'Error desconocido');
         }
     } catch (error) {
-        console.error('Error al cargar desde Google Apps Script:', error);
+        console.error('Error completo al cargar desde Google Apps Script:', error);
         mostrarToast('Error al cargar datos: ' + error.message, 'error');
+        
+        // Mostrar ayuda para configuración
+        if (error.message.includes('Failed to fetch')) {
+            mostrarToast('Verifica: 1) URL correcta 2) Web App desplegada 3) Acceso "Cualquier persona"', 'error');
+        }
+        
         mantenimientos = [];
         renderizarTabla();
         actualizarEstadisticas();
