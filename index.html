@@ -953,7 +953,6 @@
           <th>Frecuencia</th>
           <th>Último Mantenimiento</th>
           <th>Próximo Mantenimiento</th>
-          <th>Técnico</th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
@@ -997,11 +996,7 @@
         <thead>
           <tr>
             <th>Equipo</th>
-            <th>Total Mantenimientos</th>
-            <th>Realizados</th>
-            <th>Pendientes</th>
-            <th>Último Realizado</th>
-            <th>Próximo Programado</th>
+            <th>Fecha de Realización</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -1663,7 +1658,7 @@ function renderizarTabla() {
     if (filtrados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9">
+                <td colspan="8">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -1685,13 +1680,11 @@ function renderizarTabla() {
             <td>${mantenimiento.frecuencia}</td>
             <td>${formatearFecha(mantenimiento.ultimoMantenimiento)}</td>
             <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
-            <td>${mantenimiento.tecnico || '-'}</td>
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
               <div class="acciones">
                 <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar(${mantenimiento.id})">Completar</button>
                 <button class="btn btn-warning btn-sm" onclick="abrirModalModificar(${mantenimiento.id})">Modificar</button>
-                <button class="btn btn-info btn-sm" onclick="abrirModalVer(${mantenimiento.id})">Ver</button>
                 <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento(${mantenimiento.id})">Eliminar</button>
               </div>
             </td>
@@ -1840,28 +1833,18 @@ function cargarHistorial() {
     mantenimientos.forEach(mantenimiento => {
         if (!historialPorEquipo[mantenimiento.equipo]) {
             historialPorEquipo[mantenimiento.equipo] = {
-                total: 0,
-                realizados: 0,
-                pendientes: 0,
-                ultimoRealizado: null,
-                proximoProgramado: null,
+                fechaRealizacion: null,
                 mantenimientos: []
             };
         }
         
         const equipo = historialPorEquipo[mantenimiento.equipo];
-        equipo.total++;
         equipo.mantenimientos.push(mantenimiento);
         
+        // Solo guardar la fecha de realización más reciente
         if (mantenimiento.estado === 'realizado') {
-            equipo.realizados++;
-            if (!equipo.ultimoRealizado || new Date(mantenimiento.ultimoMantenimiento) > new Date(equipo.ultimoRealizado)) {
-                equipo.ultimoRealizado = mantenimiento.ultimoMantenimiento;
-            }
-        } else {
-            equipo.pendientes++;
-            if (!equipo.proximoProgramado || new Date(mantenimiento.proximoMantenimiento) < new Date(equipo.proximoProgramado)) {
-                equipo.proximoProgramado = mantenimiento.proximoMantenimiento;
+            if (!equipo.fechaRealizacion || new Date(mantenimiento.ultimoMantenimiento) > new Date(equipo.fechaRealizacion)) {
+                equipo.fechaRealizacion = mantenimiento.ultimoMantenimiento;
             }
         }
     });
@@ -1919,7 +1902,7 @@ function renderizarTablaHistorial(historialPorEquipo) {
     if (historialFiltrado.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7">
+                <td colspan="3">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -1936,11 +1919,7 @@ function renderizarTablaHistorial(historialPorEquipo) {
     tbody.innerHTML = historialFiltrado.map(([equipo, datos]) => `
         <tr>
             <td><strong>${equipo}</strong></td>
-            <td>${datos.total}</td>
-            <td><span class="badge estado-realizado">${datos.realizados}</span></td>
-            <td><span class="badge estado-pendiente">${datos.pendientes}</span></td>
-            <td>${datos.ultimoRealizado ? formatearFecha(datos.ultimoRealizado) : '-'}</td>
-            <td>${datos.proximoProgramado ? formatearFecha(datos.proximoProgramado) : '-'}</td>
+            <td>${datos.fechaRealizacion ? formatearFecha(datos.fechaRealizacion) : 'Sin realizaciones'}</td>
             <td>
               <div class="acciones">
                 <button class="btn btn-info btn-sm" onclick="verDetallesEquipo('${equipo}')">Ver Detalles</button>
