@@ -304,12 +304,7 @@
                 }
             }
 
-            // FECHA actual
-            const fechaActual = new Date().toLocaleDateString('es-ES');
-            const fechaCell = formato.querySelector('tr:first-child td:last-child');
-            if (fechaCell && fechaCell.textContent.includes('FECHA:')) {
-                fechaCell.innerHTML = `FECHA: <strong>${fechaActual}</strong>`;
-            }
+            // FECHA - No autocompletar, dejar vacío para que el usuario la llene
 
             // TIEMPO REQUERIDO (usar frecuencia)
             if (frecuencia) {
