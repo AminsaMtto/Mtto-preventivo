@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mantenimientos Preventivos - AMINSA</title>
+  <title>Sistema de Mantenimientos Preventivos - AMINSA</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <link rel="icon" type="image/png" href="LOGO.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -832,12 +832,14 @@
     <table>
       <thead>
         <tr>
+          <th>ID</th>
           <th>Equipo</th>
           <th>Centro</th>
           <th>Frecuencia</th>
           <th>Último Mantenimiento</th>
           <th>Próximo Mantenimiento</th>
           <th>Técnico</th>
+          <th>Trabajo Realizado</th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
@@ -900,8 +902,8 @@
             <input type="text" id="p-tecnico" placeholder="Nombre del técnico">
           </div>
           <div class="form-group span2">
-            <label for="p-observaciones">Observaciones</label>
-            <textarea id="p-observaciones" placeholder="Notas adicionales..."></textarea>
+            <label for="p-trabajo-realizado">Trabajo Realizado</label>
+            <textarea id="p-trabajo-realizado" placeholder="Descripción del trabajo realizado..."></textarea>
           </div>
         </div>
       </div>
@@ -956,7 +958,76 @@
     </div>
   </div>
 
-  <!-- ── TOAST ─────────────────────────────────────────────────────── -->
+  <!-- ── MODAL MODIFICAR ───────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-modificar">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Modificar Mantenimiento</h2>
+        <button class="modal-close" onclick="cerrarModal('modal-modificar')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="m-equipo">Equipo *</label>
+            <input type="text" id="m-equipo" placeholder="Nombre del equipo">
+          </div>
+          <div class="form-group">
+            <label for="m-centro">Centro de Negocio *</label>
+            <select id="m-centro">
+              <option value="">Seleccionar...</option>
+              <option value="Zinc">Zinc</option>
+              <option value="Cromo">Cromo</option>
+              <option value="Doblado">Doblado</option>
+              <option value="Oficinas">Oficinas</option>
+              <option value="Pretratamiento">Pretratamiento</option>
+              <option value="Tratamiento">Tratamiento</option>
+              <option value="Andenes">Andenes</option>
+              <option value="Laboratorio">Laboratorio</option>
+              <option value="Obra Civil">Obra Civil</option>
+              <option value="Área Periférica">Área Periférica</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="m-frecuencia">Frecuencia *</label>
+            <select id="m-frecuencia">
+              <option value="">Seleccionar...</option>
+              <option value="Semanal">Semanal</option>
+              <option value="Quincenal">Quincenal</option>
+              <option value="Mensual">Mensual</option>
+              <option value="Bimestral">Bimestral</option>
+              <option value="Trimestral">Trimestral</option>
+              <option value="Semestral">Semestral</option>
+              <option value="Anual">Anual</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="m-ultimo">Último Mantenimiento *</label>
+            <input type="date" id="m-ultimo">
+          </div>
+          <div class="form-group">
+            <label for="m-tecnico">Técnico Asignado</label>
+            <input type="text" id="m-tecnico" placeholder="Nombre del técnico">
+          </div>
+          <div class="form-group span2">
+            <label for="m-trabajo-realizado">Trabajo Realizado</label>
+            <textarea id="m-trabajo-realizado" placeholder="Descripción del trabajo realizado..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-modificar')">Cancelar</button>
+        <button class="btn btn-primary" onclick="modificarPreventivo()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14M4 12h4"/>
+          </svg>
+          Modificar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ─────────────────────────────────────────────── -->
   <div class="toast" id="toast"></div>
 
   <!-- ── SCRIPTS ───────────────────────────────────────────────────── -->
@@ -1281,7 +1352,7 @@ function renderizarTabla() {
     if (filtrados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8">
+                <td colspan="10">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -1297,17 +1368,19 @@ function renderizarTabla() {
     
     tbody.innerHTML = filtrados.map(mantenimiento => `
         <tr>
+            <td><strong>${mantenimiento.id}</strong></td>
             <td><strong>${mantenimiento.equipo}</strong></td>
             <td>${mantenimiento.centro}</td>
             <td>${mantenimiento.frecuencia}</td>
             <td>${formatearFecha(mantenimiento.ultimoMantenimiento)}</td>
             <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
             <td>${mantenimiento.tecnico || '-'}</td>
+            <td>${mantenimiento.trabajoRealizado || mantenimiento.observaciones || '-'}</td>
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
               <div class="acciones">
-                <button class="btn btn-ghost btn-sm" onclick="imprimirFormatoIndividual(${mantenimiento.id})">Imprimir</button>
                 <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar(${mantenimiento.id})">Completar</button>
+                <button class="btn btn-warning btn-sm" onclick="abrirModalModificar(${mantenimiento.id})">Modificar</button>
                 <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento(${mantenimiento.id})">Eliminar</button>
               </div>
             </td>
@@ -1370,6 +1443,30 @@ function abrirModalCompletar(id) {
     document.getElementById('modal-completar').classList.add('visible');
 }
 
+function abrirModalModificar(id) {
+    mantenimientoActual = mantenimientos.find(m => m.id === id);
+    if (!mantenimientoActual) return;
+    
+    // Llenar formulario con datos existentes
+    document.getElementById('m-equipo').value = mantenimientoActual.equipo || '';
+    document.getElementById('m-centro').value = mantenimientoActual.centro || '';
+    document.getElementById('m-frecuencia').value = mantenimientoActual.frecuencia || '';
+    document.getElementById('m-ultimo').value = mantenimientoActual.ultimoMantenimiento || '';
+    document.getElementById('m-tecnico').value = mantenimientoActual.tecnico || '';
+    document.getElementById('m-trabajo-realizado').value = mantenimientoActual.trabajoRealizado || mantenimientoActual.observaciones || '';
+    
+    document.getElementById('modal-modificar').classList.add('visible');
+}
+
+function limpiarFormularioModificar() {
+    document.getElementById('m-equipo').value = '';
+    document.getElementById('m-centro').value = '';
+    document.getElementById('m-frecuencia').value = '';
+    document.getElementById('m-ultimo').value = '';
+    document.getElementById('m-tecnico').value = '';
+    document.getElementById('m-trabajo-realizado').value = '';
+}
+
 function cerrarModal(modalId) {
     document.getElementById(modalId).classList.remove('visible');
     mantenimientoActual = null;
@@ -1381,7 +1478,7 @@ function limpiarFormularioNuevo() {
     document.getElementById('p-frecuencia').value = '';
     document.getElementById('p-ultimo').value = '';
     document.getElementById('p-tecnico').value = '';
-    document.getElementById('p-observaciones').value = '';
+    document.getElementById('p-trabajo-realizado').value = '';
 }
 
 // ===== FUNCIONES DE CRUD =====
@@ -1391,7 +1488,7 @@ async function guardarPreventivo() {
     const frecuencia = document.getElementById('p-frecuencia').value;
     const ultimo = document.getElementById('p-ultimo').value;
     const tecnico = document.getElementById('p-tecnico').value.trim();
-    const observaciones = document.getElementById('p-observaciones').value.trim();
+    const trabajoRealizado = document.getElementById('p-trabajo-realizado').value.trim();
     
     // Validaciones
     if (!equipo || !centro || !frecuencia || !ultimo) {
@@ -1412,7 +1509,7 @@ async function guardarPreventivo() {
         ultimoMantenimiento: ultimo,
         proximoMantenimiento: proximo,
         tecnico,
-        observaciones,
+        trabajoRealizado,
         estado
     };
     
@@ -1435,7 +1532,7 @@ async function completarPreventivo() {
     if (!mantenimientoActual) return;
     
     const fechaRealizado = document.getElementById('c-fecha-realizado').value;
-    const trabajo = document.getElementById('c-trabajo').value.trim();
+    const trabajoRealizado = document.getElementById('c-trabajo').value.trim();
     const proximoManual = document.getElementById('c-proximo-manual').value;
     
     // Validaciones
@@ -1449,7 +1546,7 @@ async function completarPreventivo() {
     if (index === -1) return;
     
     mantenimientos[index].ultimoMantenimiento = fechaRealizado;
-    mantenimientos[index].observaciones += '\n\n' + new Date().toLocaleDateString('es-ES') + ' - Trabajo realizado: ' + trabajo;
+    mantenimientos[index].trabajoRealizado = trabajo;
     
     if (proximoManual) {
         mantenimientos[index].proximoMantenimiento = proximoManual;
@@ -1965,6 +2062,7 @@ window.imprimirFormatoIndividual = imprimirFormatoIndividual;
 window.cargarMantenimientos = cargarMantenimientos;
 window.actualizarGraficas = actualizarGraficas;
 window.actualizarGraficaPorcentajes = actualizarGraficaPorcentajes;
+window.abrirModalModificar = abrirModalModificar;
   </script>
 </body>
 </html>
