@@ -904,14 +904,24 @@ async function sincronizarConGoogleSheets() {
 
 async function cargarDesdeGoogleSheets() {
     try {
+        console.log('Intentando cargar desde Google Sheets...');
+        console.log('Spreadsheet ID:', CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID);
+        console.log('API Key:', CONFIG.GOOGLE_SHEETS.API_KEY ? 'Configurada' : 'No configurada');
+        
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID}/values/${CONFIG.GOOGLE_SHEETS.RANGE}?key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
+        console.log('URL de solicitud:', url);
         
         const response = await fetch(url);
+        console.log('Respuesta status:', response.status);
+        
         if (!response.ok) {
-            throw new Error('Error al cargar datos desde Google Sheets');
+            const errorData = await response.json();
+            console.error('Error detallado:', errorData);
+            throw new Error(`Error ${response.status}: ${errorData.error?.message || 'Error al cargar datos'}`);
         }
 
         const data = await response.json();
+        console.log('Datos recibidos:', data);
         
         if (data.values && data.values.length > 1) {
             // Convertir datos de Google Sheets al formato local (omitir encabezado)
@@ -927,21 +937,25 @@ async function cargarDesdeGoogleSheets() {
                 estado: row[8] || 'pendiente'
             }));
 
+            console.log('Datos convertidos:', datosDesdeSheets);
+            
             // Actualizar datos en memoria
             mantenimientos = datosDesdeSheets;
             renderizarTabla();
             actualizarEstadisticas();
             
-            mostrarToast('Datos cargados desde Google Sheets', 'success');
+            mostrarToast(`Se cargaron ${datosDesdeSheets.length} mantenimientos desde Google Sheets`, 'success');
         } else {
             // Si no hay datos, inicializar vacío
+            console.log('No hay datos en Google Sheets, inicializando vacío');
             mantenimientos = [];
             renderizarTabla();
             actualizarEstadisticas();
+            mostrarToast('No hay datos en Google Sheets', 'info');
         }
     } catch (error) {
-        console.error('Error al cargar desde Google Sheets:', error);
-        mostrarToast('Error al cargar datos desde Google Sheets', 'error');
+        console.error('Error completo al cargar desde Google Sheets:', error);
+        mostrarToast(`Error: ${error.message}`, 'error');
         // Si falla, inicializar vacío
         mantenimientos = [];
         renderizarTabla();
@@ -1061,6 +1075,7 @@ function renderizarTabla() {
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
               <div class="acciones">
+                <button class="btn btn-ghost btn-sm" onclick="imprimirFormatoIndividual(${mantenimiento.id})">Imprimir</button>
                 <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar(${mantenimiento.id})">Completar</button>
                 <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento(${mantenimiento.id})">Eliminar</button>
               </div>
@@ -1273,6 +1288,32 @@ function imprimirFormato() {
     };
 }
 
+function imprimirFormatoIndividual(id) {
+    const mantenimiento = mantenimientos.find(m => m.id === id);
+    if (!mantenimiento) {
+        mostrarToast('Mantenimiento no encontrado', 'error');
+        return;
+    }
+
+    // Abrir el formato de impresión con parámetros
+    const params = new URLSearchParams({
+        equipo: mantenimiento.equipo,
+        centro: mantenimiento.centro,
+        frecuencia: mantenimiento.frecuencia,
+        tecnico: mantenimiento.tecnico || '',
+        observaciones: mantenimiento.observaciones || ''
+    });
+    
+    const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, '_blank');
+    
+    // Esperar a que la ventana se cargue y luego imprimir
+    ventanaImpresion.onload = function() {
+        setTimeout(() => {
+            ventanaImpresion.print();
+        }, 500);
+    };
+}
+
 function configurarListeners() {
     // Listener para calcular fecha cuando cambia la fecha de realización
     const fechaRealizado = document.getElementById('c-fecha-realizado');
@@ -1319,6 +1360,7 @@ window.guardarPreventivo = guardarPreventivo;
 window.completarPreventivo = completarPreventivo;
 window.eliminarMantenimiento = eliminarMantenimiento;
 window.imprimirFormato = imprimirFormato;
+window.imprimirFormatoIndividual = imprimirFormatoIndividual;
 window.sincronizarConGoogleSheets = sincronizarConGoogleSheets;
 window.cargarDesdeGoogleSheets = cargarDesdeGoogleSheets;
   </script>
