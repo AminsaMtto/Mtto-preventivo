@@ -631,6 +631,22 @@
       <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
     </div>
     
+    <a href="#" class="btn btn-ghost" onclick="cargarDesdeGoogleSheets()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Sincronizar
+    </a>
+    <a href="#" class="btn btn-ghost" onclick="imprimirFormato()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="6 9 6 2 18 2 18 9"/>
+        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      Imprimir Formato
+    </a>
     <a href="#" class="btn btn-primary" onclick="abrirModalNuevo()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M12 5v14M5 12h14"/>
@@ -639,25 +655,7 @@
     </a>
   </div>
 
-  <!-- ── FILTROS DE TABLA ───────────────────────────────────────────── -->
-  <div class="filtros-tabla">
-    <div class="filtros-tabla-left">
-      <div class="filtros">
-        <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
-        <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
-        <button class="filtro-btn" onclick="filtrar('proximo', this)">Próximos</button>
-        <button class="filtro-btn" onclick="filtrar('vencido', this)">Vencidos</button>
-        <button class="filtro-btn" onclick="filtrar('realizado', this)">Realizados</button>
-      </div>
-    </div>
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
-    </div>
-  </div>
-
+  
   <!-- ── TABLE ─────────────────────────────────────────────────────── -->
   <div class="table-wrap">
     <table>
@@ -794,7 +792,6 @@
   <script>
 // ===== CONFIGURACIÓN =====
 const CONFIG = {
-    STORAGE_KEY: 'mantenimientos_preventivos',
     // Mapeo de frecuencia a días
     FRECUENCIAS: {
         'Semanal': 7,
@@ -804,6 +801,12 @@ const CONFIG = {
         'Trimestral': 90,
         'Semestral': 180,
         'Anual': 365
+    },
+    // Configuración Google Sheets
+    GOOGLE_SHEETS: {
+        API_KEY: 'AIzaSyB4a_d5Z8X7h2j9K8l3m6n5o2p1q9r8s7t6', // Reemplazar con tu API key
+        SPREADSHEET_ID: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms4', // Reemplazar con tu Spreadsheet ID
+        RANGE: 'Hoja1!A:J' // Rango de celdas
     }
 };
 
@@ -831,53 +834,119 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ===== FUNCIONES DE ALMACENAMIENTO =====
-function cargarMantenimientos() {
-    const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
-    if (stored) {
-        mantenimientos = JSON.parse(stored);
-    } else {
-        // Datos de ejemplo para iniciar
-        mantenimientos = [
-            {
-                id: 1,
-                equipo: 'Compresor de Aire Principal',
-                centro: 'Zinc',
-                frecuencia: 'Mensual',
-                ultimoMantenimiento: '2024-01-15',
-                proximoMantenimiento: '2024-02-15',
-                tecnico: 'Juan Pérez',
-                observaciones: 'Revisión general y cambio de filtros',
-                estado: 'pendiente'
+async function cargarMantenimientos() {
+    // Cargar siempre desde Google Sheets
+    await cargarDesdeGoogleSheets();
+}
+
+async function guardarMantenimientos() {
+    // Guardar siempre en Google Sheets
+    await sincronizarConGoogleSheets();
+}
+
+// ===== FUNCIONES DE GOOGLE SHEETS =====
+async function sincronizarConGoogleSheets() {
+    try {
+        // Preparar datos para Google Sheets
+        const encabezado = [['ID', 'Equipo', 'Centro', 'Frecuencia', 'Ultimo Mantenimiento', 'Proximo Mantenimiento', 'Tecnico', 'Observaciones', 'Estado', 'Ultima Modificacion']];
+        const datosParaSheets = mantenimientos.map(m => [
+            m.id,
+            m.equipo,
+            m.centro,
+            m.frecuencia,
+            m.ultimoMantenimiento,
+            m.proximoMantenimiento,
+            m.tecnico || '',
+            m.observaciones || '',
+            m.estado,
+            new Date().toISOString() // Timestamp de última modificación
+        ]);
+
+        // Combinar encabezado con datos
+        const todosLosDatos = [...encabezado, ...datosParaSheets];
+
+        // Primero limpiar la hoja
+        const urlLimpiar = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID}/values/${CONFIG.GOOGLE_SHEETS.RANGE}:clear?key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
+        
+        await fetch(urlLimpiar, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
             },
-            {
-                id: 2,
-                equipo: 'Sistema de Bombeo',
-                centro: 'Cromo',
-                frecuencia: 'Trimestral',
-                ultimoMantenimiento: '2024-01-10',
-                proximoMantenimiento: '2024-04-10',
-                tecnico: 'María López',
-                observaciones: 'Inspección de sellos y lubricación',
-                estado: 'proximo'
+            body: JSON.stringify({})
+        });
+
+        // Luego escribir todos los datos
+        const urlEscribir = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID}/values/${CONFIG.GOOGLE_SHEETS.RANGE}?valueInputOption=USER_ENTERED&key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
+
+        const response = await fetch(urlEscribir, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
             },
-            {
-                id: 3,
-                equipo: 'Torre de Enfriamiento',
-                centro: 'Doblado',
-                frecuencia: 'Semestral',
-                ultimoMantenimiento: '2023-08-20',
-                proximoMantenimiento: '2024-02-20',
-                tecnico: 'Carlos Rodríguez',
-                observaciones: 'Limpieza de tuberías y revisión de bombas',
-                estado: 'vencido'
-            }
-        ];
-        guardarMantenimientos();
+            body: JSON.stringify({
+                values: todosLosDatos
+            })
+        });
+
+        if (response.ok) {
+            console.log('Datos sincronizados con Google Sheets');
+            mostrarToast('Datos guardados en Google Sheets', 'success');
+        } else {
+            console.error('Error al sincronizar con Google Sheets:', await response.text());
+            mostrarToast('Error al guardar en Google Sheets', 'error');
+        }
+    } catch (error) {
+        console.error('Error de conexión con Google Sheets:', error);
+        mostrarToast('Error de conexión con Google Sheets', 'error');
     }
 }
 
-function guardarMantenimientos() {
-    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(mantenimientos));
+async function cargarDesdeGoogleSheets() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID}/values/${CONFIG.GOOGLE_SHEETS.RANGE}?key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Error al cargar datos desde Google Sheets');
+        }
+
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+            // Convertir datos de Google Sheets al formato local (omitir encabezado)
+            const datosDesdeSheets = data.values.slice(1).map(row => ({
+                id: parseInt(row[0]) || Date.now(),
+                equipo: row[1] || '',
+                centro: row[2] || '',
+                frecuencia: row[3] || '',
+                ultimoMantenimiento: row[4] || '',
+                proximoMantenimiento: row[5] || '',
+                tecnico: row[6] || '',
+                observaciones: row[7] || '',
+                estado: row[8] || 'pendiente'
+            }));
+
+            // Actualizar datos en memoria
+            mantenimientos = datosDesdeSheets;
+            renderizarTabla();
+            actualizarEstadisticas();
+            
+            mostrarToast('Datos cargados desde Google Sheets', 'success');
+        } else {
+            // Si no hay datos, inicializar vacío
+            mantenimientos = [];
+            renderizarTabla();
+            actualizarEstadisticas();
+        }
+    } catch (error) {
+        console.error('Error al cargar desde Google Sheets:', error);
+        mostrarToast('Error al cargar datos desde Google Sheets', 'error');
+        // Si falla, inicializar vacío
+        mantenimientos = [];
+        renderizarTabla();
+        actualizarEstadisticas();
+    }
 }
 
 // ===== FUNCIONES DE CÁLCULO =====
@@ -1070,7 +1139,7 @@ function limpiarFormularioNuevo() {
 }
 
 // ===== FUNCIONES DE CRUD =====
-function guardarPreventivo() {
+async function guardarPreventivo() {
     const equipo = document.getElementById('p-equipo').value.trim();
     const centro = document.getElementById('p-centro').value;
     const frecuencia = document.getElementById('p-frecuencia').value;
@@ -1102,7 +1171,7 @@ function guardarPreventivo() {
     };
     
     mantenimientos.push(nuevoMantenimiento);
-    guardarMantenimientos();
+    await guardarMantenimientos();
     
     // Actualizar UI
     renderizarTabla();
@@ -1112,7 +1181,7 @@ function guardarPreventivo() {
     mostrarToast('Mantenimiento preventivo creado exitosamente', 'success');
 }
 
-function completarPreventivo() {
+async function completarPreventivo() {
     if (!mantenimientoActual) return;
     
     const fechaRealizado = document.getElementById('c-fecha-realizado').value;
@@ -1143,7 +1212,7 @@ function completarPreventivo() {
     
     mantenimientos[index].estado = determinarEstado(mantenimientos[index].proximoMantenimiento);
     
-    guardarMantenimientos();
+    await guardarMantenimientos();
     
     // Actualizar UI
     renderizarTabla();
@@ -1153,7 +1222,7 @@ function completarPreventivo() {
     mostrarToast('Mantenimiento completado exitosamente', 'success');
 }
 
-function eliminarMantenimiento(id) {
+async function eliminarMantenimiento(id) {
     if (!confirm('¿Estás seguro de que quieres eliminar este mantenimiento preventivo?')) {
         return;
     }
@@ -1162,7 +1231,7 @@ function eliminarMantenimiento(id) {
     if (index === -1) return;
     
     mantenimientos.splice(index, 1);
-    guardarMantenimientos();
+    await guardarMantenimientos();
     
     // Actualizar UI
     renderizarTabla();
@@ -1190,6 +1259,18 @@ function mostrarToast(mensaje, tipo = 'info') {
     setTimeout(() => {
         toast.classList.remove('show');
     }, 3000);
+}
+
+function imprimirFormato() {
+    // Abrir el formato de impresión en una nueva ventana
+    const ventanaImpresion = window.open('formato_impresion_preventivo.html', '_blank');
+    
+    // Esperar a que la ventana se cargue y luego imprimir
+    ventanaImpresion.onload = function() {
+        setTimeout(() => {
+            ventanaImpresion.print();
+        }, 500);
+    };
 }
 
 function configurarListeners() {
@@ -1237,6 +1318,9 @@ window.cerrarModal = cerrarModal;
 window.guardarPreventivo = guardarPreventivo;
 window.completarPreventivo = completarPreventivo;
 window.eliminarMantenimiento = eliminarMantenimiento;
+window.imprimirFormato = imprimirFormato;
+window.sincronizarConGoogleSheets = sincronizarConGoogleSheets;
+window.cargarDesdeGoogleSheets = cargarDesdeGoogleSheets;
   </script>
 </body>
 </html>
