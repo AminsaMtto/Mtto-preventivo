@@ -631,15 +631,7 @@
       <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
     </div>
     
-    <a href="#" class="btn btn-ghost" onclick="cargarDesdeGoogleSheets()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Sincronizar
-    </a>
-    <a href="#" class="btn btn-ghost" onclick="imprimirFormato()">
+            <a href="#" class="btn btn-ghost" onclick="imprimirFormato()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="6 9 6 2 18 2 18 9"/>
         <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
@@ -792,6 +784,8 @@
   <script>
 // ===== CONFIGURACIÓN =====
 const CONFIG = {
+    // Reemplazar con tu URL de Google Apps Script Web App
+    GOOGLE_APPS_SCRIPT_URL: 'TU_WEB_APP_URL_AQUI',
     // Mapeo de frecuencia a días
     FRECUENCIAS: {
         'Semanal': 7,
@@ -801,12 +795,6 @@ const CONFIG = {
         'Trimestral': 90,
         'Semestral': 180,
         'Anual': 365
-    },
-    // Configuración Google Sheets
-    GOOGLE_SHEETS: {
-        API_KEY: 'AIzaSyB4a_d5Z8X7h2j9K8l3m6n5o2p1q9r8s7t6', // Reemplazar con tu API key
-        SPREADSHEET_ID: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms4', // Reemplazar con tu Spreadsheet ID
-        RANGE: 'Hoja1!A:J' // Rango de celdas
     }
 };
 
@@ -833,133 +821,152 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ===== FUNCIONES DE ALMACENAMIENTO =====
+// ===== FUNCIONES DE GOOGLE APPS SCRIPT =====
 async function cargarMantenimientos() {
-    // Cargar siempre desde Google Sheets
-    await cargarDesdeGoogleSheets();
-}
-
-async function guardarMantenimientos() {
-    // Guardar siempre en Google Sheets
-    await sincronizarConGoogleSheets();
-}
-
-// ===== FUNCIONES DE GOOGLE SHEETS =====
-async function sincronizarConGoogleSheets() {
     try {
-        // Preparar datos para Google Sheets
-        const encabezado = [['ID', 'Equipo', 'Centro', 'Frecuencia', 'Ultimo Mantenimiento', 'Proximo Mantenimiento', 'Tecnico', 'Observaciones', 'Estado', 'Ultima Modificacion']];
-        const datosParaSheets = mantenimientos.map(m => [
-            m.id,
-            m.equipo,
-            m.centro,
-            m.frecuencia,
-            m.ultimoMantenimiento,
-            m.proximoMantenimiento,
-            m.tecnico || '',
-            m.observaciones || '',
-            m.estado,
-            new Date().toISOString() // Timestamp de última modificación
-        ]);
-
-        // Combinar encabezado con datos
-        const todosLosDatos = [...encabezado, ...datosParaSheets];
-
-        // Primero limpiar la hoja
-        const urlLimpiar = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID}/values/${CONFIG.GOOGLE_SHEETS.RANGE}:clear?key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
-        
-        await fetch(urlLimpiar, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({})
-        });
-
-        // Luego escribir todos los datos
-        const urlEscribir = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID}/values/${CONFIG.GOOGLE_SHEETS.RANGE}?valueInputOption=USER_ENTERED&key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
-
-        const response = await fetch(urlEscribir, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                values: todosLosDatos
-            })
-        });
-
-        if (response.ok) {
-            console.log('Datos sincronizados con Google Sheets');
-            mostrarToast('Datos guardados en Google Sheets', 'success');
-        } else {
-            console.error('Error al sincronizar con Google Sheets:', await response.text());
-            mostrarToast('Error al guardar en Google Sheets', 'error');
-        }
-    } catch (error) {
-        console.error('Error de conexión con Google Sheets:', error);
-        mostrarToast('Error de conexión con Google Sheets', 'error');
-    }
-}
-
-async function cargarDesdeGoogleSheets() {
-    try {
-        console.log('Intentando cargar desde Google Sheets...');
-        console.log('Spreadsheet ID:', CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID);
-        console.log('API Key:', CONFIG.GOOGLE_SHEETS.API_KEY ? 'Configurada' : 'No configurada');
-        
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.GOOGLE_SHEETS.SPREADSHEET_ID}/values/${CONFIG.GOOGLE_SHEETS.RANGE}?key=${CONFIG.GOOGLE_SHEETS.API_KEY}`;
-        console.log('URL de solicitud:', url);
-        
+        const url = `${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getAll`;
         const response = await fetch(url);
-        console.log('Respuesta status:', response.status);
         
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Error detallado:', errorData);
-            throw new Error(`Error ${response.status}: ${errorData.error?.message || 'Error al cargar datos'}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        const data = await response.json();
-        console.log('Datos recibidos:', data);
         
-        if (data.values && data.values.length > 1) {
-            // Convertir datos de Google Sheets al formato local (omitir encabezado)
-            const datosDesdeSheets = data.values.slice(1).map(row => ({
-                id: parseInt(row[0]) || Date.now(),
-                equipo: row[1] || '',
-                centro: row[2] || '',
-                frecuencia: row[3] || '',
-                ultimoMantenimiento: row[4] || '',
-                proximoMantenimiento: row[5] || '',
-                tecnico: row[6] || '',
-                observaciones: row[7] || '',
-                estado: row[8] || 'pendiente'
+        const result = await response.json();
+        
+        if (result.success) {
+            // Convertir datos de Google Apps Script al formato del sistema
+            mantenimientos = result.data.map(row => ({
+                id: parseInt(row.ID) || Date.now(),
+                equipo: row.Equipo || '',
+                centro: row.Centro || '',
+                frecuencia: row.Frecuencia || '',
+                ultimoMantenimiento: row['Ultimo Mantenimiento'] || '',
+                proximoMantenimiento: row['Proximo Mantenimiento'] || '',
+                tecnico: row.Tecnico || '',
+                observaciones: row.Observaciones || '',
+                estado: row.Estado || 'pendiente'
             }));
-
-            console.log('Datos convertidos:', datosDesdeSheets);
             
-            // Actualizar datos en memoria
-            mantenimientos = datosDesdeSheets;
             renderizarTabla();
             actualizarEstadisticas();
-            
-            mostrarToast(`Se cargaron ${datosDesdeSheets.length} mantenimientos desde Google Sheets`, 'success');
+            mostrarToast(`Se cargaron ${mantenimientos.length} mantenimientos desde Google Sheets`, 'success');
         } else {
-            // Si no hay datos, inicializar vacío
-            console.log('No hay datos en Google Sheets, inicializando vacío');
-            mantenimientos = [];
-            renderizarTabla();
-            actualizarEstadisticas();
-            mostrarToast('No hay datos en Google Sheets', 'info');
+            throw new Error(result.error || 'Error desconocido');
         }
     } catch (error) {
-        console.error('Error completo al cargar desde Google Sheets:', error);
-        mostrarToast(`Error: ${error.message}`, 'error');
-        // Si falla, inicializar vacío
+        console.error('Error al cargar desde Google Apps Script:', error);
+        mostrarToast('Error al cargar datos: ' + error.message, 'error');
         mantenimientos = [];
         renderizarTabla();
         actualizarEstadisticas();
+    }
+}
+
+async function guardarMantenimientos() {
+    // Los datos se guardan individualmente en las funciones CRUD
+    console.log('Sistema listo para guardar con Google Apps Script');
+}
+
+async function agregarMantenimientoGoogleSheets(mantenimiento) {
+    try {
+        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+        const params = new URLSearchParams({
+            action: 'add',
+            id: mantenimiento.id.toString(),
+            equipo: mantenimiento.equipo,
+            centro: mantenimiento.centro,
+            frecuencia: mantenimiento.frecuencia,
+            ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
+            proximoMantenimiento: mantenimiento.proximoMantenimiento,
+            tecnico: mantenimiento.tecnico,
+            observaciones: mantenimiento.observaciones,
+            estado: mantenimiento.estado
+        });
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString()
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarToast('Mantenimiento guardado en Google Sheets', 'success');
+        } else {
+            throw new Error(result.error || 'Error al guardar');
+        }
+    } catch (error) {
+        console.error('Error al guardar en Google Sheets:', error);
+        mostrarToast('Error al guardar: ' + error.message, 'error');
+    }
+}
+
+async function actualizarMantenimientoGoogleSheets(mantenimiento) {
+    try {
+        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+        const params = new URLSearchParams({
+            action: 'update',
+            id: mantenimiento.id.toString(),
+            equipo: mantenimiento.equipo,
+            centro: mantenimiento.centro,
+            frecuencia: mantenimiento.frecuencia,
+            ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
+            proximoMantenimiento: mantenimiento.proximoMantenimiento,
+            tecnico: mantenimiento.tecnico,
+            observaciones: mantenimiento.observaciones,
+            estado: mantenimiento.estado
+        });
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString()
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarToast('Mantenimiento actualizado en Google Sheets', 'success');
+        } else {
+            throw new Error(result.error || 'Error al actualizar');
+        }
+    } catch (error) {
+        console.error('Error al actualizar en Google Sheets:', error);
+        mostrarToast('Error al actualizar: ' + error.message, 'error');
+    }
+}
+
+async function eliminarMantenimientoGoogleSheets(id) {
+    try {
+        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+        const params = new URLSearchParams({
+            action: 'delete',
+            id: id.toString()
+        });
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString()
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            mostrarToast('Mantenimiento eliminado de Google Sheets', 'success');
+        } else {
+            throw new Error(result.error || 'Error al eliminar');
+        }
+    } catch (error) {
+        console.error('Error al eliminar en Google Sheets:', error);
+        mostrarToast('Error al eliminar: ' + error.message, 'error');
     }
 }
 
@@ -1185,15 +1192,16 @@ async function guardarPreventivo() {
         estado
     };
     
+    // Guardar en Google Apps Script
+    await agregarMantenimientoGoogleSheets(nuevoMantenimiento);
+    
+    // Agregar a la lista local
     mantenimientos.push(nuevoMantenimiento);
-    await guardarMantenimientos();
     
     // Actualizar UI
     renderizarTabla();
     actualizarEstadisticas();
     cerrarModal('modal-nuevo');
-    
-    mostrarToast('Mantenimiento preventivo creado exitosamente', 'success');
 }
 
 async function completarPreventivo() {
@@ -1227,14 +1235,13 @@ async function completarPreventivo() {
     
     mantenimientos[index].estado = determinarEstado(mantenimientos[index].proximoMantenimiento);
     
-    await guardarMantenimientos();
+    // Actualizar en Google Apps Script
+    await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
     
     // Actualizar UI
     renderizarTabla();
     actualizarEstadisticas();
     cerrarModal('modal-completar');
-    
-    mostrarToast('Mantenimiento completado exitosamente', 'success');
 }
 
 async function eliminarMantenimiento(id) {
@@ -1245,14 +1252,15 @@ async function eliminarMantenimiento(id) {
     const index = mantenimientos.findIndex(m => m.id === id);
     if (index === -1) return;
     
+    // Eliminar de Google Apps Script
+    await eliminarMantenimientoGoogleSheets(id);
+    
+    // Eliminar de la lista local
     mantenimientos.splice(index, 1);
-    await guardarMantenimientos();
     
     // Actualizar UI
     renderizarTabla();
     actualizarEstadisticas();
-    
-    mostrarToast('Mantenimiento eliminado exitosamente', 'info');
 }
 
 // ===== FUNCIONES AUXILIARES =====
@@ -1314,6 +1322,32 @@ function imprimirFormatoIndividual(id) {
     };
 }
 
+function toggleModoDatos() {
+    CONFIG.USE_LOCAL_DATA = !CONFIG.USE_LOCAL_DATA;
+    actualizarModoTexto();
+    
+    if (!CONFIG.USE_LOCAL_DATA) {
+        // Cambiar a Google Sheets
+        if (CONFIG.GOOGLE_SHEET_ID === 'TU_SHEET_ID_AQUI') {
+            mostrarToast('Por favor configura tu Google Sheet ID primero', 'warning');
+            CONFIG.USE_LOCAL_DATA = true; // Volver a local
+            actualizarModoTexto();
+            return;
+        }
+        cargarMantenimientos();
+    } else {
+        // Cambiar a localStorage
+        cargarMantenimientos();
+    }
+}
+
+function actualizarModoTexto() {
+    const modoTexto = document.getElementById('modo-texto');
+    if (modoTexto) {
+        modoTexto.textContent = CONFIG.USE_LOCAL_DATA ? 'Modo: Local' : 'Modo: Google Sheets';
+    }
+}
+
 function configurarListeners() {
     // Listener para calcular fecha cuando cambia la fecha de realización
     const fechaRealizado = document.getElementById('c-fecha-realizado');
@@ -1361,8 +1395,7 @@ window.completarPreventivo = completarPreventivo;
 window.eliminarMantenimiento = eliminarMantenimiento;
 window.imprimirFormato = imprimirFormato;
 window.imprimirFormatoIndividual = imprimirFormatoIndividual;
-window.sincronizarConGoogleSheets = sincronizarConGoogleSheets;
-window.cargarDesdeGoogleSheets = cargarDesdeGoogleSheets;
+window.cargarMantenimientos = cargarMantenimientos;
   </script>
 </body>
 </html>
