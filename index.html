@@ -1442,6 +1442,7 @@ async function cargarMantenimientos() {
             }));
             
             console.log('Mantenimientos cargados:', mantenimientos.length);
+            actualizarEstadosPorFrecuencia();
             renderizarTabla();
             actualizarEstadisticas();
             actualizarGraficasConDatos();
@@ -1582,7 +1583,10 @@ function calcularProximoMantenimiento(fechaUltimo, frecuencia) {
     return fecha.toISOString().split('T')[0];
 }
 
-function determinarEstado(fechaProximo) {
+function determinarEstado(fechaProximo, frecuencia, ultimoRealizado) {
+    // Si no hay fecha de próximo mantenimiento, está pendiente
+    if (!fechaProximo) return 'pendiente';
+    
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     
@@ -1598,6 +1602,87 @@ function determinarEstado(fechaProximo) {
     } else {
         return 'pendiente';
     }
+}
+
+function actualizarEstadosPorFrecuencia() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    mantenimientos.forEach((mantenimiento, index) => {
+        if (mantenimiento.estado === 'realizado') return; // No actualizar los realizados
+        
+        let nuevoProximo;
+        
+        switch (mantenimiento.frecuencia) {
+            case 'Mensual':
+                // Para mensuales: actualizar al inicio de cada mes basado en último realizado
+                if (mantenimiento.ultimoMantenimiento) {
+                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
+                    const proximoMantenimiento = new Date(ultimo.getFullYear(), ultimo.getMonth() + 1, 1);
+                    nuevoProximo = proximoMantenimiento.toISOString().split('T')[0];
+                }
+                break;
+                
+            case 'Semanal':
+                // Para semanales: cada 7 días desde el último realizado
+                if (mantenimiento.ultimoMantenimiento) {
+                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
+                    nuevoProximo = new Date(ultimo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                }
+                break;
+                
+            case 'Quincenal':
+                // Para quincenales: cada 15 días desde el último realizado
+                if (mantenimiento.ultimoMantenimiento) {
+                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
+                    nuevoProximo = new Date(ultimo.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                }
+                break;
+                
+            case 'Bimestral':
+                // Para bimestrales: cada 2 meses desde el último realizado
+                if (mantenimiento.ultimoMantenimiento) {
+                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
+                    nuevoProximo = new Date(ultimo.getFullYear(), ultimo.getMonth() + 2, 1).toISOString().split('T')[0];
+                }
+                break;
+                
+            case 'Trimestral':
+                // Para trimestrales: cada 3 meses desde el último realizado
+                if (mantenimiento.ultimoMantenimiento) {
+                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
+                    nuevoProximo = new Date(ultimo.getFullYear(), ultimo.getMonth() + 3, 1).toISOString().split('T')[0];
+                }
+                break;
+                
+            case 'Semestral':
+                // Para semestrales: cada 6 meses desde el último realizado
+                if (mantenimiento.ultimoMantenimiento) {
+                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
+                    nuevoProximo = new Date(ultimo.getFullYear(), ultimo.getMonth() + 6, 1).toISOString().split('T')[0];
+                }
+                break;
+                
+            case 'Anual':
+                // Para anuales: cada 12 meses desde el último realizado
+                if (mantenimiento.ultimoMantenimiento) {
+                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
+                    nuevoProximo = new Date(ultimo.getFullYear() + 1, ultimo.getMonth(), 1).toISOString().split('T')[0];
+                }
+                break;
+                
+            default:
+                // Para otros casos, usar la lógica original
+                nuevoProximo = mantenimiento.proximoMantenimiento;
+                break;
+        }
+        
+        // Actualizar el próximo mantenimiento si cambió
+        if (nuevoProximo && nuevoProximo !== mantenimiento.proximoMantenimiento) {
+            mantenimientos[index].proximoMantenimiento = nuevoProximo;
+            mantenimientos[index].estado = determinarEstado(nuevoProximo, mantenimiento.frecuencia, mantenimiento.ultimoMantenimiento);
+        }
+    });
 }
 
 function obtenerEstadoBadge(estado) {
@@ -2165,7 +2250,8 @@ async function completarPreventivo() {
     // Actualizar en Google Apps Script
     await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
     
-    // Actualizar UI
+    // Actualizar estados según frecuencia y UI
+    actualizarEstadosPorFrecuencia();
     renderizarTabla();
     actualizarEstadisticas();
     actualizarGraficasConDatos();
