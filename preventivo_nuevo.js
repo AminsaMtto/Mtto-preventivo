@@ -1,8 +1,3 @@
-/**
- * preventivo_nuevo.js — Sistema de Mantenimientos Preventivos
- * Integración con Google Sheets para gestión completa
- */
-
 // ── CONFIGURACIÓN ───────────────────────────────────────────────────
 const PREVENTIVO_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwoG96N1uwUBaLyuufZvvuaV89oIbeI-RtLjH5mBhwxMi48OImKoL2XJcHdcYYRGB5cAw/exec';
 
@@ -458,14 +453,8 @@ async function cargarPreventivos() {
   }
 }
 
-// Verificar autenticación al cargar
+// Inicialización del sistema (sin requerir login)
 document.addEventListener('DOMContentLoaded', async () => {
-  const sesion = sessionStorage.getItem('aminsa_sesion');
-  if (!sesion) {
-    window.location.href = 'login.html';
-    return;
-  }
-  
-  // Cargar preventivos
+  // Cargar preventivos directamente sin verificar sesión
   await cargarPreventivos();
 });
