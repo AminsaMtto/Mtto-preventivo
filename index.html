@@ -1097,9 +1097,13 @@
             <label for="c-proximo-calculado">Próximo Mantenimiento (Calculado)</label>
             <input type="date" id="c-proximo-calculado" readonly>
           </div>
-          <div class="form-group span2">
-            <label for="c-trabajo">Trabajo Realizado *</label>
-            <textarea id="c-trabajo" placeholder="Descripción del trabajo realizado..."></textarea>
+          <div class="form-group">
+            <label for="c-condicion-inicial">Condición Inicial *</label>
+            <textarea id="c-condicion-inicial" placeholder="Describe la condición inicial del equipo" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="c-condicion-final">Condición Final *</label>
+            <textarea id="c-condicion-final" placeholder="Describe la condición final del equipo" rows="3"></textarea>
           </div>
           <div class="form-group span2">
             <label for="c-proximo-manual">Próximo Mantenimiento (Manual)</label>
@@ -1318,7 +1322,8 @@
                 <th>Próximo Mantenimiento</th>
                 <th>Técnico</th>
                 <th>Estado</th>
-                <th>Trabajo Realizado</th>
+                <th>Condición Inicial</th>
+                <th>Condición Final</th>
               </tr>
             </thead>
             <tbody id="tabla-historial-equipo">
@@ -1820,7 +1825,8 @@ function abrirModalCompletar(id) {
     if (!mantenimientoActual) return;
     
     // Limpiar formulario
-    document.getElementById('c-trabajo').value = '';
+    document.getElementById('c-condicion-inicial').value = '';
+    document.getElementById('c-condicion-final').value = '';
     document.getElementById('c-proximo-manual').value = '';
     
     // Calcular próximo mantenimiento
@@ -1857,8 +1863,7 @@ function limpiarFormularioModificar() {
     document.getElementById('m-trabajo-realizado').value = '';
 }
 
-function abrirModalVer(id) {
-    mantenimientoActual = mantenimientos.find(m => m.id === id);
+// ... (rest of the code remains the same)
     if (!mantenimientoActual) return;
     
     // Llenar el modal con los datos del mantenimiento
@@ -2107,7 +2112,8 @@ function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
             <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
             <td>${mantenimiento.tecnico || '-'}</td>
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
-            <td>${mantenimiento.trabajoRealizado || mantenimiento.observaciones || '-'}</td>
+            <td>${mantenimiento.condicionInicial || '-'}</td>
+            <td>${mantenimiento.condicionFinal || '-'}</td>
         </tr>
     `).join('');
     
@@ -2132,7 +2138,8 @@ function imprimirFormatosEquipo() {
                 centro: mantenimiento.centro,
                 frecuencia: mantenimiento.frecuencia,
                 tecnico: mantenimiento.tecnico || '',
-                trabajoRealizado: mantenimiento.trabajoRealizado || ''
+                condicionInicial: mantenimiento.condicionInicial || '',
+                condicionFinal: mantenimiento.condicionFinal || ''
             });
             
             const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, `_blank`);
@@ -2220,11 +2227,12 @@ async function completarPreventivo() {
     if (!mantenimientoActual) return;
     
     const fechaRealizado = document.getElementById('c-fecha-realizado').value;
-    const trabajoRealizado = document.getElementById('c-trabajo').value.trim();
+    const condicionInicial = document.getElementById('c-condicion-inicial').value.trim();
+    const condicionFinal = document.getElementById('c-condicion-final').value.trim();
     const proximoManual = document.getElementById('c-proximo-manual').value;
     
     // Validaciones
-    if (!fechaRealizado || !trabajoRealizado) {
+    if (!fechaRealizado || !condicionInicial || !condicionFinal) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
     }
@@ -2234,7 +2242,8 @@ async function completarPreventivo() {
     if (index === -1) return;
     
     mantenimientos[index].ultimoMantenimiento = fechaRealizado;
-    mantenimientos[index].trabajoRealizado = trabajoRealizado;
+    mantenimientos[index].condicionInicial = condicionInicial;
+    mantenimientos[index].condicionFinal = condicionFinal;
     
     if (proximoManual) {
         mantenimientos[index].proximoMantenimiento = proximoManual;
