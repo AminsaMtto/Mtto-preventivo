@@ -2160,7 +2160,7 @@ async function completarPreventivo() {
         );
     }
     
-    mantenimientos[index].estado = determinarEstado(mantenimientos[index].proximoMantenimiento);
+    mantenimientos[index].estado = 'realizado';
     
     // Actualizar en Google Apps Script
     await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
