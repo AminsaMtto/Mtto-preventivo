@@ -519,12 +519,71 @@
 
     .modal {
       background: var(--blanco);
-      border: 1px solid var(--borde);
-      width: 100%;
-      max-width: 620px;
+      border-radius: 4px;
+      width: 90%;
+      max-width: 600px;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .modal-large {
+      max-width: 1000px;
+    }
+    
+    .formato-container {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    
+    .formato {
+      border: 2px solid var(--negro);
+      padding: 20px;
+      background: var(--blanco);
+      page-break-inside: avoid;
+    }
+    
+    .formato table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px;
+    }
+    
+    .formato td {
+      padding: 8px;
+      border: 1px solid var(--negro);
+      vertical-align: top;
+    }
+    
+    .campo-rojo {
+      color: #d32f2f;
+      font-weight: bold;
+    }
+    
+    .condicion-box {
+      min-height: 60px;
+      border: 1px solid var(--borde);
+      padding: 8px;
+      background: var(--fondo);
+    }
+    
+    .firmas {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .firmas td {
+      width: 50%;
+      text-align: center;
+    }
+    
+    .firma-box {
+      height: 60px;
+      border: 1px solid var(--borde);
+      margin-top: 8px;
+      background: var(--fondo);
     }
     .modal-header {
       background: var(--negro);
@@ -839,7 +898,6 @@
           <th>Último Mantenimiento</th>
           <th>Próximo Mantenimiento</th>
           <th>Técnico</th>
-          <th>Trabajo Realizado</th>
           <th>Estado</th>
           <th>Acciones</th>
         </tr>
@@ -859,6 +917,10 @@
       </div>
       <div class="modal-body">
         <div class="form-grid">
+          <div class="form-group">
+            <label for="p-id">ID *</label>
+            <input type="text" id="p-id" placeholder="ID del mantenimiento">
+          </div>
           <div class="form-group">
             <label for="p-equipo">Equipo *</label>
             <input type="text" id="p-equipo" placeholder="Nombre del equipo">
@@ -1027,6 +1089,117 @@
     </div>
   </div>
 
+  <!-- ── MODAL VER ───────────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal-ver">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h2>Detalles del Mantenimiento</h2>
+        <button class="modal-close" onclick="cerrarModal('modal-ver')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="formato-container">
+          <!-- Primer formato -->
+          <div class="formato">
+            <table>
+              <tr>
+                <td>TECNICO: <strong id="v-tecnico-1">-</strong></td>
+                <td>MAQUINA / EQUIPO: <strong id="v-equipo-1">-</strong></td>
+                <td>TIEMPO REQUERIDO: <span class="campo-rojo"><strong id="v-frecuencia-1">-</strong></span></td>
+              </tr>
+              <tr>
+                <td>ÁREA: <strong id="v-centro-1">-</strong></td>
+                <td>FECHA: <strong id="v-fecha-1">-</strong></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <strong>CONDICIÓN INICIAL:</strong>
+                  <div class="condicion-box" id="v-condicion-inicial-1">-</div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <strong>CONDICIÓN FINAL:</strong>
+                  <div class="condicion-box" id="v-condicion-final-1">-</div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <table class="firmas">
+                    <tr>
+                      <td>
+                        <strong>FIRMA DEL TÉCNICO:</strong>
+                        <div class="firma-box"></div>
+                      </td>
+                      <td>
+                        <strong>FIRMA DEL RESPONSABLE:</strong>
+                        <div class="firma-box"></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Segundo formato -->
+          <div class="formato">
+            <table>
+              <tr>
+                <td>TECNICO: <strong id="v-tecnico-2">-</strong></td>
+                <td>MAQUINA / EQUIPO: <strong id="v-equipo-2">-</strong></td>
+                <td>TIEMPO REQUERIDO: <span class="campo-rojo"><strong id="v-frecuencia-2">-</strong></span></td>
+              </tr>
+              <tr>
+                <td>ÁREA: <strong id="v-centro-2">-</strong></td>
+                <td>FECHA: <strong id="v-fecha-2">-</strong></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <strong>CONDICIÓN INICIAL:</strong>
+                  <div class="condicion-box" id="v-condicion-inicial-2">-</div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <strong>CONDICIÓN FINAL:</strong>
+                  <div class="condicion-box" id="v-condicion-final-2">-</div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <strong>TRABAJO REALIZADO:</strong><br>
+                  <div id="v-trabajo-realizado-2">-</div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <table class="firmas">
+                    <tr>
+                      <td>
+                        <strong>FIRMA DEL TÉCNICO:</strong>
+                        <div class="firma-box"></div>
+                      </td>
+                      <td>
+                        <strong>FIRMA DEL RESPONSABLE:</strong>
+                        <div class="firma-box"></div>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-ver')">Cerrar</button>
+        <button class="btn btn-primary" onclick="imprimirFormatoIndividual()">Imprimir</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── TOAST ─────────────────────────────────────────────── -->
   <div class="toast" id="toast"></div>
 
@@ -1035,7 +1208,7 @@
 // ===== CONFIGURACIÓN =====
 const CONFIG = {
     // URL de Google Apps Script Web App
-    GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzWQvK2PwItQAHsm8i6E8z1KIUQnQPdAsxfAFP86tzD_EpcQwHBzCOTkwODCOU_Fp7jDA/exec',
+    GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyS3ey8pyOG3sM59BnOQEShV5dcZneNH6wANFRGbND9nFaj5ZhOvFhSi4H_YnlT4UGVPg/exec',
     // Mapeo de frecuencia a días
     FRECUENCIAS: {
         'Semanal': 7,
@@ -1352,7 +1525,7 @@ function renderizarTabla() {
     if (filtrados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10">
+                <td colspan="9">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -1375,12 +1548,12 @@ function renderizarTabla() {
             <td>${formatearFecha(mantenimiento.ultimoMantenimiento)}</td>
             <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
             <td>${mantenimiento.tecnico || '-'}</td>
-            <td>${mantenimiento.trabajoRealizado || mantenimiento.observaciones || '-'}</td>
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
               <div class="acciones">
                 <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar(${mantenimiento.id})">Completar</button>
                 <button class="btn btn-warning btn-sm" onclick="abrirModalModificar(${mantenimiento.id})">Modificar</button>
+                <button class="btn btn-info btn-sm" onclick="abrirModalVer(${mantenimiento.id})">Ver</button>
                 <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento(${mantenimiento.id})">Eliminar</button>
               </div>
             </td>
@@ -1467,12 +1640,42 @@ function limpiarFormularioModificar() {
     document.getElementById('m-trabajo-realizado').value = '';
 }
 
+function abrirModalVer(id) {
+    mantenimientoActual = mantenimientos.find(m => m.id === id);
+    if (!mantenimientoActual) return;
+    
+    // Llenar el modal con los datos del mantenimiento
+    const datos = mantenimientoActual;
+    
+    // Formato 1
+    document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
+    document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
+    document.getElementById('v-frecuencia-1').textContent = datos.frecuencia || '-';
+    document.getElementById('v-centro-1').textContent = datos.centro || '-';
+    document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
+    document.getElementById('v-condicion-inicial-1').textContent = 'Por revisar al iniciar mantenimiento';
+    document.getElementById('v-condicion-final-1').textContent = 'Por revisar al finalizar mantenimiento';
+    
+    // Formato 2
+    document.getElementById('v-tecnico-2').textContent = datos.tecnico || '-';
+    document.getElementById('v-equipo-2').textContent = datos.equipo || '-';
+    document.getElementById('v-frecuencia-2').textContent = datos.frecuencia || '-';
+    document.getElementById('v-centro-2').textContent = datos.centro || '-';
+    document.getElementById('v-fecha-2').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
+    document.getElementById('v-condicion-inicial-2').textContent = 'Por revisar al iniciar mantenimiento';
+    document.getElementById('v-condicion-final-2').textContent = 'Por revisar al finalizar mantenimiento';
+    document.getElementById('v-trabajo-realizado-2').textContent = datos.trabajoRealizado || datos.observaciones || 'Sin trabajo realizado registrado';
+    
+    document.getElementById('modal-ver').classList.add('visible');
+}
+
 function cerrarModal(modalId) {
     document.getElementById(modalId).classList.remove('visible');
     mantenimientoActual = null;
 }
 
 function limpiarFormularioNuevo() {
+    document.getElementById('p-id').value = '';
     document.getElementById('p-equipo').value = '';
     document.getElementById('p-centro').value = '';
     document.getElementById('p-frecuencia').value = '';
@@ -1483,6 +1686,7 @@ function limpiarFormularioNuevo() {
 
 // ===== FUNCIONES DE CRUD =====
 async function guardarPreventivo() {
+    const id = document.getElementById('p-id').value.trim();
     const equipo = document.getElementById('p-equipo').value.trim();
     const centro = document.getElementById('p-centro').value;
     const frecuencia = document.getElementById('p-frecuencia').value;
@@ -1491,8 +1695,14 @@ async function guardarPreventivo() {
     const trabajoRealizado = document.getElementById('p-trabajo-realizado').value.trim();
     
     // Validaciones
-    if (!equipo || !centro || !frecuencia || !ultimo) {
+    if (!id || !equipo || !centro || !frecuencia || !ultimo) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+        return;
+    }
+    
+    // Verificar que el ID no exista
+    if (mantenimientos.some(m => m.id === id)) {
+        mostrarToast('Este ID ya existe. Por favor usa otro ID.', 'error');
         return;
     }
     
@@ -1502,7 +1712,7 @@ async function guardarPreventivo() {
     
     // Crear nuevo mantenimiento
     const nuevoMantenimiento = {
-        id: Date.now(),
+        id: id,
         equipo,
         centro,
         frecuencia,
@@ -1536,7 +1746,7 @@ async function completarPreventivo() {
     const proximoManual = document.getElementById('c-proximo-manual').value;
     
     // Validaciones
-    if (!fechaRealizado || !trabajo) {
+    if (!fechaRealizado || !trabajoRealizado) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
     }
@@ -1546,7 +1756,7 @@ async function completarPreventivo() {
     if (index === -1) return;
     
     mantenimientos[index].ultimoMantenimiento = fechaRealizado;
-    mantenimientos[index].trabajoRealizado = trabajo;
+    mantenimientos[index].trabajoRealizado = trabajoRealizado;
     
     if (proximoManual) {
         mantenimientos[index].proximoMantenimiento = proximoManual;
@@ -2063,6 +2273,7 @@ window.cargarMantenimientos = cargarMantenimientos;
 window.actualizarGraficas = actualizarGraficas;
 window.actualizarGraficaPorcentajes = actualizarGraficaPorcentajes;
 window.abrirModalModificar = abrirModalModificar;
+window.abrirModalVer = abrirModalVer;
   </script>
 </body>
 </html>
