@@ -389,6 +389,102 @@
     .empty-state p { font-family: 'Cormorant SC', serif; font-size: 18px; letter-spacing: 2px; color: var(--texto-sec); margin-bottom: 8px; }
     .empty-state small { font-family: 'Inconsolata', monospace; font-size: 11px; color: var(--texto-ter); letter-spacing: 1px; }
 
+    /* ── GRÁFICAS ── */
+    .charts-section {
+      margin: 32px auto;
+      max-width: 1200px;
+      padding: 0 20px;
+    }
+    
+    .charts-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--borde);
+    }
+    
+    .charts-title {
+      font-family: 'Cormorant SC', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--texto);
+      letter-spacing: 1px;
+    }
+    
+    .charts-filter {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .charts-filter select {
+      padding: 8px 16px;
+      border: 1px solid var(--borde);
+      background: var(--blanco);
+      font-family: 'Inconsolata', monospace;
+      font-size: 12px;
+      color: var(--texto);
+      cursor: pointer;
+    }
+    
+    .charts-filter select:focus {
+      outline: none;
+      border-color: var(--negro);
+    }
+    
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    
+    .chart-container {
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 4px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .chart-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--texto);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    
+    .chart-wrapper {
+      position: relative;
+      height: 300px;
+    }
+    
+    .chart-legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      color: var(--texto-sec);
+    }
+    
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
     /* ── MODAL ── */
     .modal-overlay {
       display: none;
@@ -612,6 +708,41 @@
     </div>
   </div>
 
+  <!-- ── GRÁFICAS ───────────────────────────────────────────────────── -->
+  <div class="charts-section">
+    <div class="charts-header">
+      <h2 class="charts-title">Análisis de Mantenimientos</h2>
+      <div class="charts-filter">
+        <label for="centro-filter" style="font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--texto-sec);">Centro:</label>
+        <select id="centro-filter" onchange="actualizarGraficas()">
+          <option value="todos">Todos</option>
+          <option value="Zinc">Zinc</option>
+          <option value="Cromo">Cromo</option>
+          <option value="Doblado">Doblado</option>
+          <option value="Gral">Gral</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="charts-grid">
+      <div class="chart-container">
+        <h3 class="chart-title">Mantenimientos por Mes</h3>
+        <div class="chart-wrapper">
+          <canvas id="chart-mensual"></canvas>
+        </div>
+        <div class="chart-legend" id="legend-mensual"></div>
+      </div>
+      
+      <div class="chart-container">
+        <h3 class="chart-title">Distribución por Centro</h3>
+        <div class="chart-wrapper">
+          <canvas id="chart-centros"></canvas>
+        </div>
+        <div class="chart-legend" id="legend-centros"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
   <div class="toolbar">
     <div class="toolbar-left">
@@ -795,6 +926,16 @@ const CONFIG = {
         'Trimestral': 90,
         'Semestral': 180,
         'Anual': 365
+    },
+    // Centros de negocio disponibles
+    CENTROS: ['Zinc', 'Cromo', 'Doblado', 'Gral'],
+    // Colores para gráficas
+    COLORES_GRAFICAS: {
+        'Zinc': '#FF6B6B',
+        'Cromo': '#4ECDC4', 
+        'Doblado': '#45B7D1',
+        'Gral': '#96CEB4',
+        'Todos': '#2E86AB'
     }
 };
 
@@ -804,11 +945,18 @@ let filtroActual = 'todos';
 let terminoBusqueda = '';
 let mantenimientoActual = null;
 
+// Variables para gráficas
+let chartMensual = null;
+let chartCentros = null;
+
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
     cargarMantenimientos();
     actualizarEstadisticas();
     renderizarTabla();
+    
+    // Inicializar gráficas
+    inicializarGraficas();
     
     // Configurar listeners
     configurarListeners();
@@ -868,6 +1016,7 @@ async function cargarMantenimientos() {
             console.log('Mantenimientos cargados:', mantenimientos.length);
             renderizarTabla();
             actualizarEstadisticas();
+            actualizarGraficasConDatos();
             mostrarToast(`Se cargaron ${mantenimientos.length} mantenimientos desde Google Sheets`, 'success');
         } else {
             throw new Error(result.error || 'Error desconocido');
@@ -1226,7 +1375,10 @@ async function guardarPreventivo() {
     // Actualizar UI
     renderizarTabla();
     actualizarEstadisticas();
+    actualizarGraficasConDatos();
     cerrarModal('modal-nuevo');
+    
+    mostrarToast('Mantenimiento preventivo creado exitosamente', 'success');
 }
 
 async function completarPreventivo() {
@@ -1266,6 +1418,7 @@ async function completarPreventivo() {
     // Actualizar UI
     renderizarTabla();
     actualizarEstadisticas();
+    actualizarGraficasConDatos();
     cerrarModal('modal-completar');
 }
 
@@ -1286,6 +1439,7 @@ async function eliminarMantenimiento(id) {
     // Actualizar UI
     renderizarTabla();
     actualizarEstadisticas();
+    actualizarGraficasConDatos();
 }
 
 // ===== FUNCIONES AUXILIARES =====
@@ -1409,6 +1563,253 @@ function configurarListeners() {
     });
 }
 
+// ===== FUNCIONES DE GRÁFICAS =====
+function inicializarGraficas() {
+    // Configurar Chart.js
+    Chart.defaults.font.family = "'Cormorant Garamond', serif";
+    Chart.defaults.color = '#2e2e2e';
+    
+    // Inicializar gráfica mensual
+    const ctxMensual = document.getElementById('chart-mensual');
+    if (ctxMensual) {
+        chartMensual = new Chart(ctxMensual, {
+            type: 'bar',
+            data: {
+                labels: obtenerMesesAnio(),
+                datasets: []
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: {
+                            family: "'Inconsolata', monospace"
+                        },
+                        bodyFont: {
+                            family: "'Inconsolata', monospace"
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                family: "'Inconsolata', monospace",
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                family: "'Inconsolata', monospace",
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Inicializar gráfica de centros
+    const ctxCentros = document.getElementById('chart-centros');
+    if (ctxCentros) {
+        chartCentros = new Chart(ctxCentros, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: {
+                            family: "'Inconsolata', monospace"
+                        },
+                        bodyFont: {
+                            family: "'Inconsolata', monospace"
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Actualizar gráficas con datos iniciales
+    setTimeout(() => actualizarGraficas(), 500);
+}
+
+function obtenerMesesAnio() {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const mesActual = new Date().getMonth();
+    // Ordenar meses a partir del mes actual
+    const mesesOrdenados = [];
+    for (let i = 0; i < 12; i++) {
+        const indice = (mesActual + i) % 12;
+        mesesOrdenados.push(meses[indice]);
+    }
+    return mesesOrdenados;
+}
+
+function calcularDatosMensuales(centroSeleccionado) {
+    const datosMensuales = {};
+    const meses = obtenerMesesAnio();
+    const añoActual = new Date().getFullYear();
+    
+    // Inicializar todos los meses en 0
+    meses.forEach(mes => {
+        datosMensuales[mes] = 0;
+    });
+    
+    // Filtrar mantenimientos por centro si es necesario
+    let mantenimientosFiltrados = mantenimientos;
+    if (centroSeleccionado !== 'todos') {
+        mantenimientosFiltrados = mantenimientos.filter(m => 
+            m.centro === centroSeleccionado
+        );
+    }
+    
+    // Contar mantenimientos por mes
+    mantenimientosFiltrados.forEach(mantenimiento => {
+        if (mantenimiento.ultimoMantenimiento) {
+            const fecha = new Date(mantenimiento.ultimoMantenimiento);
+            if (fecha.getFullYear() === añoActual) {
+                const mesIndex = fecha.getMonth();
+                const mesNombre = obtenerMesesAnio()[mesIndex];
+                datosMensuales[mesNombre]++;
+            }
+        }
+    });
+    
+    return datosMensuales;
+}
+
+function calcularDatosCentros() {
+    const datosCentros = {};
+    
+    // Inicializar centros en 0
+    CONFIG.CENTROS.forEach(centro => {
+        datosCentros[centro] = 0;
+    });
+    
+    // Contar mantenimientos por centro
+    mantenimientos.forEach(mantenimiento => {
+        if (mantenimiento.centro && datosCentros.hasOwnProperty(mantenimiento.centro)) {
+            datosCentros[mantenimiento.centro]++;
+        }
+    });
+    
+    return datosCentros;
+}
+
+function actualizarGraficas() {
+    const centroSeleccionado = document.getElementById('centro-filter').value;
+    
+    // Actualizar gráfica mensual
+    if (chartMensual) {
+        const datosMensuales = calcularDatosMensuales(centroSeleccionado);
+        const color = CONFIG.COLORES_GRAFICAS[centroSeleccionado === 'todos' ? 'Todos' : centroSeleccionado];
+        
+        chartMensual.data.datasets = [{
+            label: centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado,
+            data: Object.values(datosMensuales),
+            backgroundColor: color + '80',
+            borderColor: color,
+            borderWidth: 2,
+            borderRadius: 4
+        }];
+        
+        chartMensual.update();
+        
+        // Actualizar leyenda
+        actualizarLeyenda('legend-mensual', [{
+            label: centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado,
+            color: color
+        }]);
+    }
+    
+    // Actualizar gráfica de centros (solo cuando se selecciona "todos")
+    if (chartCentros && centroSeleccionado === 'todos') {
+        const datosCentros = calcularDatosCentros();
+        const labels = Object.keys(datosCentros);
+        const data = Object.values(datosCentros);
+        const colors = labels.map(centro => CONFIG.COLORES_GRAFICAS[centro]);
+        
+        chartCentros.data.datasets = [{
+            data: data,
+            backgroundColor: colors.map(color => color + '80'),
+            borderColor: colors,
+            borderWidth: 2
+        }];
+        
+        chartCentros.data.labels = labels;
+        chartCentros.update();
+        
+        // Actualizar leyenda
+        const legendData = labels.map((centro, index) => ({
+            label: centro,
+            color: colors[index]
+        }));
+        actualizarLeyenda('legend-centros', legendData);
+    } else if (chartCentros && centroSeleccionado !== 'todos') {
+        // Ocultar gráfica de centros cuando se selecciona un centro específico
+        chartCentros.data.datasets = [];
+        chartCentros.data.labels = [];
+        chartCentros.update();
+        document.getElementById('legend-centros').innerHTML = '';
+    }
+}
+
+function actualizarLeyenda(legendId, items) {
+    const legendContainer = document.getElementById(legendId);
+    if (!legendContainer) return;
+    
+    legendContainer.innerHTML = '';
+    items.forEach(item => {
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        
+        const colorBox = document.createElement('div');
+        colorBox.className = 'legend-color';
+        colorBox.style.backgroundColor = item.color;
+        
+        const label = document.createElement('span');
+        label.textContent = item.label;
+        
+        legendItem.appendChild(colorBox);
+        legendItem.appendChild(label);
+        legendContainer.appendChild(legendItem);
+    });
+}
+
+// Actualizar gráficas automáticamente cuando cambien los datos
+function actualizarGraficasConDatos() {
+    if (chartMensual || chartCentros) {
+        setTimeout(() => actualizarGraficas(), 100);
+    }
+}
+
 // ===== EXPORTAR FUNCIONES =====
 window.filtrar = filtrar;
 window.buscar = buscar;
@@ -1421,6 +1822,7 @@ window.eliminarMantenimiento = eliminarMantenimiento;
 window.imprimirFormato = imprimirFormato;
 window.imprimirFormatoIndividual = imprimirFormatoIndividual;
 window.cargarMantenimientos = cargarMantenimientos;
+window.actualizarGraficas = actualizarGraficas;
   </script>
 </body>
 </html>
