@@ -274,7 +274,7 @@
         const centro = getParameterByName('centro');
         const frecuencia = getParameterByName('frecuencia');
         const tecnico = getParameterByName('tecnico');
-        const observaciones = getParameterByName('observaciones');
+        const trabajoRealizado = getParameterByName('trabajoRealizado');
 
         // Autocompletar campos en ambos formatos
         const formatos = document.querySelectorAll('.formato');
@@ -314,11 +314,11 @@
                 }
             }
 
-            // OBSERVACIONES en el segundo formato
-            if (observaciones && index === 1) {
-                const observacionesCell = formato.querySelector('tr:last-child td:last-child');
-                if (observacionesCell) {
-                    observacionesCell.innerHTML = `<strong>OBSERVACIONES:</strong><br>${observaciones}`;
+            // TRABAJO REALIZADO en el segundo formato
+            if (trabajoRealizado && index === 1) {
+                const trabajoCell = formato.querySelector('tr:last-child td:last-child');
+                if (trabajoCell) {
+                    trabajoCell.innerHTML = `<strong>TRABAJO REALIZADO:</strong><br>${trabajoRealizado}`;
                 }
             }
         });
