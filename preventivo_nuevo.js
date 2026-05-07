@@ -4,7 +4,7 @@
  */
 
 // ── CONFIGURACIÓN ───────────────────────────────────────────────────
-const PREVENTIVO_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyrP_UdUQWXnQkNqOZatGUQ3jJHZwn2A5w7lhb5R0lZTAmKMgi0vDlO3IdSvmjx2iAbCw/exec';
+const PREVENTIVO_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwoG96N1uwUBaLyuufZvvuaV89oIbeI-RtLjH5mBhwxMi48OImKoL2XJcHdcYYRGB5cAw/exec';
 
 // ── VARIABLES GLOBALES ───────────────────────────────────────────────
 let todosLosPreventivos = [];
