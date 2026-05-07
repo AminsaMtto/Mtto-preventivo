@@ -1750,16 +1750,9 @@ function inicializarGraficas() {
 }
 
 function obtenerMesesAnio() {
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const mesActual = new Date().getMonth();
-    // Ordenar meses a partir del mes actual
-    const mesesOrdenados = [];
-    for (let i = 0; i < 12; i++) {
-        const indice = (mesActual + i) % 12;
-        mesesOrdenados.push(meses[indice]);
-    }
-    return mesesOrdenados;
+    // Devolver meses en orden cronológico de enero a diciembre
+    return ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 }
 
 function calcularDatosMensuales(centroSeleccionado) {
