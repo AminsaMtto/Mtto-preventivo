@@ -2,9 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Mantenimiento Preventivo</title>
+<title></title>
 
 <style>
+
+    @page{
+        size: letter;
+        margin: 0;
+    }
 
     body{
         font-family: Arial, sans-serif;
@@ -79,14 +84,21 @@
     }
 
     @media print{
-        body{
+
+        html, body{
             margin:0;
             padding:0;
+        }
+
+        body{
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .formato{
             break-inside:avoid;
         }
+
     }
 
 </style>
@@ -106,30 +118,29 @@
         <table>
             <tr>
                 <td width="65%">
-                    TECNICO: {{tecnico}}
+                    TECNICO:
                 </td>
 
                 <td width="35%">
-                    FECHA: {{fecha}}
+                    FECHA:
                 </td>
             </tr>
 
             <tr>
                 <td>
-                    MAQUINA / EQUIPO: {{equipo}}
+                    MAQUINA / EQUIPO:
                 </td>
 
                 <td>
                     <span class="campo-rojo">
                         TIEMPO REQUERIDO:
                     </span>
-                    {{tiempo}}
                 </td>
             </tr>
 
             <tr>
                 <td>
-                    ÁREA: {{area}}
+                    ÁREA:
                 </td>
 
                 <td class="sin-borde"></td>
@@ -150,13 +161,9 @@
             </tr>
 
             <tr>
-                <td class="espacio">
-                    {{condicion_inicial}}
-                </td>
+                <td class="espacio"></td>
 
-                <td class="espacio">
-                    {{observaciones}}
-                </td>
+                <td class="espacio"></td>
             </tr>
         </table>
 
@@ -187,30 +194,29 @@
         <table>
             <tr>
                 <td width="65%">
-                    TECNICO: {{tecnico}}
+                    TECNICO:
                 </td>
 
                 <td width="35%">
-                    FECHA: {{fecha}}
+                    FECHA:
                 </td>
             </tr>
 
             <tr>
                 <td>
-                    MAQUINA / EQUIPO: {{equipo}}
+                    MAQUINA / EQUIPO:
                 </td>
 
                 <td>
                     <span class="campo-rojo">
                         TIEMPO REQUERIDO:
                     </span>
-                    {{tiempo}}
                 </td>
             </tr>
 
             <tr>
                 <td>
-                    ÁREA: {{area}}
+                    ÁREA:
                 </td>
 
                 <td class="sin-borde"></td>
@@ -231,13 +237,9 @@
             </tr>
 
             <tr>
-                <td class="espacio">
-                    {{condicion_inicial}}
-                </td>
+                <td class="espacio"></td>
 
-                <td class="espacio">
-                    {{observaciones}}
-                </td>
+                <td class="espacio"></td>
             </tr>
         </table>
 
