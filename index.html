@@ -978,6 +978,13 @@
         </div>
       </div>
       <div class="toolbar-right">
+        <select id="filtro-centro-historial" onchange="filtrarHistorial()">
+          <option value="">Todos</option>
+          <option value="Zinc">Zinc</option>
+          <option value="Cromo">Cromo</option>
+          <option value="Doblado">Doblado</option>
+          <option value="Gral">Gral</option>
+        </select>
         <select id="filtro-equipo-historial" onchange="filtrarHistorial()">
           <option value="">Todos los equipos</option>
         </select>
@@ -1881,6 +1888,7 @@ function actualizarFiltroEquipos(equipos) {
 function renderizarTablaHistorial(historialPorEquipo) {
     const tbody = document.getElementById('tabla-historial');
     const terminoBusqueda = document.getElementById('buscar-equipo').value.toLowerCase();
+    const filtroCentro = document.getElementById('filtro-centro-historial').value;
     const filtroEquipo = document.getElementById('filtro-equipo-historial').value;
     
     let historialFiltrado = Object.entries(historialPorEquipo);
@@ -1894,6 +1902,18 @@ function renderizarTablaHistorial(historialPorEquipo) {
     
     if (filtroEquipo) {
         historialFiltrado = historialFiltrado.filter(([equipo]) => equipo === filtroEquipo);
+    }
+    
+    // Filtrar por centro de negocios
+    if (filtroCentro) {
+        historialFiltrado = historialFiltrado.filter(([equipo, datos]) => {
+            // Verificar si algún mantenimiento del equipo pertenece al centro seleccionado
+            return datos.mantenimientos.some(m => {
+                // Mapear centros a las 4 opciones principales
+                const centroMapeado = mapearCentro(m.centro);
+                return centroMapeado === filtroCentro;
+            });
+        });
     }
     
     if (historialFiltrado.length === 0) {
@@ -1935,12 +1955,58 @@ function filtrarHistorial() {
     cargarHistorial();
 }
 
+function mapearCentro(centro) {
+    // Mapear todos los centros a las 4 opciones principales
+    const centrosMapeados = {
+        'Zinc': 'Zinc',
+        'Cromo': 'Cromo', 
+        'Doblado': 'Doblado',
+        'Gral': 'Gral',
+        'Oficinas': 'Gral',
+        'Pretratamiento': 'Gral',
+        'Tratamiento': 'Gral',
+        'Andenes': 'Gral',
+        'Laboratorio': 'Gral',
+        'Obra Civil': 'Gral',
+        'Área Periférica': 'Gral',
+        'Otros': 'Gral'
+    };
+    
+    return centrosMapeados[centro] || 'Gral';
+}
+
 function verDetallesEquipo(equipo) {
-    // Filtrar mantenimientos del equipo seleccionado
+    // Buscar el mantenimiento más reciente del equipo
     const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo);
     
-    // Abrir modal con todos los mantenimientos del equipo
-    abrirModalHistorialEquipo(equipo, mantenimientosEquipo);
+    if (mantenimientosEquipo.length === 0) {
+        mostrarToast('No hay mantenimientos registrados para este equipo', 'error');
+        return;
+    }
+    
+    // Obtener el mantenimiento más reciente
+    const mantenimientoMasReciente = mantenimientosEquipo.reduce((masReciente, actual) => {
+        return new Date(actual.ultimoMantenimiento) > new Date(masReciente.ultimoMantenimiento) ? actual : masReciente;
+    });
+    
+    // Abrir formato de impresión con los datos del mantenimiento más reciente
+    const params = new URLSearchParams({
+        equipo: mantenimientoMasReciente.equipo,
+        centro: mantenimientoMasReciente.centro,
+        frecuencia: mantenimientoMasReciente.frecuencia,
+        tecnico: mantenimientoMasReciente.tecnico || '',
+        trabajoRealizado: mantenimientoMasReciente.trabajoRealizado || ''
+    });
+    
+    const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, '_blank');
+    
+    // Esperar a que la ventana se cargue
+    ventanaImpresion.onload = function() {
+        // La página de formato ya se autocompletará automáticamente
+        setTimeout(() => {
+            ventanaImpresion.print();
+        }, 500);
+    };
 }
 
 function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
