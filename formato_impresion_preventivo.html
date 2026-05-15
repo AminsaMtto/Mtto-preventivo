@@ -117,10 +117,17 @@
             <td>
                 MAQUINA / EQUIPO:
             </td>
-            MANTENIMIENTO PREVENTIVO
-        </div>
+            <td>
+                <span class="campo-rojo">
+                    TIEMPO REQUERIDO:
+                </span>
+            </td>
+        </tr>
+    </table>
 
-        <table>
+    <br>
+
+    <table>
             <tr>
                 <td width="65%">
                     TECNICO:
@@ -166,9 +173,9 @@
             </tr>
 
             <tr>
-                <td class="espacio"></td>
+                <td class="espacio" id="condicion-inicial"></td>
 
-                <td class="espacio"></td>
+                <td class="espacio" id="condicion-final"></td>
             </tr>
         </table>
 
@@ -206,76 +213,60 @@
         const condicionInicial = getParameterByName('condicionInicial');
         const condicionFinal = getParameterByName('condicionFinal');
 
-        // Autocompletar campos en ambos formatos
-        const formatos = document.querySelectorAll('.formato');
+        // Autocompletar campos
+        const formato = document.querySelector('.formato');
         
-        formatos.forEach((formato, index) => {
-            // TÉCNICO
-            if (tecnico) {
-                const tecnicoCell = formato.querySelector('tr:first-child td:first-child');
-                if (tecnicoCell && tecnicoCell.textContent.includes('TECNICO:')) {
-                    tecnicoCell.innerHTML = `TECNICO: <strong>${tecnico}</strong>`;
-                }
-            }
+        if (!formato) return;
 
-            // MAQUINA / EQUIPO
-            if (equipo) {
-                const equipoCell = formato.querySelector('tr:nth-child(2) td:first-child');
-                if (equipoCell && equipoCell.textContent.includes('MAQUINA / EQUIPO:')) {
-                    equipoCell.innerHTML = `MAQUINA / EQUIPO: <strong>${equipo}</strong>`;
-                }
+        // TÉCNICO
+        if (tecnico) {
+            const tecnicoCell = formato.querySelector('tr:first-child td:first-child');
+            if (tecnicoCell && tecnicoCell.textContent.includes('TECNICO:')) {
+                tecnicoCell.innerHTML = `TECNICO: <strong>${tecnico}</strong>`;
             }
+        }
 
-            // ÁREA (usar centro como área)
-            if (centro) {
-                const areaCell = formato.querySelector('tr:nth-child(3) td:first-child');
-                if (areaCell && areaCell.textContent.includes('ÁREA:')) {
-                    areaCell.innerHTML = `ÁREA: <strong>${centro}</strong>`;
-                }
+        // MAQUINA / EQUIPO
+        if (equipo) {
+            const equipoCell = formato.querySelector('tr:nth-child(2) td:first-child');
+            if (equipoCell && equipoCell.textContent.includes('MAQUINA / EQUIPO:')) {
+                equipoCell.innerHTML = `MAQUINA / EQUIPO: <strong>${equipo}</strong>`;
             }
+        }
 
-            // FECHA - No autocompletar, dejar vacío para que el usuario la llene
+        // ÁREA (usar centro como área)
+        if (centro) {
+            const areaCell = formato.querySelector('tr:nth-child(3) td:first-child');
+            if (areaCell && areaCell.textContent.includes('ÁREA:')) {
+                areaCell.innerHTML = `ÁREA: <strong>${centro}</strong>`;
+            }
+        }
 
-            // TIEMPO REQUERIDO (usar frecuencia)
-            if (frecuencia) {
-                const tiempoCell = formato.querySelector('tr:nth-child(2) td:last-child .campo-rojo');
-                if (tiempoCell) {
-                    tiempoCell.innerHTML = `TIEMPO REQUERIDO: <strong>${frecuencia}</strong>`;
-                }
-            }
+        // FECHA - No autocompletar, dejar vacío para que el usuario la llene
 
-            // CONDICIÓN INICIAL en el primer formato
-            if (condicionInicial && index === 0) {
-                const condicionInicialCell = formato.querySelector('tr:nth-child(3) td:last-child div');
-                if (condicionInicialCell) {
-                    condicionInicialCell.innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
-                }
+        // TIEMPO REQUERIDO (usar frecuencia)
+        if (frecuencia) {
+            const tiempoCell = formato.querySelector('tr:nth-child(2) td:last-child .campo-rojo');
+            if (tiempoCell) {
+                tiempoCell.innerHTML = `TIEMPO REQUERIDO: <strong>${frecuencia}</strong>`;
             }
-            
-            // CONDICIÓN FINAL en el primer formato
-            if (condicionFinal && index === 0) {
-                const condicionFinalCell = formato.querySelector('tr:nth-child(4) td:last-child div');
-                if (condicionFinalCell) {
-                    condicionFinalCell.innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
-                }
+        }
+
+        // CONDICIÓN INICIAL
+        if (condicionInicial) {
+            const condicionInicialCell = formato.querySelector('#condicion-inicial');
+            if (condicionInicialCell) {
+                condicionInicialCell.innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
             }
-            
-            // CONDICIÓN INICIAL en el segundo formato
-            if (condicionInicial && index === 1) {
-                const condicionInicialCell = formato.querySelector('tr:nth-child(3) td:last-child div');
-                if (condicionInicialCell) {
-                    condicionInicialCell.innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
-                }
+        }
+        
+        // CONDICIÓN FINAL
+        if (condicionFinal) {
+            const condicionFinalCell = formato.querySelector('#condicion-final');
+            if (condicionFinalCell) {
+                condicionFinalCell.innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
             }
-            
-            // CONDICIÓN FINAL en el segundo formato
-            if (condicionFinal && index === 1) {
-                const condicionFinalCell = formato.querySelector('tr:nth-child(4) td:last-child div');
-                if (condicionFinalCell) {
-                    condicionFinalCell.innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
-                }
-            }
-        });
+        }
     }
 
     // Ejecutar autocompletado cuando se carga la página
