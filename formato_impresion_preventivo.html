@@ -1,250 +1,211 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title></title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mantenimiento Preventivo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #dcdcdc;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0;
+    }
+    .page {
+      width: 905px;
+      min-height: 564px;
+      background: #dcdcdc;
 
-<style>
+      position: relative;
+      padding-bottom: 25px;
+    }
+    .content {
+      width: 720px;
+      margin: 22px auto 0;
+    }
+    .title-box {
+      border: 2px solid #222;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 28px;
+      letter-spacing: 0.5px;
+      margin-bottom: 22px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    .info-table td {
+      border: 2px solid #222;
+      height: 23px;
+      font-size: 14px;
+      padding: 2px 6px;
+      vertical-align: middle;
+    }
+    .red {
+      color: #d32020;
+    }
+    .condition-table {
+      margin-top: 20px;
+    }
+    .condition-table th {
+      border: 2px solid #222;
+      height: 24px;
+      font-size: 14px;
+      font-weight: normal;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .condition-table td {
+      border: 2px solid #222;
+      height: 275px;
+      vertical-align: top;
+      padding: 6px;
+      font-size: 13px;
+    }
+    .signatures {
+      width: 100%;
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 45px;
+      padding-bottom: 10px;
+    }
+    .signature {
+      text-align: center;
+    }
+    .signature-box {
+      width: 190px;
+      height: 46px;
+      border: 1.8px solid #222;
+      margin-bottom: 4px;
+      background: transparent;
+    }
+    .signature-label {
+      font-size: 14px;
+      line-height: 18px;
+      padding-bottom: 5px;
+    }
 
-    @page{
-        size: letter;
+    @media print {
+      html, body {
         margin: 0;
+        padding: 0;
+        background: white;
+      }
+      .page {
+        border: none;
+        width: 100%;
+      }
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
-
-    body{
-        font-family: Arial, sans-serif;
-        margin:0;
-        padding:20px;
-        background:white;
-    }
-
-    .formato{
-        width:90%;
-        margin:auto;
-        border:2px solid black;
-        padding:15px;
-        box-sizing:border-box;
-    }
-
-    .titulo{
-        border:2px solid black;
-        text-align:center;
-        font-weight:bold;
-        font-size:24px;
-        padding:12px;
-        margin-bottom:20px;
-    }
-
-    table{
-        width:100%;
-        border-collapse:collapse;
-    }
-
-    td{
-        border:1px solid black;
-        padding:6px;
-        font-size:14px;
-    }
-
-    .sin-borde{
-        border:none;
-    }
-
-    .campo-rojo{
-        color:red;
-    }
-
-    .espacio{
-        height:350px;
-        vertical-align:top;
-    }
-
-    .firmas{
-        margin-top:30px;
-        display:flex;
-        justify-content:space-around;
-    }
-
-    .firma-box{
-        text-align:center;
-        font-size:14px;
-    }
-
-    .firma-linea{
-        width:220px;
-        height:45px;
-        border:1px solid black;
-        margin-bottom:8px;
-    }
-
-    @media print{
-
-        html, body{
-            margin:0;
-            padding:0;
-        }
-
-        body{
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-
-    }
-
-</style>
+  </style>
 </head>
-
 <body>
+  <div class="page">
+    <div class="content">
 
-<div class="formato">
-
-    <div class="titulo">
+      <div class="title-box">
         MANTENIMIENTO PREVENTIVO
-    </div>
-                    TECNICO:
-                </td>
+      </div>
 
-                <td width="35%">
-                    FECHA:
-                </td>
-            </tr>
+      <table class="info-table">
+        <tr>
+          <td id="cell-tecnico" style="width:65%;">TECNICO:</td>
+          <td id="cell-fecha" style="width:35%;">FECHA:</td>
+        </tr>
+        <tr>
+          <td id="cell-equipo">MAQUINA / EQUIPO:</td>
+          <td id="cell-tiempo" class="red">TIEMPO REQUERIDO:</td>
+        </tr>
+        <tr>
+          <td id="cell-area" style="width:35%;">ÁREA:</td>
+          <td style="border:none;"></td>
+        </tr>
+      </table>
 
-            <tr>
-                <td>
-                    MAQUINA / EQUIPO:
-                </td>
+      <table class="condition-table">
+        <tr>
+          <th style="width:39%;">CONDICION INICIAL DEL EQUIPO</th>
+          <th style="width:61%;">CONDICION FINAL DEL EQUIPO Y OBSERVACIONES</th>
+        </tr>
+        <tr>
+          <td id="condicion-inicial"></td>
+          <td id="condicion-final"></td>
+        </tr>
+      </table>
 
-                <td>
-                    <span class="campo-rojo">
-                        TIEMPO REQUERIDO:
-                    </span>
-                </td>
-            </tr>
-
-            <tr>
-                <td>
-                    ÁREA:
-                </td>
-
-                <td class="sin-borde"></td>
-            </tr>
-        </table>
-
-        <br>
-
-        <table>
-            <tr>
-                <td width="50%" style="text-align:center;font-weight:bold;">
-                    CONDICION INICIAL DEL EQUIPO
-                </td>
-
-                <td width="50%" style="text-align:center;font-weight:bold;">
-                    CONDICION FINAL DEL EQUIPO Y OBSERVACIONES
-                </td>
-            </tr>
-
-            <tr>
-                <td class="espacio" id="condicion-inicial"></td>
-
-                <td class="espacio" id="condicion-final"></td>
-            </tr>
-        </table>
-
-        <div class="firmas">
-
-            <div class="firma-box">
-                <div class="firma-linea"></div>
-                Firma de Técnico
-            </div>
-
-            <div class="firma-box">
-                <div class="firma-linea"></div>
-                Firma Jefe de Área
-            </div>
-
+      <div class="signatures">
+        <div class="signature">
+          <div class="signature-box"></div>
+          <div class="signature-label">Firma de Técnico</div>
         </div>
+        <div class="signature">
+          <div class="signature-box"></div>
+          <div class="signature-label">Firma Jefe de Área</div>
+        </div>
+      </div>
 
     </div>
+  </div>
 
-</div>
-
-<script>
-    // Función para leer parámetros de la URL
-    function getParameterByName(name) {
-        const url = new URL(window.location.href);
-        return url.searchParams.get(name);
+  <script>
+    function getParam(name) {
+      return new URL(window.location.href).searchParams.get(name);
     }
 
-    // Función para autocompletar campos
-    function autocompletarFormato() {
-        const equipo = getParameterByName('equipo');
-        const centro = getParameterByName('centro');
-        const frecuencia = getParameterByName('frecuencia');
-        const tecnico = getParameterByName('tecnico');
-        const condicionInicial = getParameterByName('condicionInicial');
-        const condicionFinal = getParameterByName('condicionFinal');
+    function autocompletar() {
+      const tecnico        = getParam('tecnico');
+      const equipo         = getParam('equipo');
+      const centro         = getParam('centro');
+      const frecuencia     = getParam('frecuencia');
+      const condicionInicial = getParam('condicionInicial');
+      const condicionFinal   = getParam('condicionFinal');
 
-        // Autocompletar campos
-        const formato = document.querySelector('.formato');
-        
-        if (!formato) return;
+      if (tecnico) {
+        document.getElementById('cell-tecnico').innerHTML =
+          `TECNICO: <strong>${tecnico}</strong>`;
+      }
 
-        // TÉCNICO
-        if (tecnico) {
-            const tecnicoCell = formato.querySelector('tr:first-child td:first-child');
-            if (tecnicoCell && tecnicoCell.textContent.includes('TECNICO:')) {
-                tecnicoCell.innerHTML = `TECNICO: <strong>${tecnico}</strong>`;
-            }
-        }
+      if (equipo) {
+        document.getElementById('cell-equipo').innerHTML =
+          `MAQUINA / EQUIPO: <strong>${equipo}</strong>`;
+      }
 
-        // MAQUINA / EQUIPO
-        if (equipo) {
-            const equipoCell = formato.querySelector('tr:nth-child(2) td:first-child');
-            if (equipoCell && equipoCell.textContent.includes('MAQUINA / EQUIPO:')) {
-                equipoCell.innerHTML = `MAQUINA / EQUIPO: <strong>${equipo}</strong>`;
-            }
-        }
+      if (centro) {
+        document.getElementById('cell-area').innerHTML =
+          `ÁREA: <strong>${centro}</strong>`;
+      }
 
-        // ÁREA (usar centro como área)
-        if (centro) {
-            const areaCell = formato.querySelector('tr:nth-child(3) td:first-child');
-            if (areaCell && areaCell.textContent.includes('ÁREA:')) {
-                areaCell.innerHTML = `ÁREA: <strong>${centro}</strong>`;
-            }
-        }
+      if (frecuencia) {
+        document.getElementById('cell-tiempo').innerHTML =
+          `<span class="red">TIEMPO REQUERIDO: <strong>${frecuencia}</strong></span>`;
+      }
 
-        // FECHA - No autocompletar, dejar vacío para que el usuario la llene
+      if (condicionInicial) {
+        document.getElementById('condicion-inicial').innerHTML =
+          `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
+      }
 
-        // TIEMPO REQUERIDO (usar frecuencia)
-        if (frecuencia) {
-            const tiempoCell = formato.querySelector('tr:nth-child(2) td:last-child .campo-rojo');
-            if (tiempoCell) {
-                tiempoCell.innerHTML = `TIEMPO REQUERIDO: <strong>${frecuencia}</strong>`;
-            }
-        }
-
-        // CONDICIÓN INICIAL
-        if (condicionInicial) {
-            const condicionInicialCell = formato.querySelector('#condicion-inicial');
-            if (condicionInicialCell) {
-                condicionInicialCell.innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
-            }
-        }
-        
-        // CONDICIÓN FINAL
-        if (condicionFinal) {
-            const condicionFinalCell = formato.querySelector('#condicion-final');
-            if (condicionFinalCell) {
-                condicionFinalCell.innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
-            }
-        }
+      if (condicionFinal) {
+        document.getElementById('condicion-final').innerHTML =
+          `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
+      }
     }
 
-    // Ejecutar autocompletado cuando se carga la página
-    document.addEventListener('DOMContentLoaded', function() {
-        autocompletarFormato();
-    });
-</script>
-
+    document.addEventListener('DOMContentLoaded', autocompletar);
+  </script>
 </body>
 </html>
