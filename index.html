@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -1863,7 +1863,8 @@ function limpiarFormularioModificar() {
     document.getElementById('m-trabajo-realizado').value = '';
 }
 
-// ... (rest of the code remains the same)
+function abrirModalVer(id) {
+    mantenimientoActual = mantenimientos.find(m => m.id === id);
     if (!mantenimientoActual) return;
     
     // Llenar el modal con los datos del mantenimiento
