@@ -13,16 +13,17 @@
 
     body{
       margin:0;
-      background:#dcdcdc;
+      background:white;
       display:flex;
       justify-content:center;
-      padding:10px;
+      padding:0;
     }
 
     .sheet{
-      width:900px;
-      background:#dcdcdc;
-      border:2px solid #1f3cff;
+      width:100%;
+      max-width:900px;
+      background:white;
+      border:none;
       padding:10px 0;
     }
 
@@ -110,10 +111,19 @@
       body{
         background:white;
         padding:0;
+        margin:0;
       }
 
       .sheet{
         border:none;
+        width:100%;
+        max-width:none;
+      }
+
+      .format{
+        width:100%;
+        max-width:720px;
+        margin:10px auto;
       }
 
       .divider{
