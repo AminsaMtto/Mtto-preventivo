@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doble Formato - Mantenimiento Preventivo</title>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body{
+      margin:0;
+      background:#dcdcdc;
+      display:flex;
+      justify-content:center;
+      padding:10px;
+    }
+
+    .sheet{
+      width:900px;
+      background:#dcdcdc;
+      border:2px solid #1f3cff;
+      padding:10px 0;
+    }
+
+    .format{
+      width:720px;
+      margin:12px auto;
+      padding-bottom:10px;
+    }
+
+    .title-box{
+      border:2px solid #222;
+      height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:bold;
+      font-size:24px;
+      margin-bottom:16px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .info-table td{
+      border:2px solid #222;
+      height:22px;
+      font-size:12px;
+      padding:2px 6px;
+      vertical-align:middle;
+    }
+
+    .red{
+      color:#d32020;
+    }
+
+    .condition-table{
+      margin-top:16px;
+    }
+
+    .condition-table th{
+      border:2px solid #222;
+      height:22px;
+      font-size:12px;
+      font-weight:normal;
+      text-align:center;
+    }
+
+    .condition-table td{
+      border:2px solid #222;
+      height:180px;
+    }
+
+    .signatures{
+      width:100%;
+      margin-top:16px;
+      display:flex;
+      justify-content:center;
+      gap:40px;
+    }
+
+    .signature{
+      text-align:center;
+    }
+
+    .signature-box{
+      width:170px;
+      height:40px;
+      border:1.8px solid #222;
+      margin-bottom:4px;
+    }
+
+    .signature-label{
+      font-size:12px;
+    }
+
+    .divider{
+      width:95%;
+      margin:10px auto;
+      border-top:2px dashed #666;
+    }
+
+    @media print{
+      body{
+        background:white;
+        padding:0;
+      }
+
+      .sheet{
+        border:none;
+      }
+
+      .divider{
+        border-top:1px dashed #666;
+      }
+
+      @page {
+        margin: 0;
+        size: letter;
+      }
+
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sheet">
+
+    <!-- FORMATO 1 -->
+    <div class="format">
+
+      <div class="title-box">
+        MANTENIMIENTO PREVENTIVO
+      </div>
+
+      <table class="info-table">
+        <tr>
+          <td id="cell-tecnico-1" style="width:65%;">TECNICO:</td>
+          <td id="cell-fecha-1" style="width:35%;">FECHA:</td>
+        </tr>
+
+        <tr>
+          <td id="cell-equipo-1">MAQUINA / EQUIPO:</td>
+          <td id="cell-tiempo-1" class="red">TIEMPO REQUERIDO:</td>
+        </tr>
+
+        <tr>
+          <td id="cell-area-1" style="width:35%;">ÁREA:</td>
+          <td style="border:none;"></td>
+        </tr>
+      </table>
+
+      <table class="condition-table">
+        <tr>
+          <th style="width:39%;">
+            CONDICION INICIAL DEL EQUIPO
+          </th>
+
+          <th style="width:61%;">
+            CONDICION FINAL DEL EQUIPO Y OBSERVACIONES
+          </th>
+        </tr>
+
+        <tr>
+          <td id="condicion-inicial-1"></td>
+          <td id="condicion-final-1"></td>
+        </tr>
+      </table>
+
+      <div class="signatures">
+
+        <div class="signature">
+          <div class="signature-box"></div>
+          <div class="signature-label">Firma de Técnico</div>
+        </div>
+
+        <div class="signature">
+          <div class="signature-box"></div>
+          <div class="signature-label">Firma Jefe de Área</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- FORMATO 2 -->
+    <div class="format">
+
+      <div class="title-box">
+        MANTENIMIENTO PREVENTIVO
+      </div>
+
+      <table class="info-table">
+        <tr>
+          <td id="cell-tecnico-2" style="width:65%;">TECNICO:</td>
+          <td id="cell-fecha-2" style="width:35%;">FECHA:</td>
+        </tr>
+
+        <tr>
+          <td id="cell-equipo-2">MAQUINA / EQUIPO:</td>
+          <td id="cell-tiempo-2" class="red">TIEMPO REQUERIDO:</td>
+        </tr>
+
+        <tr>
+          <td id="cell-area-2" style="width:35%;">ÁREA:</td>
+          <td style="border:none;"></td>
+        </tr>
+      </table>
+
+      <table class="condition-table">
+        <tr>
+          <th style="width:39%;">
+            CONDICION INICIAL DEL EQUIPO
+          </th>
+
+          <th style="width:61%;">
+            CONDICION FINAL DEL EQUIPO Y OBSERVACIONES
+          </th>
+        </tr>
+
+        <tr>
+          <td id="condicion-inicial-2"></td>
+          <td id="condicion-final-2"></td>
+        </tr>
+      </table>
+
+      <div class="signatures">
+
+        <div class="signature">
+          <div class="signature-box"></div>
+          <div class="signature-label">Firma de Técnico</div>
+        </div>
+
+        <div class="signature">
+          <div class="signature-box"></div>
+          <div class="signature-label">Firma Jefe de Área</div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function getParam(name) {
+      return new URL(window.location.href).searchParams.get(name);
+    }
+
+    function autocompletar() {
+      const tecnico = getParam('tecnico');
+      const equipo = getParam('equipo');
+      const centro = getParam('centro');
+      const frecuencia = getParam('frecuencia');
+      const condicionInicial = getParam('condicionInicial');
+      const condicionFinal = getParam('condicionFinal');
+      const fecha = getParam('fecha');
+
+      // Formato 1
+      if (tecnico) {
+        document.getElementById('cell-tecnico-1').innerHTML = `TECNICO: <strong>${tecnico}</strong>`;
+      }
+      if (equipo) {
+        document.getElementById('cell-equipo-1').innerHTML = `MAQUINA / EQUIPO: <strong>${equipo}</strong>`;
+      }
+      if (centro) {
+        document.getElementById('cell-area-1').innerHTML = `ÁREA: <strong>${centro}</strong>`;
+      }
+      if (frecuencia) {
+        document.getElementById('cell-tiempo-1').innerHTML = `<span class="red">TIEMPO REQUERIDO: <strong>${frecuencia}</strong></span>`;
+      }
+      if (fecha) {
+        document.getElementById('cell-fecha-1').innerHTML = `FECHA: <strong>${fecha}</strong>`;
+      }
+      if (condicionInicial) {
+        document.getElementById('condicion-inicial-1').innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
+      }
+      if (condicionFinal) {
+        document.getElementById('condicion-final-1').innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
+      }
+
+      // Formato 2 (mismo contenido)
+      if (tecnico) {
+        document.getElementById('cell-tecnico-2').innerHTML = `TECNICO: <strong>${tecnico}</strong>`;
+      }
+      if (equipo) {
+        document.getElementById('cell-equipo-2').innerHTML = `MAQUINA / EQUIPO: <strong>${equipo}</strong>`;
+      }
+      if (centro) {
+        document.getElementById('cell-area-2').innerHTML = `ÁREA: <strong>${centro}</strong>`;
+      }
+      if (frecuencia) {
+        document.getElementById('cell-tiempo-2').innerHTML = `<span class="red">TIEMPO REQUERIDO: <strong>${frecuencia}</strong></span>`;
+      }
+      if (fecha) {
+        document.getElementById('cell-fecha-2').innerHTML = `FECHA: <strong>${fecha}</strong>`;
+      }
+      if (condicionInicial) {
+        document.getElementById('condicion-inicial-2').innerHTML = `<strong>CONDICIÓN INICIAL:</strong><br>${condicionInicial}`;
+      }
+      if (condicionFinal) {
+        document.getElementById('condicion-final-2').innerHTML = `<strong>CONDICIÓN FINAL:</strong><br>${condicionFinal}`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', autocompletar);
+  </script>
+</body>
+</html>
