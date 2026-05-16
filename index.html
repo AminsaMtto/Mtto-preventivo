@@ -1821,13 +1821,8 @@
       document.getElementById('c-condicion-inicial').value = '';
       document.getElementById('c-condicion-final').value = '';
       document.getElementById('c-proximo-manual').value = '';
-      
-      // Calcular próximo mantenimiento
-      const proximoCalculado = calcularProximoMantenimiento(
-        document.getElementById('c-fecha-realizado').value,
-        mantenimientoActual.frecuencia
-      );
-      document.getElementById('c-proximo-calculado').value = proximoCalculado;
+      document.getElementById('c-fecha-realizado').value = '';
+      document.getElementById('c-proximo-calculado').value = '';
       
       document.getElementById('modal-completar').classList.add('visible');
     }
