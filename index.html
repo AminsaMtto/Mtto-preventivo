@@ -2049,24 +2049,8 @@
         return new Date(actual.ultimoMantenimiento) > new Date(masReciente.ultimoMantenimiento) ? actual : masReciente;
       });
       
-      // Abrir formato de impresión con los datos del mantenimiento más reciente
-      const params = new URLSearchParams({
-        equipo: mantenimientoMasReciente.equipo,
-        centro: mantenimientoMasReciente.centro,
-        frecuencia: mantenimientoMasReciente.frecuencia,
-        tecnico: mantenimientoMasReciente.tecnico || '',
-        trabajoRealizado: mantenimientoMasReciente.trabajoRealizado || ''
-      });
-      
-      const ventanaImpresion = window.open(`ver_detalles.html?${params.toString()}`, '_blank');
-      
-      // Esperar a que la ventana se cargue
-      ventanaImpresion.onload = function() {
-        // La página de formato ya se autocompletará automáticamente
-        setTimeout(() => {
-          ventanaImpresion.print();
-        }, 500);
-      };
+      // Abrir el modal de ver detalles con los datos del mantenimiento más reciente
+      abrirModalVer(mantenimientoMasReciente.id);
     }
 
     function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
@@ -2378,9 +2362,9 @@
         centro: mantenimiento.centro,
         frecuencia: mantenimiento.frecuencia,
         tecnico: mantenimiento.tecnico || '',
-        observaciones: mantenimiento.observaciones || ''
+        condicionInicial: mantenimiento.condicionInicial || '',
+        condicionFinal: mantenimiento.condicionFinal || ''
       });
-      params.append('trabajoRealizado', mantenimiento.trabajoRealizado || '');
       
       const ventanaImpresion = window.open(`ver_detalles.html?${params.toString()}`, '_blank');
       
