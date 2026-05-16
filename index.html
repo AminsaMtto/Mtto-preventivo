@@ -1345,8 +1345,8 @@
   <script>
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUI',
-      USE_LOCAL_DATA: true,
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwNzXEbZY7BO_GR9k9fxttg-a46g-PokzH0G6Ndp7nFEpkff1IK2D6YGv5395iNtse7RA/exec',
+      USE_LOCAL_DATA: false,
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1412,7 +1412,7 @@
     async function cargarMantenimientosGoogleSheets() {
       try {
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({ action: 'get' });
+        const params = new URLSearchParams({ action: 'getAll' });
         
         const response = await fetch(`${url}?${params.toString()}`, {
           method: 'GET',
@@ -1429,11 +1429,11 @@
             equipo: row.Equipo,
             centro: row.Centro,
             frecuencia: row.Frecuencia,
-            ultimoMantenimiento: row['Último Mantenimiento'],
-            proximoMantenimiento: row['Próximo Mantenimiento'],
-            tecnico: row.Técnico,
-            trabajoRealizado: row['Trabajo Realizado'] || '',
-            observaciones: row.Observaciones || '',
+            ultimoMantenimiento: row['Ultimo Mantenimiento'],
+            proximoMantenimiento: row['Proximo Mantenimiento'],
+            tecnico: row.Tecnico,
+            condicionInicial: row['Condición Inicial'] || '',
+            condicionFinal: row['Condición Final'] || '',
             estado: row.Estado || 'pendiente'
           }));
           
@@ -1478,7 +1478,8 @@
           ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
           proximoMantenimiento: mantenimiento.proximoMantenimiento,
           tecnico: mantenimiento.tecnico,
-          observaciones: mantenimiento.observaciones,
+          condicionInicial: mantenimiento.condicionInicial || '',
+          condicionFinal: mantenimiento.condicionFinal || '',
           estado: mantenimiento.estado
         });
         
@@ -1515,7 +1516,8 @@
           ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
           proximoMantenimiento: mantenimiento.proximoMantenimiento,
           tecnico: mantenimiento.tecnico,
-          trabajoRealizado: mantenimiento.trabajoRealizado || '',
+          condicionInicial: mantenimiento.condicionInicial || '',
+          condicionFinal: mantenimiento.condicionFinal || '',
           estado: mantenimiento.estado
         });
         
