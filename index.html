@@ -1339,17 +1339,15 @@
     </div>
   </div>
 
-  <!-- ── TOAST ─────────────────────────────────────────────── -->
+  <!-- ── TOAST ───────────────────────────────────────────────────── -->
   <div class="toast" id="toast"></div>
 
-  <!-- ── SCRIPTS ───────────────────────────────────────────────────── -->
   <script>
-// ===== CONFIGURACIÓN =====
-const CONFIG = {
-    // URL de Google Apps Script Web App
-    GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzBLNEEaVpMs0HZSnTKt5fqm911rMPdlRuKlhc69t5KqO4XJ56493nlcgM2S0E-gSKoTQ/exec',
-    // Mapeo de frecuencia a días
-    FRECUENCIAS: {
+    // ===== CONFIGURACIÓN =====
+    const CONFIG = {
+      GOOGLE_APPS_SCRIPT_URL: 'TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUI',
+      USE_LOCAL_DATA: true,
+      FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
         'Mensual': 30,
@@ -1357,263 +1355,256 @@ const CONFIG = {
         'Trimestral': 90,
         'Semestral': 180,
         'Anual': 365
-    },
-    // Centros de negocio disponibles
-    CENTROS: ['Zinc', 'Cromo', 'Doblado', 'Gral'],
-    // Colores para gráficas
-    COLORES_GRAFICAS: {
-        'Cerrados': '#1e6b35',  // Verde para realizados
-        'Pendientes': '#b55a00',  // Naranja para pendientes
-        'Zinc': '#FF6B6B',
-        'Cromo': '#4ECDC4', 
-        'Doblado': '#45B7D1',
-        'Gral': '#96CEB4',
-        'Todos': '#2E86AB'
-    }
-};
+      },
+      CENTROS: ['Zinc', 'Cromo', 'Doblado', 'Gral'],
+      COLORES_GRAFICAS: {
+        'Cerrados': '#1e6b35',
+        'Pendientes': '#7a5500'
+      }
+    };
 
-// ===== ESTADO GLOBAL =====
-let mantenimientos = [];
-let filtroActual = 'todos';
-let terminoBusqueda = '';
-let mantenimientoActual = null;
+    // ===== VARIABLES GLOBALES =====
+    let mantenimientos = [];
+    let mantenimientoActual = null;
+    let filtroActual = 'todos';
+    let terminoBusqueda = '';
+    let chartMensual = null;
+    let chartPorcentajes = null;
 
-// Variables para gráficas
-let chartMensual = null;
-let chartPorcentajes = null;
+    // ===== INICIALIZACIÓN =====
+    document.addEventListener('DOMContentLoaded', function() {
+      cargarMantenimientos();
+      configurarListeners();
+      inicializarGraficas();
+    });
 
-// ===== INICIALIZACIÓN =====
-document.addEventListener('DOMContentLoaded', function() {
-    cargarMantenimientos();
-    actualizarEstadisticas();
-    renderizarTabla();
-    
-    // Inicializar gráficas
-    inicializarGraficas();
-    
-    // Configurar listeners
-    configurarListeners();
-    
-    // Establecer fecha actual por defecto en modales
-    const fechaActual = new Date().toISOString().split('T')[0];
-    const fechaRealizado = document.getElementById('c-fecha-realizado');
-    if (fechaRealizado) {
-        fechaRealizado.value = fechaActual;
-    }
-});
-
-// ===== FUNCIONES DE GOOGLE APPS SCRIPT =====
-async function cargarMantenimientos() {
-    try {
-        // Verificar que la URL esté configurada
-        if (CONFIG.GOOGLE_APPS_SCRIPT_URL === 'TU_WEB_APP_URL_AQUI') {
-            mostrarToast('Por favor configura tu Google Apps Script URL primero', 'warning');
-            console.log('URL no configurada. Reemplaza "TU_WEB_APP_URL_AQUI" con tu URL real');
+    // ===== FUNCIONES DE DATOS =====
+    async function cargarMantenimientos() {
+      try {
+        if (CONFIG.USE_LOCAL_DATA) {
+          // Usar localStorage
+          const datos = localStorage.getItem('mantenimientos');
+          if (datos) {
+            mantenimientos = JSON.parse(datos);
+            console.log('Mantenimientos cargados desde localStorage:', mantenimientos.length);
+          } else {
             mantenimientos = [];
-            renderizarTabla();
-            actualizarEstadisticas();
-            return;
+            console.log('No hay mantenimientos en localStorage, iniciando vacío');
+          }
+        } else {
+          // Usar Google Apps Script
+          await cargarMantenimientosGoogleSheets();
         }
         
-        console.log('Intentando cargar desde:', CONFIG.GOOGLE_APPS_SCRIPT_URL);
-        const url = `${CONFIG.GOOGLE_APPS_SCRIPT_URL}?action=getAll`;
-        console.log('URL completa:', url);
+        actualizarEstadosPorFrecuencia();
+        renderizarTabla();
+        actualizarEstadisticas();
+        actualizarGraficasConDatos();
+      } catch (error) {
+        console.error('Error al cargar mantenimientos:', error);
+        mostrarToast('Error al cargar datos', 'error');
+        mantenimientos = [];
+        renderizarTabla();
+        actualizarEstadisticas();
+      }
+    }
+
+    async function cargarMantenimientosGoogleSheets() {
+      try {
+        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+        const params = new URLSearchParams({ action: 'get' });
         
-        const response = await fetch(url);
-        console.log('Respuesta status:', response.status);
-        console.log('Respuesta ok:', response.ok);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error response:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
-        }
+        const response = await fetch(`${url}?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
         
         const result = await response.json();
-        console.log('Respuesta JSON:', result);
         
-        if (result.success) {
-            // Convertir datos de Google Apps Script al formato del sistema
-            mantenimientos = result.data.map(row => ({
-                id: parseInt(row.ID) || Date.now(),
-                equipo: row.Equipo || '',
-                centro: row.Centro || '',
-                frecuencia: row.Frecuencia || '',
-                ultimoMantenimiento: row['Ultimo Mantenimiento'] || '',
-                proximoMantenimiento: row['Proximo Mantenimiento'] || '',
-                tecnico: row.Tecnico || '',
-                observaciones: row.Observaciones || '',
-                estado: row.Estado || 'pendiente'
-            }));
-            
-            console.log('Mantenimientos cargados:', mantenimientos.length);
-            actualizarEstadosPorFrecuencia();
-            renderizarTabla();
-            actualizarEstadisticas();
-            actualizarGraficasConDatos();
-            mostrarToast(`Se cargaron ${mantenimientos.length} mantenimientos desde Google Sheets`, 'success');
+        if (result.success && result.data) {
+          mantenimientos = result.data.map(row => ({
+            id: row.ID,
+            equipo: row.Equipo,
+            centro: row.Centro,
+            frecuencia: row.Frecuencia,
+            ultimoMantenimiento: row['Último Mantenimiento'],
+            proximoMantenimiento: row['Próximo Mantenimiento'],
+            tecnico: row.Técnico,
+            trabajoRealizado: row['Trabajo Realizado'] || '',
+            observaciones: row.Observaciones || '',
+            estado: row.Estado || 'pendiente'
+          }));
+          
+          console.log('Mantenimientos cargados:', mantenimientos.length);
+          actualizarEstadosPorFrecuencia();
+          renderizarTabla();
+          actualizarEstadisticas();
+          actualizarGraficasConDatos();
+          mostrarToast(`Se cargaron ${mantenimientos.length} mantenimientos desde Google Sheets`, 'success');
         } else {
-            throw new Error(result.error || 'Error desconocido');
+          throw new Error(result.error || 'Error desconocido');
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error completo al cargar desde Google Apps Script:', error);
         mostrarToast('Error al cargar datos: ' + error.message, 'error');
         
         // Mostrar ayuda para configuración
         if (error.message.includes('Failed to fetch')) {
-            mostrarToast('Verifica: 1) URL correcta 2) Web App desplegada 3) Acceso "Cualquier persona"', 'error');
+          mostrarToast('Verifica: 1) URL correcta 2) Web App desplegada 3) Acceso "Cualquier persona"', 'error');
         }
         
         mantenimientos = [];
         renderizarTabla();
         actualizarEstadisticas();
+      }
     }
-}
 
-async function guardarMantenimientos() {
-    // Los datos se guardan individualmente en las funciones CRUD
-    console.log('Sistema listo para guardar con Google Apps Script');
-}
+    async function guardarMantenimientos() {
+      // Los datos se guardan individualmente en las funciones CRUD
+      console.log('Sistema listo para guardar con Google Apps Script');
+    }
 
-async function agregarMantenimientoGoogleSheets(mantenimiento) {
-    try {
+    async function agregarMantenimientoGoogleSheets(mantenimiento) {
+      try {
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
         const params = new URLSearchParams({
-            action: 'add',
-            id: mantenimiento.id.toString(),
-            equipo: mantenimiento.equipo,
-            centro: mantenimiento.centro,
-            frecuencia: mantenimiento.frecuencia,
-            ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
-            proximoMantenimiento: mantenimiento.proximoMantenimiento,
-            tecnico: mantenimiento.tecnico,
-            observaciones: mantenimiento.observaciones,
-            estado: mantenimiento.estado
+          action: 'add',
+          id: mantenimiento.id.toString(),
+          equipo: mantenimiento.equipo,
+          centro: mantenimiento.centro,
+          frecuencia: mantenimiento.frecuencia,
+          ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
+          proximoMantenimiento: mantenimiento.proximoMantenimiento,
+          tecnico: mantenimiento.tecnico,
+          observaciones: mantenimiento.observaciones,
+          estado: mantenimiento.estado
         });
         
         const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: params.toString()
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params.toString()
         });
         
         const result = await response.json();
         
         if (result.success) {
-            mostrarToast('Mantenimiento guardado en Google Sheets', 'success');
+          mostrarToast('Mantenimiento guardado en Google Sheets', 'success');
         } else {
-            throw new Error(result.error || 'Error al guardar');
+          throw new Error(result.error || 'Error al guardar');
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error al guardar en Google Sheets:', error);
         mostrarToast('Error al guardar: ' + error.message, 'error');
+      }
     }
-}
 
-async function actualizarMantenimientoGoogleSheets(mantenimiento) {
-    try {
+    async function actualizarMantenimientoGoogleSheets(mantenimiento) {
+      try {
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
         const params = new URLSearchParams({
-            action: 'update',
-            id: mantenimiento.id.toString(),
-            equipo: mantenimiento.equipo,
-            centro: mantenimiento.centro,
-            frecuencia: mantenimiento.frecuencia,
-            ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
-            proximoMantenimiento: mantenimiento.proximoMantenimiento,
-            tecnico: mantenimiento.tecnico,
-            trabajoRealizado: mantenimiento.trabajoRealizado || '',
-            estado: mantenimiento.estado
+          action: 'update',
+          id: mantenimiento.id.toString(),
+          equipo: mantenimiento.equipo,
+          centro: mantenimiento.centro,
+          frecuencia: mantenimiento.frecuencia,
+          ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
+          proximoMantenimiento: mantenimiento.proximoMantenimiento,
+          tecnico: mantenimiento.tecnico,
+          trabajoRealizado: mantenimiento.trabajoRealizado || '',
+          estado: mantenimiento.estado
         });
         
         const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: params.toString()
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params.toString()
         });
         
         const result = await response.json();
         
         if (result.success) {
-            mostrarToast('Mantenimiento actualizado en Google Sheets', 'success');
+          mostrarToast('Mantenimiento actualizado en Google Sheets', 'success');
         } else {
-            throw new Error(result.error || 'Error al actualizar');
+          throw new Error(result.error || 'Error al actualizar');
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error al actualizar en Google Sheets:', error);
         mostrarToast('Error al actualizar: ' + error.message, 'error');
+      }
     }
-}
 
-async function eliminarMantenimientoGoogleSheets(id) {
-    try {
+    async function eliminarMantenimientoGoogleSheets(id) {
+      try {
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
         const params = new URLSearchParams({
-            action: 'delete',
-            id: id.toString()
+          action: 'delete',
+          id: id.toString()
         });
         
         const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: params.toString()
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: params.toString()
         });
         
         const result = await response.json();
         
         if (result.success) {
-            mostrarToast('Mantenimiento eliminado de Google Sheets', 'success');
+          mostrarToast('Mantenimiento eliminado de Google Sheets', 'success');
         } else {
-            throw new Error(result.error || 'Error al eliminar');
+          throw new Error(result.error || 'Error al eliminar');
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error al eliminar en Google Sheets:', error);
         mostrarToast('Error al eliminar: ' + error.message, 'error');
+      }
     }
-}
 
-// ===== FUNCIONES DE CÁLCULO =====
-function calcularProximoMantenimiento(fechaUltimo, frecuencia) {
-    const dias = CONFIG.FRECUENCIAS[frecuencia];
-    if (!dias) return null;
-    
-    const fecha = new Date(fechaUltimo);
-    fecha.setDate(fecha.getDate() + dias);
-    return fecha.toISOString().split('T')[0];
-}
+    // ===== FUNCIONES DE CÁLCULO =====
+    function calcularProximoMantenimiento(fechaUltimo, frecuencia) {
+      const dias = CONFIG.FRECUENCIAS[frecuencia];
+      if (!dias) return null;
+      
+      const fecha = new Date(fechaUltimo);
+      fecha.setDate(fecha.getDate() + dias);
+      return fecha.toISOString().split('T')[0];
+    }
 
-function determinarEstado(fechaProximo, frecuencia, ultimoRealizado) {
-    // Si no hay fecha de próximo mantenimiento, está pendiente
-    if (!fechaProximo) return 'pendiente';
-    
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    const proximo = new Date(fechaProximo);
-    proximo.setHours(0, 0, 0, 0);
-    
-    const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
-    
-    if (diasDiff < 0) {
+    function determinarEstado(fechaProximo, frecuencia, ultimoRealizado) {
+      // Si no hay fecha de próximo mantenimiento, está pendiente
+      if (!fechaProximo) return 'pendiente';
+      
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      const proximo = new Date(fechaProximo);
+      proximo.setHours(0, 0, 0, 0);
+      
+      const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
+      
+      if (diasDiff < 0) {
         return 'vencido';
-    } else if (diasDiff <= 7) {
+      } else if (diasDiff <= 7) {
         return 'proximo';
-    } else {
+      } else {
         return 'pendiente';
+      }
     }
-}
 
-function actualizarEstadosPorFrecuencia() {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    mantenimientos.forEach((mantenimiento, index) => {
+    function actualizarEstadosPorFrecuencia() {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      mantenimientos.forEach((mantenimiento, index) => {
         if (mantenimiento.estado === 'realizado') return; // No actualizar los realizados
         
         let nuevoProximo;
@@ -1688,65 +1679,65 @@ function actualizarEstadosPorFrecuencia() {
             mantenimientos[index].estado = determinarEstado(nuevoProximo, mantenimiento.frecuencia, mantenimiento.ultimoMantenimiento);
         }
     });
-}
+    }
 
-function obtenerEstadoBadge(estado) {
-    const badges = {
+    function obtenerEstadoBadge(estado) {
+      const badges = {
         'pendiente': '<span class="badge estado-pendiente">Pendiente</span>',
         'proximo': '<span class="badge estado-proximo">Próximo</span>',
         'vencido': '<span class="badge estado-vencido">Vencido</span>',
         'realizado': '<span class="badge estado-realizado">Realizado</span>'
-    };
-    return badges[estado] || badges['pendiente'];
-}
+      };
+      return badges[estado] || badges['pendiente'];
+    }
 
-// ===== FUNCIONES DE FILTRADO Y BÚSQUEDA =====
-function filtrar(tipo, boton) {
-    filtroActual = tipo;
-    
-    // Actualizar botones
-    document.querySelectorAll('.filtro-btn').forEach(btn => {
+    // ===== FUNCIONES DE FILTRADO Y BÚSQUEDA =====
+    function filtrar(tipo, boton) {
+      filtroActual = tipo;
+      
+      // Actualizar botones
+      document.querySelectorAll('.filtro-btn').forEach(btn => {
         btn.classList.remove('activo');
-    });
-    boton.classList.add('activo');
-    
-    renderizarTabla();
-}
+      });
+      boton.classList.add('activo');
+      
+      renderizarTabla();
+    }
 
-function buscar(termino) {
-    terminoBusqueda = termino.toLowerCase();
-    renderizarTabla();
-}
+    function buscar(termino) {
+      terminoBusqueda = termino.toLowerCase();
+      renderizarTabla();
+    }
 
-function obtenerMantenimientosFiltrados() {
-    let filtrados = [...mantenimientos];
-    
-    // Aplicar filtro de estado
-    if (filtroActual !== 'todos') {
+    function obtenerMantenimientosFiltrados() {
+      let filtrados = [...mantenimientos];
+      
+      // Aplicar filtro de estado
+      if (filtroActual !== 'todos') {
         filtrados = filtrados.filter(m => m.estado === filtroActual);
-    }
-    
-    // Aplicar búsqueda
-    if (terminoBusqueda) {
+      }
+      
+      // Aplicar búsqueda
+      if (terminoBusqueda) {
         filtrados = filtrados.filter(m => 
-            m.equipo.toLowerCase().includes(terminoBusqueda) ||
-            m.centro.toLowerCase().includes(terminoBusqueda) ||
-            (m.tecnico && m.tecnico.toLowerCase().includes(terminoBusqueda))
+          m.equipo.toLowerCase().includes(terminoBusqueda) ||
+          m.centro.toLowerCase().includes(terminoBusqueda) ||
+          (m.tecnico && m.tecnico.toLowerCase().includes(terminoBusqueda))
         );
+      }
+      
+      // Ordenar por fecha de próximo mantenimiento
+      filtrados.sort((a, b) => new Date(a.proximoMantenimiento) - new Date(b.proximoMantenimiento));
+      
+      return filtrados;
     }
-    
-    // Ordenar por fecha de próximo mantenimiento
-    filtrados.sort((a, b) => new Date(a.proximoMantenimiento) - new Date(b.proximoMantenimiento));
-    
-    return filtrados;
-}
 
-// ===== FUNCIONES DE RENDERIZADO =====
-function renderizarTabla() {
-    const tbody = document.getElementById('tabla-preventivos');
-    const filtrados = obtenerMantenimientosFiltrados();
-    
-    if (filtrados.length === 0) {
+    // ===== FUNCIONES DE RENDERIZADO =====
+    function renderizarTabla() {
+      const tbody = document.getElementById('tabla-preventivos');
+      const filtrados = obtenerMantenimientosFiltrados();
+      
+      if (filtrados.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="8">
@@ -1761,9 +1752,9 @@ function renderizarTabla() {
             </tr>
         `;
         return;
-    }
-    
-    tbody.innerHTML = filtrados.map(mantenimiento => `
+      }
+      
+      tbody.innerHTML = filtrados.map(mantenimiento => `
         <tr>
             <td><strong>${mantenimiento.id}</strong></td>
             <td><strong>${mantenimiento.equipo}</strong></td>
@@ -1780,219 +1771,219 @@ function renderizarTabla() {
               </div>
             </td>
         </tr>
-    `).join('');
-}
+      `).join('');
+    }
 
-function actualizarEstadisticas() {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    
-    const stats = {
+    function actualizarEstadisticas() {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      const stats = {
         total: mantenimientos.length,
         pendientes: 0,
         proximos: 0,
         vencidos: 0
-    };
-    
-    mantenimientos.forEach(m => {
+      };
+      
+      mantenimientos.forEach(m => {
         const proximo = new Date(m.proximoMantenimiento);
         proximo.setHours(0, 0, 0, 0);
         const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
         
         if (diasDiff < 0) {
-            stats.vencidos++;
+          stats.vencidos++;
         } else if (diasDiff <= 7) {
-            stats.proximos++;
+          stats.proximos++;
         } else if (m.estado === 'pendiente') {
-            stats.pendientes++;
+          stats.pendientes++;
         }
-    });
-    
-    document.getElementById('stat-total').textContent = stats.total;
-    document.getElementById('stat-pendientes').textContent = stats.pendientes;
-    document.getElementById('stat-proximos').textContent = stats.proximos;
-    document.getElementById('stat-vencidos').textContent = stats.vencidos;
-}
+      });
+      
+      document.getElementById('stat-total').textContent = stats.total;
+      document.getElementById('stat-pendientes').textContent = stats.pendientes;
+      document.getElementById('stat-proximos').textContent = stats.proximos;
+      document.getElementById('stat-vencidos').textContent = stats.vencidos;
+    }
 
-// ===== FUNCIONES DE MODALES =====
-function abrirModalNuevo() {
-    document.getElementById('modal-nuevo').classList.add('visible');
-    limpiarFormularioNuevo();
-}
+    // ===== FUNCIONES DE MODALES =====
+    function abrirModalNuevo() {
+      document.getElementById('modal-nuevo').classList.add('visible');
+      limpiarFormularioNuevo();
+    }
 
-function abrirModalCompletar(id) {
-    mantenimientoActual = mantenimientos.find(m => m.id === id);
-    if (!mantenimientoActual) return;
-    
-    // Limpiar formulario
-    document.getElementById('c-condicion-inicial').value = '';
-    document.getElementById('c-condicion-final').value = '';
-    document.getElementById('c-proximo-manual').value = '';
-    
-    // Calcular próximo mantenimiento
-    const proximoCalculado = calcularProximoMantenimiento(
+    function abrirModalCompletar(id) {
+      mantenimientoActual = mantenimientos.find(m => m.id === id);
+      if (!mantenimientoActual) return;
+      
+      // Limpiar formulario
+      document.getElementById('c-condicion-inicial').value = '';
+      document.getElementById('c-condicion-final').value = '';
+      document.getElementById('c-proximo-manual').value = '';
+      
+      // Calcular próximo mantenimiento
+      const proximoCalculado = calcularProximoMantenimiento(
         document.getElementById('c-fecha-realizado').value,
         mantenimientoActual.frecuencia
-    );
-    document.getElementById('c-proximo-calculado').value = proximoCalculado;
-    
-    document.getElementById('modal-completar').classList.add('visible');
-}
-
-function abrirModalModificar(id) {
-    mantenimientoActual = mantenimientos.find(m => m.id === id);
-    if (!mantenimientoActual) return;
-    
-    // Llenar formulario con datos existentes
-    document.getElementById('m-equipo').value = mantenimientoActual.equipo || '';
-    document.getElementById('m-centro').value = mantenimientoActual.centro || '';
-    document.getElementById('m-frecuencia').value = mantenimientoActual.frecuencia || '';
-    document.getElementById('m-ultimo').value = mantenimientoActual.ultimoMantenimiento || '';
-    document.getElementById('m-tecnico').value = mantenimientoActual.tecnico || '';
-    document.getElementById('m-trabajo-realizado').value = mantenimientoActual.trabajoRealizado || mantenimientoActual.observaciones || '';
-    
-    document.getElementById('modal-modificar').classList.add('visible');
-}
-
-function limpiarFormularioModificar() {
-    document.getElementById('m-equipo').value = '';
-    document.getElementById('m-centro').value = '';
-    document.getElementById('m-frecuencia').value = '';
-    document.getElementById('m-ultimo').value = '';
-    document.getElementById('m-tecnico').value = '';
-    document.getElementById('m-trabajo-realizado').value = '';
-}
-
-function abrirModalVer(id) {
-    mantenimientoActual = mantenimientos.find(m => m.id === id);
-    if (!mantenimientoActual) return;
-    
-    // Llenar el modal con los datos del mantenimiento
-    const datos = mantenimientoActual;
-    
-    // Formato 1
-    document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
-    document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
-    document.getElementById('v-frecuencia-1').textContent = datos.frecuencia || '-';
-    document.getElementById('v-centro-1').textContent = datos.centro || '-';
-    document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-    document.getElementById('v-condicion-inicial-1').textContent = 'Por revisar al iniciar mantenimiento';
-    document.getElementById('v-condicion-final-1').textContent = 'Por revisar al finalizar mantenimiento';
-    
-    // Formato 2
-    document.getElementById('v-tecnico-2').textContent = datos.tecnico || '-';
-    document.getElementById('v-equipo-2').textContent = datos.equipo || '-';
-    document.getElementById('v-frecuencia-2').textContent = datos.frecuencia || '-';
-    document.getElementById('v-centro-2').textContent = datos.centro || '-';
-    document.getElementById('v-fecha-2').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-    document.getElementById('v-condicion-inicial-2').textContent = 'Por revisar al iniciar mantenimiento';
-    document.getElementById('v-condicion-final-2').textContent = 'Por revisar al finalizar mantenimiento';
-    document.getElementById('v-trabajo-realizado-2').textContent = datos.trabajoRealizado || datos.observaciones || 'Sin trabajo realizado registrado';
-    
-    document.getElementById('modal-ver').classList.add('visible');
-}
-
-function cambiarTab(tabName, button) {
-    // Ocultar todos los contenidos de pestañas
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    // Desactivar todos los botones de pestaña
-    document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Mostrar la pestaña seleccionada
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    button.classList.add('active');
-    
-    // Si es la pestaña de historial, cargar los datos
-    if (tabName === 'historial') {
-        cargarHistorial();
+      );
+      document.getElementById('c-proximo-calculado').value = proximoCalculado;
+      
+      document.getElementById('modal-completar').classList.add('visible');
     }
-}
 
-function cerrarModal(modalId) {
-    document.getElementById(modalId).classList.remove('visible');
-    mantenimientoActual = null;
-}
+    function abrirModalModificar(id) {
+      mantenimientoActual = mantenimientos.find(m => m.id === id);
+      if (!mantenimientoActual) return;
+      
+      // Llenar formulario con datos existentes
+      document.getElementById('m-equipo').value = mantenimientoActual.equipo || '';
+      document.getElementById('m-centro').value = mantenimientoActual.centro || '';
+      document.getElementById('m-frecuencia').value = mantenimientoActual.frecuencia || '';
+      document.getElementById('m-ultimo').value = mantenimientoActual.ultimoMantenimiento || '';
+      document.getElementById('m-tecnico').value = mantenimientoActual.tecnico || '';
+      document.getElementById('m-trabajo-realizado').value = mantenimientoActual.trabajoRealizado || mantenimientoActual.observaciones || '';
+      
+      document.getElementById('modal-modificar').classList.add('visible');
+    }
 
-function cargarHistorial() {
-    // Agrupar mantenimientos por equipo (solo los realizados)
-    const historialPorEquipo = {};
-    
-    mantenimientos.forEach(mantenimiento => {
+    function limpiarFormularioModificar() {
+      document.getElementById('m-equipo').value = '';
+      document.getElementById('m-centro').value = '';
+      document.getElementById('m-frecuencia').value = '';
+      document.getElementById('m-ultimo').value = '';
+      document.getElementById('m-tecnico').value = '';
+      document.getElementById('m-trabajo-realizado').value = '';
+    }
+
+    function abrirModalVer(id) {
+      mantenimientoActual = mantenimientos.find(m => m.id === id);
+      if (!mantenimientoActual) return;
+      
+      // Llenar el modal con los datos del mantenimiento
+      const datos = mantenimientoActual;
+      
+      // Formato 1
+      document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
+      document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
+      document.getElementById('v-frecuencia-1').textContent = datos.frecuencia || '-';
+      document.getElementById('v-centro-1').textContent = datos.centro || '-';
+      document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
+      document.getElementById('v-condicion-inicial-1').textContent = 'Por revisar al iniciar mantenimiento';
+      document.getElementById('v-condicion-final-1').textContent = 'Por revisar al finalizar mantenimiento';
+      
+      // Formato 2
+      document.getElementById('v-tecnico-2').textContent = datos.tecnico || '-';
+      document.getElementById('v-equipo-2').textContent = datos.equipo || '-';
+      document.getElementById('v-frecuencia-2').textContent = datos.frecuencia || '-';
+      document.getElementById('v-centro-2').textContent = datos.centro || '-';
+      document.getElementById('v-fecha-2').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
+      document.getElementById('v-condicion-inicial-2').textContent = 'Por revisar al iniciar mantenimiento';
+      document.getElementById('v-condicion-final-2').textContent = 'Por revisar al finalizar mantenimiento';
+      document.getElementById('v-trabajo-realizado-2').textContent = datos.trabajoRealizado || datos.observaciones || 'Sin trabajo realizado registrado';
+      
+      document.getElementById('modal-ver').classList.add('visible');
+    }
+
+    function cambiarTab(tabName, button) {
+      // Ocultar todos los contenidos de pestañas
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Desactivar todos los botones de pestaña
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Mostrar la pestaña seleccionada
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      button.classList.add('active');
+      
+      // Si es la pestaña de historial, cargar los datos
+      if (tabName === 'historial') {
+        cargarHistorial();
+      }
+    }
+
+    function cerrarModal(modalId) {
+      document.getElementById(modalId).classList.remove('visible');
+      mantenimientoActual = null;
+    }
+
+    function cargarHistorial() {
+      // Agrupar mantenimientos por equipo (solo los realizados)
+      const historialPorEquipo = {};
+      
+      mantenimientos.forEach(mantenimiento => {
         // Solo considerar mantenimientos realizados
         if (mantenimiento.estado === 'realizado') {
-            if (!historialPorEquipo[mantenimiento.equipo]) {
-                historialPorEquipo[mantenimiento.equipo] = {
-                    fechaRealizacion: null,
-                    mantenimientos: []
-                };
-            }
-            
-            const equipo = historialPorEquipo[mantenimiento.equipo];
-            equipo.mantenimientos.push(mantenimiento);
-            
-            // Guardar la fecha de realización más reciente
-            if (!equipo.fechaRealizacion || new Date(mantenimiento.ultimoMantenimiento) > new Date(equipo.fechaRealizacion)) {
-                equipo.fechaRealizacion = mantenimiento.ultimoMantenimiento;
-            }
+          if (!historialPorEquipo[mantenimiento.equipo]) {
+            historialPorEquipo[mantenimiento.equipo] = {
+              fechaRealizacion: null,
+              mantenimientos: []
+            };
+          }
+          
+          const equipo = historialPorEquipo[mantenimiento.equipo];
+          equipo.mantenimientos.push(mantenimiento);
+          
+          // Guardar la fecha de realización más reciente
+          if (!equipo.fechaRealizacion || new Date(mantenimiento.ultimoMantenimiento) > new Date(equipo.fechaRealizacion)) {
+            equipo.fechaRealizacion = mantenimiento.ultimoMantenimiento;
+          }
         }
-    });
-    
-    // Actualizar filtro de equipos
-    actualizarFiltroEquipos(Object.keys(historialPorEquipo));
-    
-    // Renderizar tabla de historial
-    renderizarTablaHistorial(historialPorEquipo);
-}
+      });
+      
+      // Actualizar filtro de equipos
+      actualizarFiltroEquipos(Object.keys(historialPorEquipo));
+      
+      // Renderizar tabla de historial
+      renderizarTablaHistorial(historialPorEquipo);
+    }
 
-function actualizarFiltroEquipos(equipos) {
-    const filtro = document.getElementById('filtro-equipo-historial');
-    const valorActual = filtro.value;
-    
-    filtro.innerHTML = '<option value="">Todos los equipos</option>';
-    equipos.sort().forEach(equipo => {
+    function actualizarFiltroEquipos(equipos) {
+      const filtro = document.getElementById('filtro-equipo-historial');
+      const valorActual = filtro.value;
+      
+      filtro.innerHTML = '<option value="">Todos los equipos</option>';
+      equipos.sort().forEach(equipo => {
         filtro.innerHTML += `<option value="${equipo}">${equipo}</option>`;
-    });
-    
-    filtro.value = valorActual;
-}
+      });
+      
+      filtro.value = valorActual;
+    }
 
-function renderizarTablaHistorial(historialPorEquipo) {
-    const tbody = document.getElementById('tabla-historial');
-    const terminoBusqueda = document.getElementById('buscar-equipo').value.toLowerCase();
-    const filtroCentro = document.getElementById('filtro-centro-historial').value;
-    const filtroEquipo = document.getElementById('filtro-equipo-historial').value;
-    
-    let historialFiltrado = Object.entries(historialPorEquipo);
-    
-    // Aplicar filtros
-    if (terminoBusqueda) {
+    function renderizarTablaHistorial(historialPorEquipo) {
+      const tbody = document.getElementById('tabla-historial');
+      const terminoBusqueda = document.getElementById('buscar-equipo').value.toLowerCase();
+      const filtroCentro = document.getElementById('filtro-centro-historial').value;
+      const filtroEquipo = document.getElementById('filtro-equipo-historial').value;
+      
+      let historialFiltrado = Object.entries(historialPorEquipo);
+      
+      // Aplicar filtros
+      if (terminoBusqueda) {
         historialFiltrado = historialFiltrado.filter(([equipo]) => 
-            equipo.toLowerCase().includes(terminoBusqueda)
+          equipo.toLowerCase().includes(terminoBusqueda)
         );
-    }
-    
-    if (filtroEquipo) {
+      }
+      
+      if (filtroEquipo) {
         historialFiltrado = historialFiltrado.filter(([equipo]) => equipo === filtroEquipo);
-    }
-    
-    // Filtrar por centro de negocios
-    if (filtroCentro) {
+      }
+      
+      // Filtrar por centro de negocios
+      if (filtroCentro) {
         historialFiltrado = historialFiltrado.filter(([equipo, datos]) => {
-            // Verificar si algún mantenimiento del equipo pertenece al centro seleccionado
-            return datos.mantenimientos.some(m => {
-                // Mapear centros a las 4 opciones principales
-                const centroMapeado = mapearCentro(m.centro);
-                return centroMapeado === filtroCentro;
-            });
+          // Verificar si algún mantenimiento del equipo pertenece al centro seleccionado
+          return datos.mantenimientos.some(m => {
+            // Mapear centros a las 4 opciones principales
+            const centroMapeado = mapearCentro(m.centro);
+            return centroMapeado === filtroCentro;
+          });
         });
-    }
-    
-    if (historialFiltrado.length === 0) {
+      }
+      
+      if (historialFiltrado.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="3">
@@ -2007,9 +1998,9 @@ function renderizarTablaHistorial(historialPorEquipo) {
             </tr>
         `;
         return;
-    }
-    
-    tbody.innerHTML = historialFiltrado.map(([equipo, datos]) => `
+      }
+      
+      tbody.innerHTML = historialFiltrado.map(([equipo, datos]) => `
         <tr>
             <td><strong>${equipo}</strong></td>
             <td>${datos.fechaRealizacion ? formatearFecha(datos.fechaRealizacion) : 'Sin realizaciones'}</td>
@@ -2019,17 +2010,17 @@ function renderizarTablaHistorial(historialPorEquipo) {
               </div>
             </td>
         </tr>
-    `).join('');
-}
+      `).join('');
+    }
 
-function filtrarHistorial() {
-    // Volver a cargar y renderizar el historial con los filtros aplicados
-    cargarHistorial();
-}
+    function filtrarHistorial() {
+      // Volver a cargar y renderizar el historial con los filtros aplicados
+      cargarHistorial();
+    }
 
-function mapearCentro(centro) {
-    // Mapear todos los centros a las 4 opciones principales
-    const centrosMapeados = {
+    function mapearCentro(centro) {
+      // Mapear todos los centros a las 4 opciones principales
+      const centrosMapeados = {
         'Zinc': 'Zinc',
         'Cromo': 'Cromo', 
         'Doblado': 'Doblado',
@@ -2042,56 +2033,56 @@ function mapearCentro(centro) {
         'Obra Civil': 'Gral',
         'Área Periférica': 'Gral',
         'Otros': 'Gral'
-    };
-    
-    return centrosMapeados[centro] || 'Gral';
-}
+      };
+      
+      return centrosMapeados[centro] || 'Gral';
+    }
 
-function verDetallesEquipo(equipo) {
-    // Buscar el mantenimiento más reciente del equipo
-    const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo);
-    
-    if (mantenimientosEquipo.length === 0) {
+    function verDetallesEquipo(equipo) {
+      // Buscar el mantenimiento más reciente del equipo
+      const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo);
+      
+      if (mantenimientosEquipo.length === 0) {
         mostrarToast('No hay mantenimientos registrados para este equipo', 'error');
         return;
-    }
-    
-    // Obtener el mantenimiento más reciente
-    const mantenimientoMasReciente = mantenimientosEquipo.reduce((masReciente, actual) => {
+      }
+      
+      // Obtener el mantenimiento más reciente
+      const mantenimientoMasReciente = mantenimientosEquipo.reduce((masReciente, actual) => {
         return new Date(actual.ultimoMantenimiento) > new Date(masReciente.ultimoMantenimiento) ? actual : masReciente;
-    });
-    
-    // Abrir formato de impresión con los datos del mantenimiento más reciente
-    const params = new URLSearchParams({
+      });
+      
+      // Abrir formato de impresión con los datos del mantenimiento más reciente
+      const params = new URLSearchParams({
         equipo: mantenimientoMasReciente.equipo,
         centro: mantenimientoMasReciente.centro,
         frecuencia: mantenimientoMasReciente.frecuencia,
         tecnico: mantenimientoMasReciente.tecnico || '',
         trabajoRealizado: mantenimientoMasReciente.trabajoRealizado || ''
-    });
-    
-    const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, '_blank');
-    
-    // Esperar a que la ventana se cargue
-    ventanaImpresion.onload = function() {
+      });
+      
+      const ventanaImpresion = window.open(`ver_detalles.html?${params.toString()}`, '_blank');
+      
+      // Esperar a que la ventana se cargue
+      ventanaImpresion.onload = function() {
         // La página de formato ya se autocompletará automáticamente
         setTimeout(() => {
-            ventanaImpresion.print();
+          ventanaImpresion.print();
         }, 500);
-    };
-}
+      };
+    }
 
-function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
-    // Mostrar nombre del equipo en el título
-    document.getElementById('nombre-equipo-modal').textContent = equipo;
-    
-    // Ordenar mantenimientos por fecha (más reciente primero)
-    mantenimientosEquipo.sort((a, b) => new Date(b.ultimoMantenimiento) - new Date(a.ultimoMantenimiento));
-    
-    // Renderizar tabla con todos los mantenimientos del equipo
-    const tbody = document.getElementById('tabla-historial-equipo');
-    
-    if (mantenimientosEquipo.length === 0) {
+    function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
+      // Mostrar nombre del equipo en el título
+      document.getElementById('nombre-equipo-modal').textContent = equipo;
+      
+      // Ordenar mantenimientos por fecha (más reciente primero)
+      mantenimientosEquipo.sort((a, b) => new Date(b.ultimoMantenimiento) - new Date(a.ultimoMantenimiento));
+      
+      // Renderizar tabla con todos los mantenimientos del equipo
+      const tbody = document.getElementById('tabla-historial-equipo');
+      
+      if (mantenimientosEquipo.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="8">
@@ -2102,9 +2093,9 @@ function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
             </tr>
         `;
         return;
-    }
-    
-    tbody.innerHTML = mantenimientosEquipo.map(mantenimiento => `
+      }
+      
+      tbody.innerHTML = mantenimientosEquipo.map(mantenimiento => `
         <tr>
             <td><strong>${mantenimiento.id}</strong></td>
             <td>${mantenimiento.centro}</td>
@@ -2116,88 +2107,88 @@ function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
             <td>${mantenimiento.condicionInicial || '-'}</td>
             <td>${mantenimiento.condicionFinal || '-'}</td>
         </tr>
-    `).join('');
-    
-    // Mostrar el modal
-    document.getElementById('modal-historial-equipo').classList.add('visible');
-}
+      `).join('');
+      
+      // Mostrar el modal
+      document.getElementById('modal-historial-equipo').classList.add('visible');
+    }
 
-function imprimirFormatosEquipo() {
-    const equipo = document.getElementById('nombre-equipo-modal').textContent;
-    const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo && m.estado === 'realizado');
-    
-    if (mantenimientosEquipo.length === 0) {
+    function imprimirFormatosEquipo() {
+      const equipo = document.getElementById('nombre-equipo-modal').textContent;
+      const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo && m.estado === 'realizado');
+      
+      if (mantenimientosEquipo.length === 0) {
         mostrarToast('No hay mantenimientos realizados para imprimir', 'error');
         return;
-    }
-    
-    // Abrir múltiples ventanas para cada formato
-    mantenimientosEquipo.forEach((mantenimiento, index) => {
+      }
+      
+      // Abrir múltiples ventanas para cada formato
+      mantenimientosEquipo.forEach((mantenimiento, index) => {
         setTimeout(() => {
-            const params = new URLSearchParams({
-                equipo: mantenimiento.equipo,
-                centro: mantenimiento.centro,
-                frecuencia: mantenimiento.frecuencia,
-                tecnico: mantenimiento.tecnico || '',
-                condicionInicial: mantenimiento.condicionInicial || '',
-                condicionFinal: mantenimiento.condicionFinal || ''
-            });
-            
-            const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, `_blank`);
-            
-            ventanaImpresion.onload = function() {
-                setTimeout(() => {
-                    ventanaImpresion.print();
-                    // Cerrar la ventana después de imprimir
-                    setTimeout(() => {
-                        ventanaImpresion.close();
-                    }, 1000);
-                }, 500);
-            };
+          const params = new URLSearchParams({
+            equipo: mantenimiento.equipo,
+            centro: mantenimiento.centro,
+            frecuencia: mantenimiento.frecuencia,
+            tecnico: mantenimiento.tecnico || '',
+            condicionInicial: mantenimiento.condicionInicial || '',
+            condicionFinal: mantenimiento.condicionFinal || ''
+          });
+          
+          const ventanaImpresion = window.open(`ver_detalles.html?${params.toString()}`, `_blank`);
+          
+          ventanaImpresion.onload = function() {
+            setTimeout(() => {
+              ventanaImpresion.print();
+              // Cerrar la ventana después de imprimir
+              setTimeout(() => {
+                ventanaImpresion.close();
+              }, 1000);
+            }, 500);
+          };
         }, index * 200); // Abrir cada ventana con 200ms de diferencia
-    });
-    
-    mostrarToast(`Abriendo ${mantenimientosEquipo.length} formato(s) para impresión...`, 'success');
-}
+      });
+      
+      mostrarToast(`Abriendo ${mantenimientosEquipo.length} formato(s) para impresión...`, 'success');
+    }
 
-function limpiarFormularioNuevo() {
-    document.getElementById('p-id').value = '';
-    document.getElementById('p-equipo').value = '';
-    document.getElementById('p-centro').value = '';
-    document.getElementById('p-frecuencia').value = '';
-    document.getElementById('p-ultimo').value = '';
-    document.getElementById('p-tecnico').value = '';
-    document.getElementById('p-trabajo-realizado').value = '';
-}
+    function limpiarFormularioNuevo() {
+      document.getElementById('p-id').value = '';
+      document.getElementById('p-equipo').value = '';
+      document.getElementById('p-centro').value = '';
+      document.getElementById('p-frecuencia').value = '';
+      document.getElementById('p-ultimo').value = '';
+      document.getElementById('p-tecnico').value = '';
+      document.getElementById('p-trabajo-realizado').value = '';
+    }
 
-// ===== FUNCIONES DE CRUD =====
-async function guardarPreventivo() {
-    const id = document.getElementById('p-id').value.trim();
-    const equipo = document.getElementById('p-equipo').value.trim();
-    const centro = document.getElementById('p-centro').value;
-    const frecuencia = document.getElementById('p-frecuencia').value;
-    const ultimo = document.getElementById('p-ultimo').value;
-    const tecnico = document.getElementById('p-tecnico').value.trim();
-    const trabajoRealizado = document.getElementById('p-trabajo-realizado').value.trim();
-    
-    // Validaciones
-    if (!id || !equipo || !centro || !frecuencia || !ultimo) {
+    // ===== FUNCIONES DE CRUD =====
+    async function guardarPreventivo() {
+      const id = document.getElementById('p-id').value.trim();
+      const equipo = document.getElementById('p-equipo').value.trim();
+      const centro = document.getElementById('p-centro').value;
+      const frecuencia = document.getElementById('p-frecuencia').value;
+      const ultimo = document.getElementById('p-ultimo').value;
+      const tecnico = document.getElementById('p-tecnico').value.trim();
+      const trabajoRealizado = document.getElementById('p-trabajo-realizado').value.trim();
+      
+      // Validaciones
+      if (!id || !equipo || !centro || !frecuencia || !ultimo) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
-    }
-    
-    // Verificar que el ID no exista
-    if (mantenimientos.some(m => m.id === id)) {
+      }
+      
+      // Verificar que el ID no exista
+      if (mantenimientos.some(m => m.id === id)) {
         mostrarToast('Este ID ya existe. Por favor usa otro ID.', 'error');
         return;
-    }
-    
-    // Calcular próximo mantenimiento
-    const proximo = calcularProximoMantenimiento(ultimo, frecuencia);
-    const estado = determinarEstado(proximo);
-    
-    // Crear nuevo mantenimiento
-    const nuevoMantenimiento = {
+      }
+      
+      // Calcular próximo mantenimiento
+      const proximo = calcularProximoMantenimiento(ultimo, frecuencia);
+      const estado = determinarEstado(proximo);
+      
+      // Crear nuevo mantenimiento
+      const nuevoMantenimiento = {
         id: id,
         equipo,
         centro,
@@ -2207,421 +2198,477 @@ async function guardarPreventivo() {
         tecnico,
         trabajoRealizado,
         estado
-    };
-    
-    // Guardar en Google Apps Script
-    await agregarMantenimientoGoogleSheets(nuevoMantenimiento);
-    
-    // Agregar a la lista local
-    mantenimientos.push(nuevoMantenimiento);
-    
-    // Actualizar UI
-    renderizarTabla();
-    actualizarEstadisticas();
-    actualizarGraficasConDatos();
-    cerrarModal('modal-nuevo');
-    
-    mostrarToast('Mantenimiento preventivo creado exitosamente', 'success');
-}
+      };
+      
+      // Guardar en Google Apps Script
+      await agregarMantenimientoGoogleSheets(nuevoMantenimiento);
+      
+      // Agregar a la lista local
+      mantenimientos.push(nuevoMantenimiento);
+      
+      // Guardar en localStorage
+      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
+      
+      // Actualizar UI
+      renderizarTabla();
+      actualizarEstadisticas();
+      actualizarGraficasConDatos();
+      cerrarModal('modal-nuevo');
+      
+      mostrarToast('Mantenimiento preventivo creado exitosamente', 'success');
+    }
 
-async function completarPreventivo() {
-    if (!mantenimientoActual) return;
-    
-    const fechaRealizado = document.getElementById('c-fecha-realizado').value;
-    const condicionInicial = document.getElementById('c-condicion-inicial').value.trim();
-    const condicionFinal = document.getElementById('c-condicion-final').value.trim();
-    const proximoManual = document.getElementById('c-proximo-manual').value;
-    
-    // Validaciones
-    if (!fechaRealizado || !condicionInicial || !condicionFinal) {
+    async function completarPreventivo() {
+      if (!mantenimientoActual) return;
+      
+      const fechaRealizado = document.getElementById('c-fecha-realizado').value;
+      const condicionInicial = document.getElementById('c-condicion-inicial').value.trim();
+      const condicionFinal = document.getElementById('c-condicion-final').value.trim();
+      const proximoManual = document.getElementById('c-proximo-manual').value;
+      
+      // Validaciones
+      if (!fechaRealizado || !condicionInicial || !condicionFinal) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
-    }
-    
-    // Actualizar mantenimiento
-    const index = mantenimientos.findIndex(m => m.id === mantenimientoActual.id);
-    if (index === -1) return;
-    
-    mantenimientos[index].ultimoMantenimiento = fechaRealizado;
-    mantenimientos[index].condicionInicial = condicionInicial;
-    mantenimientos[index].condicionFinal = condicionFinal;
-    
-    if (proximoManual) {
+      }
+      
+      // Actualizar mantenimiento
+      const index = mantenimientos.findIndex(m => m.id === mantenimientoActual.id);
+      if (index === -1) return;
+      
+      mantenimientos[index].ultimoMantenimiento = fechaRealizado;
+      mantenimientos[index].condicionInicial = condicionInicial;
+      mantenimientos[index].condicionFinal = condicionFinal;
+      
+      if (proximoManual) {
         mantenimientos[index].proximoMantenimiento = proximoManual;
-    } else {
+      } else {
         mantenimientos[index].proximoMantenimiento = calcularProximoMantenimiento(
-            fechaRealizado,
-            mantenimientoActual.frecuencia
+          fechaRealizado,
+          mantenimientoActual.frecuencia
         );
+      }
+      
+      mantenimientos[index].estado = 'realizado';
+      
+      // Actualizar en Google Apps Script
+      await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
+      
+      // Guardar en localStorage
+      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
+      
+      // Actualizar estados según frecuencia y UI
+      actualizarEstadosPorFrecuencia();
+      renderizarTabla();
+      actualizarEstadisticas();
+      actualizarGraficasConDatos();
+      cerrarModal('modal-completar');
     }
-    
-    mantenimientos[index].estado = 'realizado';
-    
-    // Actualizar en Google Apps Script
-    await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
-    
-    // Actualizar estados según frecuencia y UI
-    actualizarEstadosPorFrecuencia();
-    renderizarTabla();
-    actualizarEstadisticas();
-    actualizarGraficasConDatos();
-    cerrarModal('modal-completar');
-}
 
-async function eliminarMantenimiento(id) {
-    if (!confirm('¿Estás seguro de que quieres eliminar este mantenimiento preventivo?')) {
+    async function modificarPreventivo() {
+      if (!mantenimientoActual) return;
+      
+      const equipo = document.getElementById('m-equipo').value.trim();
+      const centro = document.getElementById('m-centro').value;
+      const frecuencia = document.getElementById('m-frecuencia').value;
+      const ultimo = document.getElementById('m-ultimo').value;
+      const tecnico = document.getElementById('m-tecnico').value.trim();
+      const trabajoRealizado = document.getElementById('m-trabajo-realizado').value.trim();
+      
+      // Validaciones
+      if (!equipo || !centro || !frecuencia || !ultimo) {
+        mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
+      }
+      
+      // Actualizar mantenimiento
+      const index = mantenimientos.findIndex(m => m.id === mantenimientoActual.id);
+      if (index === -1) return;
+      
+      mantenimientos[index].equipo = equipo;
+      mantenimientos[index].centro = centro;
+      mantenimientos[index].frecuencia = frecuencia;
+      mantenimientos[index].ultimoMantenimiento = ultimo;
+      mantenimientos[index].tecnico = tecnico;
+      mantenimientos[index].trabajoRealizado = trabajoRealizado;
+      
+      // Recalcular próximo mantenimiento
+      mantenimientos[index].proximoMantenimiento = calcularProximoMantenimiento(ultimo, frecuencia);
+      mantenimientos[index].estado = determinarEstado(mantenimientos[index].proximoMantenimiento);
+      
+      // Actualizar en Google Apps Script
+      await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
+      
+      // Guardar en localStorage
+      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
+      
+      // Actualizar UI
+      actualizarEstadosPorFrecuencia();
+      renderizarTabla();
+      actualizarEstadisticas();
+      actualizarGraficasConDatos();
+      cerrarModal('modal-modificar');
+      
+      mostrarToast('Mantenimiento modificado exitosamente', 'success');
     }
-    
-    const index = mantenimientos.findIndex(m => m.id === id);
-    if (index === -1) return;
-    
-    // Eliminar de Google Apps Script
-    await eliminarMantenimientoGoogleSheets(id);
-    
-    // Eliminar de la lista local
-    mantenimientos.splice(index, 1);
-    
-    // Actualizar UI
-    renderizarTabla();
-    actualizarEstadisticas();
-    actualizarGraficasConDatos();
-}
 
-// ===== FUNCIONES AUXILIARES =====
-function formatearFecha(fechaISO) {
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleDateString('es-ES', {
+    async function eliminarMantenimiento(id) {
+      if (!confirm('¿Estás seguro de que quieres eliminar este mantenimiento preventivo?')) {
+        return;
+      }
+      
+      const index = mantenimientos.findIndex(m => m.id === id);
+      if (index === -1) return;
+      
+      // Eliminar de Google Apps Script
+      await eliminarMantenimientoGoogleSheets(id);
+      
+      // Eliminar de la lista local
+      mantenimientos.splice(index, 1);
+      
+      // Guardar en localStorage
+      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
+      
+      // Actualizar UI
+      renderizarTabla();
+      actualizarEstadisticas();
+      actualizarGraficasConDatos();
+    }
+
+    // ===== FUNCIONES AUXILIARES =====
+    function formatearFecha(fechaISO) {
+      const fecha = new Date(fechaISO);
+      return fecha.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
-    });
-}
-
-function mostrarToast(mensaje, tipo = 'info') {
-    const toast = document.getElementById('toast');
-    toast.textContent = mensaje;
-    toast.className = `toast ${tipo}`;
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-function imprimirFormato() {
-    // Abrir el formato de impresión en una nueva ventana
-    const ventanaImpresion = window.open('formato_impresion_preventivo.html', '_blank');
-    
-    // Esperar a que la ventana se cargue y luego imprimir
-    ventanaImpresion.onload = function() {
-        setTimeout(() => {
-            ventanaImpresion.print();
-        }, 500);
-    };
-}
-
-function imprimirFormatoIndividual(id) {
-    const mantenimiento = mantenimientos.find(m => m.id === id);
-    if (!mantenimiento) {
-        mostrarToast('Mantenimiento no encontrado', 'error');
-        return;
+      });
     }
 
-    // Abrir el formato de impresión con parámetros
-    const params = new URLSearchParams({
+    function mostrarToast(mensaje, tipo = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = mensaje;
+      toast.className = `toast ${tipo}`;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    function imprimirFormato() {
+      // Abrir el formato de impresión en una nueva ventana
+      const ventanaImpresion = window.open('formato_impresion.html', '_blank');
+      
+      // Esperar a que la ventana se cargue y luego imprimir
+      ventanaImpresion.onload = function() {
+        setTimeout(() => {
+          ventanaImpresion.print();
+        }, 500);
+      };
+    }
+
+    function imprimirFormatoIndividual(id) {
+      const mantenimiento = mantenimientos.find(m => m.id === id);
+      if (!mantenimiento) {
+        mostrarToast('Mantenimiento no encontrado', 'error');
+        return;
+      }
+
+      // Abrir el formato de impresión con parámetros
+      const params = new URLSearchParams({
         equipo: mantenimiento.equipo,
         centro: mantenimiento.centro,
         frecuencia: mantenimiento.frecuencia,
         tecnico: mantenimiento.tecnico || '',
         observaciones: mantenimiento.observaciones || ''
-    });
-    params.append('trabajoRealizado', mantenimiento.trabajoRealizado || '');
-    
-    const ventanaImpresion = window.open(`formato_impresion_preventivo.html?${params.toString()}`, '_blank');
-    
-    // Esperar a que la ventana se cargue y luego imprimir
-    ventanaImpresion.onload = function() {
+      });
+      params.append('trabajoRealizado', mantenimiento.trabajoRealizado || '');
+      
+      const ventanaImpresion = window.open(`ver_detalles.html?${params.toString()}`, '_blank');
+      
+      // Esperar a que la ventana se cargue y luego imprimir
+      ventanaImpresion.onload = function() {
         setTimeout(() => {
-            ventanaImpresion.print();
+          ventanaImpresion.print();
         }, 500);
-    };
-}
+      };
+    }
 
-function toggleModoDatos() {
-    CONFIG.USE_LOCAL_DATA = !CONFIG.USE_LOCAL_DATA;
-    actualizarModoTexto();
-    
-    if (!CONFIG.USE_LOCAL_DATA) {
+    function toggleModoDatos() {
+      CONFIG.USE_LOCAL_DATA = !CONFIG.USE_LOCAL_DATA;
+      actualizarModoTexto();
+      
+      if (!CONFIG.USE_LOCAL_DATA) {
         // Cambiar a Google Sheets
         if (CONFIG.GOOGLE_SHEET_ID === 'TU_SHEET_ID_AQUI') {
-            mostrarToast('Por favor configura tu Google Sheet ID primero', 'warning');
-            CONFIG.USE_LOCAL_DATA = true; // Volver a local
-            actualizarModoTexto();
-            return;
+          mostrarToast('Por favor configura tu Google Sheet ID primero', 'warning');
+          CONFIG.USE_LOCAL_DATA = true; // Volver a local
+          actualizarModoTexto();
+          return;
         }
         cargarMantenimientos();
-    } else {
+      } else {
         // Cambiar a localStorage
         cargarMantenimientos();
+      }
     }
-}
 
-function actualizarModoTexto() {
-    const modoTexto = document.getElementById('modo-texto');
-    if (modoTexto) {
+    function actualizarModoTexto() {
+      const modoTexto = document.getElementById('modo-texto');
+      if (modoTexto) {
         modoTexto.textContent = CONFIG.USE_LOCAL_DATA ? 'Modo: Local' : 'Modo: Google Sheets';
+      }
     }
-}
 
-function configurarListeners() {
-    // Listener para calcular fecha cuando cambia la fecha de realización
-    const fechaRealizado = document.getElementById('c-fecha-realizado');
-    if (fechaRealizado) {
+    function configurarListeners() {
+      // Listener para calcular fecha cuando cambia la fecha de realización
+      const fechaRealizado = document.getElementById('c-fecha-realizado');
+      if (fechaRealizado) {
         fechaRealizado.addEventListener('change', function() {
-            if (mantenimientoActual) {
-                const proximoCalculado = calcularProximoMantenimiento(
-                    this.value,
-                    mantenimientoActual.frecuencia
-                );
-                document.getElementById('c-proximo-calculado').value = proximoCalculado;
-            }
+          if (mantenimientoActual) {
+            const proximoCalculado = calcularProximoMantenimiento(
+              this.value,
+              mantenimientoActual.frecuencia
+            );
+            document.getElementById('c-proximo-calculado').value = proximoCalculado;
+          }
         });
-    }
-    
-    // Cerrar modales con Escape
-    document.addEventListener('keydown', function(e) {
+      }
+      
+      // Cerrar modales con Escape
+      document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.modal.visible').forEach(modal => {
-                modal.classList.remove('visible');
-            });
-            mantenimientoActual = null;
+          document.querySelectorAll('.modal.visible').forEach(modal => {
+            modal.classList.remove('visible');
+          });
+          mantenimientoActual = null;
         }
-    });
-    
-    // Cerrar modals al hacer clic fuera
-    document.querySelectorAll('.modal').forEach(modal => {
+      });
+      
+      // Cerrar modals al hacer clic fuera
+      document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('visible');
-                mantenimientoActual = null;
-            }
+          if (e.target === this) {
+            this.classList.remove('visible');
+            mantenimientoActual = null;
+          }
         });
-    });
-}
+      });
+    }
 
-// ===== FUNCIONES DE GRÁFICAS =====
-function inicializarGraficas() {
-    // Configurar Chart.js
-    Chart.defaults.font.family = "'Cormorant Garamond', serif";
-    Chart.defaults.color = '#2e2e2e';
-    
-    // Inicializar gráfica mensual comparativa
-    const ctxMensual = document.getElementById('chart-mensual');
-    if (ctxMensual) {
+    // ===== FUNCIONES DE GRÁFICAS =====
+    function inicializarGraficas() {
+      // Configurar Chart.js
+      Chart.defaults.font.family = "'Cormorant Garamond', serif";
+      Chart.defaults.color = '#2e2e2e';
+      
+      // Inicializar gráfica mensual comparativa
+      const ctxMensual = document.getElementById('chart-mensual');
+      if (ctxMensual) {
         chartMensual = new Chart(ctxMensual, {
-            type: 'bar',
-            data: {
-                labels: obtenerMesesAnio(),
-                datasets: [
-                    {
-                        label: 'Cerrados',
-                        data: [],
-                        backgroundColor: CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
-                        borderColor: CONFIG.COLORES_GRAFICAS['Cerrados'],
-                        borderWidth: 2,
-                        borderRadius: 4
-                    },
-                    {
-                        label: 'Pendientes',
-                        data: [],
-                        backgroundColor: CONFIG.COLORES_GRAFICAS['Pendientes'] + '80',
-                        borderColor: CONFIG.COLORES_GRAFICAS['Pendientes'],
-                        borderWidth: 2,
-                        borderRadius: 4
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleFont: {
-                            family: "'Inconsolata', monospace"
-                        },
-                        bodyFont: {
-                            family: "'Inconsolata', monospace"
-                        }
-                    }
+          type: 'bar',
+          data: {
+            labels: obtenerMesesAnio(),
+            datasets: [
+              {
+                label: 'Cerrados',
+                data: [],
+                backgroundColor: CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
+                borderColor: CONFIG.COLORES_GRAFICAS['Cerrados'],
+                borderWidth: 2,
+                borderRadius: 4
+              },
+              {
+                label: 'Pendientes',
+                data: [],
+                backgroundColor: CONFIG.COLORES_GRAFICAS['Pendientes'] + '80',
+                borderColor: CONFIG.COLORES_GRAFICAS['Pendientes'],
+                borderWidth: 2,
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: {
+                  family: "'Inconsolata', monospace"
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            font: {
-                                family: "'Inconsolata', monospace",
-                                size: 11
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0,0,0,0.05)'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                family: "'Inconsolata', monospace",
-                                size: 11
-                            }
-                        },
-                        grid: {
-                            display: false
-                        }
-                    }
+                bodyFont: {
+                  family: "'Inconsolata', monospace"
                 }
-            }
-        });
-    }
-    
-    // Inicializar gráfica de porcentajes
-    const ctxPorcentajes = document.getElementById('chart-porcentajes');
-    if (ctxPorcentajes) {
-        chartPorcentajes = new Chart(ctxPorcentajes, {
-            type: 'doughnut',
-            data: {
-                labels: ['Cerrados', 'Pendientes'],
-                datasets: [{
-                    data: [0, 0],
-                    backgroundColor: [
-                        CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
-                        CONFIG.COLORES_GRAFICAS['Pendientes'] + '80'
-                    ],
-                    borderColor: [
-                        CONFIG.COLORES_GRAFICAS['Cerrados'],
-                        CONFIG.COLORES_GRAFICAS['Pendientes']
-                    ],
-                    borderWidth: 2
-                }]
+              }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleFont: {
-                            family: "'Inconsolata', monospace"
-                        },
-                        bodyFont: {
-                            family: "'Inconsolata', monospace"
-                        },
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return `${label}: ${value} (${percentage}%)`;
-                            }
-                        }
-                    }
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1,
+                  font: {
+                    family: "'Inconsolata', monospace",
+                    size: 11
+                  }
+                },
+                grid: {
+                  color: 'rgba(0,0,0,0.05)'
                 }
+              },
+              x: {
+                ticks: {
+                  font: {
+                    family: "'Inconsolata', monospace",
+                    size: 11
+                  }
+                },
+                grid: {
+                  display: false
+                }
+              }
             }
+          }
         });
-    }
-    
-    // Actualizar gráficas con datos iniciales
-    setTimeout(() => {
+      }
+      
+      // Inicializar gráfica de porcentajes
+      const ctxPorcentajes = document.getElementById('chart-porcentajes');
+      if (ctxPorcentajes) {
+        chartPorcentajes = new Chart(ctxPorcentajes, {
+          type: 'doughnut',
+          data: {
+            labels: ['Cerrados', 'Pendientes'],
+            datasets: [{
+              data: [0, 0],
+              backgroundColor: [
+                CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
+                CONFIG.COLORES_GRAFICAS['Pendientes'] + '80'
+              ],
+              borderColor: [
+                CONFIG.COLORES_GRAFICAS['Cerrados'],
+                CONFIG.COLORES_GRAFICAS['Pendientes']
+              ],
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: {
+                  family: "'Inconsolata', monospace"
+                },
+                bodyFont: {
+                  family: "'Inconsolata', monospace"
+                },
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    return `${label}: ${value} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Actualizar gráficas con datos iniciales
+      setTimeout(() => {
         actualizarGraficas();
         actualizarGraficaPorcentajes();
-    }, 500);
-}
+      }, 500);
+    }
 
-function obtenerMesesAnio() {
-    // Devolver meses en orden cronológico de enero a diciembre
-    return ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-}
+    function obtenerMesesAnio() {
+      // Devolver meses en orden cronológico de enero a diciembre
+      return ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    }
 
-function calcularDatosMensuales(centroSeleccionado) {
-    const datosCerrados = {};
-    const datosPendientes = {};
-    const meses = obtenerMesesAnio();
-    const añoActual = new Date().getFullYear();
-    const hoy = new Date();
-    
-    // Inicializar todos los meses en 0
-    meses.forEach(mes => {
+    function calcularDatosMensuales(centroSeleccionado) {
+      const datosCerrados = {};
+      const datosPendientes = {};
+      const meses = obtenerMesesAnio();
+      const añoActual = new Date().getFullYear();
+      const hoy = new Date();
+      
+      // Inicializar todos los meses en 0
+      meses.forEach(mes => {
         datosCerrados[mes] = 0;
         datosPendientes[mes] = 0;
-    });
-    
-    // Filtrar mantenimientos por centro si es necesario
-    let mantenimientosFiltrados = mantenimientos;
-    if (centroSeleccionado !== 'todos') {
+      });
+      
+      // Filtrar mantenimientos por centro si es necesario
+      let mantenimientosFiltrados = mantenimientos;
+      if (centroSeleccionado !== 'todos') {
         mantenimientosFiltrados = mantenimientos.filter(m => 
-            m.centro === centroSeleccionado
+          m.centro === centroSeleccionado
         );
-    }
-    
-    // Contar mantenimientos por mes y estado
-    mantenimientosFiltrados.forEach(mantenimiento => {
+      }
+      
+      // Contar mantenimientos por mes y estado
+      mantenimientosFiltrados.forEach(mantenimiento => {
         if (mantenimiento.ultimoMantenimiento) {
-            const fecha = new Date(mantenimiento.ultimoMantenimiento);
-            if (fecha.getFullYear() === añoActual) {
-                const mesIndex = fecha.getMonth();
-                // Usar el array de meses estándar, no el reordenado
-                const mesesEstandard = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+          const fecha = new Date(mantenimiento.ultimoMantenimiento);
+          if (fecha.getFullYear() === añoActual) {
+            const mesIndex = fecha.getMonth();
+            // Usar el array de meses estándar, no el reordenado
+            const mesesEstandard = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                const mesNombre = mesesEstandard[mesIndex];
-                
-                if (mantenimiento.estado === 'realizado') {
-                    datosCerrados[mesNombre]++;
-                } else {
-                    datosPendientes[mesNombre]++;
-                }
+            const mesNombre = mesesEstandard[mesIndex];
+            
+            if (mantenimiento.estado === 'realizado') {
+              datosCerrados[mesNombre]++;
+            } else {
+              datosPendientes[mesNombre]++;
             }
+          }
         }
-    });
-    
-    return {
+      });
+      
+      return {
         cerrados: datosCerrados,
         pendientes: datosPendientes
-    };
-}
+      };
+    }
 
-function calcularDatosCentros() {
-    const datosCentros = {};
-    
-    // Inicializar centros en 0
-    CONFIG.CENTROS.forEach(centro => {
+    function calcularDatosCentros() {
+      const datosCentros = {};
+      
+      // Inicializar centros en 0
+      CONFIG.CENTROS.forEach(centro => {
         datosCentros[centro] = 0;
-    });
-    
-    // Contar mantenimientos por centro
-    mantenimientos.forEach(mantenimiento => {
+      });
+      
+      // Contar mantenimientos por centro
+      mantenimientos.forEach(mantenimiento => {
         if (mantenimiento.centro && datosCentros.hasOwnProperty(mantenimiento.centro)) {
-            datosCentros[mantenimiento.centro]++;
+          datosCentros[mantenimiento.centro]++;
         }
-    });
-    
-    return datosCentros;
-}
+      });
+      
+      return datosCentros;
+    }
 
-function actualizarGraficas() {
-    const centroSeleccionado = document.getElementById('centro-filter').value;
-    
-    // Actualizar gráfica mensual comparativa
-    if (chartMensual) {
+    function actualizarGraficas() {
+      const centroSeleccionado = document.getElementById('centro-filter').value;
+      
+      // Actualizar gráfica mensual comparativa
+      if (chartMensual) {
         const datos = calcularDatosMensuales(centroSeleccionado);
         const meses = obtenerMesesAnio();
         
@@ -2637,24 +2684,24 @@ function actualizarGraficas() {
         
         // Actualizar leyenda
         actualizarLeyenda('legend-mensual', [
-            {
-                label: `Cerrados - ${tituloCentro}`,
-                color: CONFIG.COLORES_GRAFICAS['Cerrados']
-            },
-            {
-                label: `Pendientes - ${tituloCentro}`,
-                color: CONFIG.COLORES_GRAFICAS['Pendientes']
-            }
+          {
+            label: `Cerrados - ${tituloCentro}`,
+            color: CONFIG.COLORES_GRAFICAS['Cerrados']
+          },
+          {
+            label: `Pendientes - ${tituloCentro}`,
+            color: CONFIG.COLORES_GRAFICAS['Pendientes']
+          }
         ]);
+      }
     }
-}
 
-function actualizarLeyenda(legendId, items) {
-    const legendContainer = document.getElementById(legendId);
-    if (!legendContainer) return;
-    
-    legendContainer.innerHTML = '';
-    items.forEach(item => {
+    function actualizarLeyenda(legendId, items) {
+      const legendContainer = document.getElementById(legendId);
+      if (!legendContainer) return;
+      
+      legendContainer.innerHTML = '';
+      items.forEach(item => {
         const legendItem = document.createElement('div');
         legendItem.className = 'legend-item';
         
@@ -2668,106 +2715,107 @@ function actualizarLeyenda(legendId, items) {
         legendItem.appendChild(colorBox);
         legendItem.appendChild(label);
         legendContainer.appendChild(legendItem);
-    });
-}
-
-function calcularPorcentajes(mesSeleccionado, centroSeleccionado) {
-    let mantenimientosFiltrados = mantenimientos;
-    
-    // Filtrar por centro si es necesario
-    if (centroSeleccionado !== 'todos') {
-        mantenimientosFiltrados = mantenimientosFiltrados.filter(m => 
-            m.centro === centroSeleccionado
-        );
+      });
     }
-    
-    // Filtrar por mes si es necesario
-    if (mesSeleccionado !== 'todos') {
+
+    function calcularPorcentajes(mesSeleccionado, centroSeleccionado) {
+      let mantenimientosFiltrados = mantenimientos;
+      
+      // Filtrar por centro si es necesario
+      if (centroSeleccionado !== 'todos') {
+        mantenimientosFiltrados = mantenimientosFiltrados.filter(m => 
+          m.centro === centroSeleccionado
+        );
+      }
+      
+      // Filtrar por mes si es necesario
+      if (mesSeleccionado !== 'todos') {
         const añoActual = new Date().getFullYear();
         mantenimientosFiltrados = mantenimientosFiltrados.filter(m => {
-            if (m.ultimoMantenimiento) {
-                const fecha = new Date(m.ultimoMantenimiento);
-                return fecha.getFullYear() === añoActual && fecha.getMonth() === parseInt(mesSeleccionado);
-            }
-            return false;
+          if (m.ultimoMantenimiento) {
+            const fecha = new Date(m.ultimoMantenimiento);
+            return fecha.getFullYear() === añoActual && fecha.getMonth() === parseInt(mesSeleccionado);
+          }
+          return false;
         });
-    }
-    
-    // Contar por estado
-    let cerrados = 0;
-    let pendientes = 0;
-    
-    mantenimientosFiltrados.forEach(mantenimiento => {
+      }
+      
+      // Contar por estado
+      let cerrados = 0;
+      let pendientes = 0;
+      
+      mantenimientosFiltrados.forEach(mantenimiento => {
         if (mantenimiento.estado === 'realizado') {
-            cerrados++;
+          cerrados++;
         } else {
-            pendientes++;
+          pendientes++;
         }
-    });
-    
-    return { cerrados, pendientes };
-}
+      });
+      
+      return { cerrados, pendientes };
+    }
 
-function actualizarGraficaPorcentajes() {
-    if (!chartPorcentajes) return;
-    
-    const mesSeleccionado = document.getElementById('mes-filter').value;
-    const centroSeleccionado = document.getElementById('centro-filter-2').value;
-    
-    const datos = calcularPorcentajes(mesSeleccionado, centroSeleccionado);
-    
-    // Actualizar datos de la gráfica
-    chartPorcentajes.data.datasets[0].data = [datos.cerrados, datos.pendientes];
-    chartPorcentajes.update();
-    
-    // Actualizar leyenda
-    const mesTexto = mesSeleccionado === 'todos' ? 'Todos los meses' : 
-                    ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][parseInt(mesSeleccionado)];
-    const centroTexto = centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado;
-    
-    actualizarLeyenda('legend-porcentajes', [
+    function actualizarGraficaPorcentajes() {
+      if (!chartPorcentajes) return;
+      
+      const mesSeleccionado = document.getElementById('mes-filter').value;
+      const centroSeleccionado = document.getElementById('centro-filter-2').value;
+      
+      const datos = calcularPorcentajes(mesSeleccionado, centroSeleccionado);
+      
+      // Actualizar datos de la gráfica
+      chartPorcentajes.data.datasets[0].data = [datos.cerrados, datos.pendientes];
+      chartPorcentajes.update();
+      
+      // Actualizar leyenda
+      const mesTexto = mesSeleccionado === 'todos' ? 'Todos los meses' : 
+                      ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][parseInt(mesSeleccionado)];
+      const centroTexto = centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado;
+      
+      actualizarLeyenda('legend-porcentajes', [
         {
-            label: `Cerrados - ${mesTexto} - ${centroTexto}`,
-            color: CONFIG.COLORES_GRAFICAS['Cerrados']
+          label: `Cerrados - ${mesTexto} - ${centroTexto}`,
+          color: CONFIG.COLORES_GRAFICAS['Cerrados']
         },
         {
-            label: `Pendientes - ${mesTexto} - ${centroTexto}`,
-            color: CONFIG.COLORES_GRAFICAS['Pendientes']
+          label: `Pendientes - ${mesTexto} - ${centroTexto}`,
+          color: CONFIG.COLORES_GRAFICAS['Pendientes']
         }
-    ]);
-}
-
-// Actualizar gráficas automáticamente cuando cambien los datos
-function actualizarGraficasConDatos() {
-    if (chartMensual || chartPorcentajes) {
-        setTimeout(() => {
-            actualizarGraficas();
-            actualizarGraficaPorcentajes();
-        }, 100);
+      ]);
     }
-}
 
-// ===== EXPORTAR FUNCIONES =====
-window.filtrar = filtrar;
-window.buscar = buscar;
-window.abrirModalNuevo = abrirModalNuevo;
-window.abrirModalCompletar = abrirModalCompletar;
-window.cerrarModal = cerrarModal;
-window.guardarPreventivo = guardarPreventivo;
-window.completarPreventivo = completarPreventivo;
-window.eliminarMantenimiento = eliminarMantenimiento;
-window.imprimirFormato = imprimirFormato;
-window.imprimirFormatoIndividual = imprimirFormatoIndividual;
-window.cargarMantenimientos = cargarMantenimientos;
-window.actualizarGraficas = actualizarGraficas;
-window.actualizarGraficaPorcentajes = actualizarGraficaPorcentajes;
-window.abrirModalModificar = abrirModalModificar;
-window.abrirModalVer = abrirModalVer;
-window.cambiarTab = cambiarTab;
-window.cargarHistorial = cargarHistorial;
-window.filtrarHistorial = filtrarHistorial;
-window.verDetallesEquipo = verDetallesEquipo;
+    // Actualizar gráficas automáticamente cuando cambien los datos
+    function actualizarGraficasConDatos() {
+      if (chartMensual || chartPorcentajes) {
+        setTimeout(() => {
+          actualizarGraficas();
+          actualizarGraficaPorcentajes();
+        }, 100);
+      }
+    }
+
+    // ===== EXPORTAR FUNCIONES =====
+    window.filtrar = filtrar;
+    window.buscar = buscar;
+    window.abrirModalNuevo = abrirModalNuevo;
+    window.abrirModalCompletar = abrirModalCompletar;
+    window.cerrarModal = cerrarModal;
+    window.guardarPreventivo = guardarPreventivo;
+    window.completarPreventivo = completarPreventivo;
+    window.eliminarMantenimiento = eliminarMantenimiento;
+    window.imprimirFormato = imprimirFormato;
+    window.imprimirFormatoIndividual = imprimirFormatoIndividual;
+    window.cargarMantenimientos = cargarMantenimientos;
+    window.actualizarGraficas = actualizarGraficas;
+    window.actualizarGraficaPorcentajes = actualizarGraficaPorcentajes;
+    window.abrirModalModificar = abrirModalModificar;
+    window.abrirModalVer = abrirModalVer;
+    window.cambiarTab = cambiarTab;
+    window.cargarHistorial = cargarHistorial;
+    window.filtrarHistorial = filtrarHistorial;
+    window.verDetallesEquipo = verDetallesEquipo;
+    window.modificarPreventivo = modificarPreventivo;
   </script>
 </body>
 </html>
