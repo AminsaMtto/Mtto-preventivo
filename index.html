@@ -1087,6 +1087,14 @@
             <input type="date" id="c-fecha-realizado">
           </div>
           <div class="form-group">
+            <label for="c-tecnico">Técnico *</label>
+            <input type="text" id="c-tecnico" placeholder="Nombre del técnico">
+          </div>
+          <div class="form-group">
+            <label for="c-tiempo">Tiempo Requerido *</label>
+            <input type="text" id="c-tiempo" placeholder="Ej: 2 horas">
+          </div>
+          <div class="form-group">
             <label for="c-proximo-calculado">Próximo Mantenimiento (Calculado)</label>
             <input type="date" id="c-proximo-calculado" readonly>
           </div>
@@ -1816,6 +1824,8 @@
       document.getElementById('c-proximo-manual').value = '';
       document.getElementById('c-fecha-realizado').value = '';
       document.getElementById('c-proximo-calculado').value = '';
+      document.getElementById('c-tecnico').value = '';
+      document.getElementById('c-tiempo').value = '';
       
       document.getElementById('modal-completar').classList.add('visible');
     }
@@ -1854,20 +1864,20 @@
       // Formato 1
       document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
       document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
-      document.getElementById('v-frecuencia-1').textContent = datos.frecuencia || '-';
+      document.getElementById('v-frecuencia-1').textContent = datos.tiempoRequerido || datos.frecuencia || '-';
       document.getElementById('v-centro-1').textContent = datos.centro || '-';
       document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-      document.getElementById('v-condicion-inicial-1').textContent = 'Por revisar al iniciar mantenimiento';
-      document.getElementById('v-condicion-final-1').textContent = 'Por revisar al finalizar mantenimiento';
+      document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
+      document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
       
       // Formato 2
       document.getElementById('v-tecnico-2').textContent = datos.tecnico || '-';
       document.getElementById('v-equipo-2').textContent = datos.equipo || '-';
-      document.getElementById('v-frecuencia-2').textContent = datos.frecuencia || '-';
+      document.getElementById('v-frecuencia-2').textContent = datos.tiempoRequerido || datos.frecuencia || '-';
       document.getElementById('v-centro-2').textContent = datos.centro || '-';
       document.getElementById('v-fecha-2').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-      document.getElementById('v-condicion-inicial-2').textContent = 'Por revisar al iniciar mantenimiento';
-      document.getElementById('v-condicion-final-2').textContent = 'Por revisar al finalizar mantenimiento';
+      document.getElementById('v-condicion-inicial-2').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
+      document.getElementById('v-condicion-final-2').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
       document.getElementById('v-trabajo-realizado-2').textContent = datos.trabajoRealizado || datos.observaciones || 'Sin trabajo realizado registrado';
       
       document.getElementById('modal-ver').classList.add('visible');
@@ -2196,12 +2206,14 @@
       if (!mantenimientoActual) return;
       
       const fechaRealizado = document.getElementById('c-fecha-realizado').value;
+      const tecnico = document.getElementById('c-tecnico').value.trim();
+      const tiempo = document.getElementById('c-tiempo').value.trim();
       const condicionInicial = document.getElementById('c-condicion-inicial').value.trim();
       const condicionFinal = document.getElementById('c-condicion-final').value.trim();
       const proximoManual = document.getElementById('c-proximo-manual').value;
       
       // Validaciones
-      if (!fechaRealizado || !condicionInicial || !condicionFinal) {
+      if (!fechaRealizado || !tecnico || !tiempo || !condicionInicial || !condicionFinal) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
       }
@@ -2211,6 +2223,8 @@
       if (index === -1) return;
       
       mantenimientos[index].ultimoMantenimiento = fechaRealizado;
+      mantenimientos[index].tecnico = tecnico;
+      mantenimientos[index].tiempoRequerido = tiempo;
       mantenimientos[index].condicionInicial = condicionInicial;
       mantenimientos[index].condicionFinal = condicionFinal;
       
