@@ -1202,7 +1202,6 @@
       </div>
       <div class="modal-body">
         <div class="formato-container">
-          <!-- Primer formato -->
           <div class="formato">
             <table>
               <tr>
@@ -1225,50 +1224,6 @@
                 <td colspan="3">
                   <strong>CONDICIÓN FINAL:</strong>
                   <div class="condicion-box" id="v-condicion-final-1">-</div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="3">
-                  <table class="firmas">
-                    <tr>
-                      <td>
-                        <strong>FIRMA DEL TÉCNICO:</strong>
-                        <div class="firma-box"></div>
-                      </td>
-                      <td>
-                        <strong>FIRMA DEL RESPONSABLE:</strong>
-                        <div class="firma-box"></div>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- Segundo formato -->
-          <div class="formato">
-            <table>
-              <tr>
-                <td>TECNICO: <strong id="v-tecnico-2">-</strong></td>
-                <td>MAQUINA / EQUIPO: <strong id="v-equipo-2">-</strong></td>
-                <td>TIEMPO REQUERIDO: <span class="campo-rojo"><strong id="v-frecuencia-2">-</strong></span></td>
-              </tr>
-              <tr>
-                <td>ÁREA: <strong id="v-centro-2">-</strong></td>
-                <td>FECHA: <strong id="v-fecha-2">-</strong></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colspan="3">
-                  <strong>CONDICIÓN INICIAL:</strong>
-                  <div class="condicion-box" id="v-condicion-inicial-2">-</div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="3">
-                  <strong>CONDICIÓN FINAL:</strong>
-                  <div class="condicion-box" id="v-condicion-final-2">-</div>
                 </td>
               </tr>
               <tr>
@@ -1861,7 +1816,6 @@
       // Llenar el modal con los datos del mantenimiento
       const datos = mantenimientoActual;
       
-      // Formato 1
       document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
       document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
       document.getElementById('v-frecuencia-1').textContent = datos.tiempoRequerido || datos.frecuencia || '-';
@@ -1869,15 +1823,6 @@
       document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
       document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
       document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
-      
-      // Formato 2
-      document.getElementById('v-tecnico-2').textContent = datos.tecnico || '-';
-      document.getElementById('v-equipo-2').textContent = datos.equipo || '-';
-      document.getElementById('v-frecuencia-2').textContent = datos.tiempoRequerido || datos.frecuencia || '-';
-      document.getElementById('v-centro-2').textContent = datos.centro || '-';
-      document.getElementById('v-fecha-2').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-      document.getElementById('v-condicion-inicial-2').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
-      document.getElementById('v-condicion-final-2').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
       document.getElementById('v-trabajo-realizado-2').textContent = datos.trabajoRealizado || datos.observaciones || 'Sin trabajo realizado registrado';
       
       document.getElementById('modal-ver').classList.add('visible');
