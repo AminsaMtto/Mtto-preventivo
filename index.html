@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Mantenimientos Preventivos - AMINSA</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <link rel="icon" type="image/png" href="LOGO.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cormorant+SC:wght@300;400;500;600;700&family=IM+Fell+DW+Pica&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
@@ -900,6 +901,7 @@
   <div class="tabs-container">
     <div class="tabs-nav">
       <button class="tab-button active" onclick="cambiarTab('preventivos', this)">Preventivos</button>
+      <button class="tab-button" onclick="cambiarTab('calendario', this)">Calendario</button>
       <button class="tab-button" onclick="cambiarTab('historial', this)">Historial por Equipo</button>
     </div>
   </div>
@@ -962,6 +964,36 @@
       </tbody>
     </table>
   </div>
+  </div>
+
+  <!-- ── TAB CONTENT: CALENDARIO ───────────────────────────────────── -->
+  <div id="tab-calendario" class="tab-content">
+    <!-- ── TOOLBAR CALENDARIO ───────────────────────────────────── -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filtros">
+          <button class="filtro-btn activo" onclick="filtrarCalendario('todos', this)">Todos</button>
+          <button class="filtro-btn" onclick="filtrarCalendario('pendiente', this)">Pendientes</button>
+          <button class="filtro-btn" onclick="filtrarCalendario('proximo', this)">Próximos</button>
+          <button class="filtro-btn" onclick="filtrarCalendario('vencido', this)">Vencidos</button>
+          <button class="filtro-btn" onclick="filtrarCalendario('realizado', this)">Realizados</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <select id="filtro-centro-calendario" onchange="actualizarCalendario()">
+          <option value="">Todos los centros</option>
+          <option value="Zinc">Zinc</option>
+          <option value="Cromo">Cromo</option>
+          <option value="Doblado">Doblado</option>
+          <option value="Gral">Gral</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── CALENDARIO ───────────────────────────────────────────── -->
+    <div class="table-wrap">
+      <div id="calendar"></div>
+    </div>
   </div>
 
   <!-- ── TAB CONTENT: HISTORIAL ───────────────────────────────────── -->
@@ -1834,6 +1866,103 @@
       if (tabName === 'historial') {
         cargarHistorial();
       }
+      
+      // Si es la pestaña de calendario, inicializar el calendario
+      if (tabName === 'calendario') {
+        inicializarCalendario();
+      }
+    }
+
+    let calendar = null;
+    let filtroCalendarioEstado = 'todos';
+
+    function inicializarCalendario() {
+      if (calendar) {
+        calendar.destroy();
+      }
+
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: obtenerEventosCalendario(),
+        eventClick: function(info) {
+          abrirModalVer(info.event.id);
+        },
+        eventColor: function(info) {
+          const estado = info.event.extendedProps.estado;
+          switch(estado) {
+            case 'pendiente': return '#7a5500';
+            case 'proximo': return '#1a3a7a';
+            case 'vencido': return '#8b1a1a';
+            case 'realizado': return '#1a5c30';
+            default: return '#2e2e2e';
+          }
+        }
+      });
+
+      calendar.render();
+    }
+
+    function obtenerEventosCalendario() {
+      const centroFiltro = document.getElementById('filtro-centro-calendario').value;
+      
+      return mantenimientos
+        .filter(m => {
+          // Filtrar por centro
+          if (centroFiltro && m.centro !== centroFiltro) return false;
+          
+          // Filtrar por estado
+          if (filtroCalendarioEstado !== 'todos' && m.estado !== filtroCalendarioEstado) return false;
+          
+          return true;
+        })
+        .map(m => ({
+          id: m.id,
+          title: `${m.equipo} - ${m.centro}`,
+          start: m.proximoMantenimiento || m.ultimoMantenimiento,
+          backgroundColor: getColorPorEstado(m.estado),
+          borderColor: getColorPorEstado(m.estado),
+          extendedProps: {
+            estado: m.estado,
+            centro: m.centro,
+            equipo: m.equipo
+          }
+        }));
+    }
+
+    function getColorPorEstado(estado) {
+      switch(estado) {
+        case 'pendiente': return '#7a5500';
+        case 'proximo': return '#1a3a7a';
+        case 'vencido': return '#8b1a1a';
+        case 'realizado': return '#1a5c30';
+        default: return '#2e2e2e';
+      }
+    }
+
+    function actualizarCalendario() {
+      if (calendar) {
+        calendar.removeAllEvents();
+        calendar.addEventSource(obtenerEventosCalendario());
+      }
+    }
+
+    function filtrarCalendario(estado, button) {
+      filtroCalendarioEstado = estado;
+      
+      // Actualizar botones activos
+      document.querySelectorAll('#tab-calendario .filtro-btn').forEach(btn => {
+        btn.classList.remove('activo');
+      });
+      button.classList.add('activo');
+      
+      actualizarCalendario();
     }
 
     function cerrarModal(modalId) {
@@ -2738,6 +2867,9 @@
     window.filtrarHistorial = filtrarHistorial;
     window.verDetallesEquipo = verDetallesEquipo;
     window.modificarPreventivo = modificarPreventivo;
+    window.inicializarCalendario = inicializarCalendario;
+    window.actualizarCalendario = actualizarCalendario;
+    window.filtrarCalendario = filtrarCalendario;
   </script>
 </body>
 </html>
