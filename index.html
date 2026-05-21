@@ -776,9 +776,9 @@
     </div>
     <div class="header-right">
       <div class="header-nav">
-        <a href="index.html" class="nav-link" id="nav-ordenes">Órdenes</a>
-        <a href="preventivos.html" class="nav-link active">Preventivos</a>
-        <a href="refacciones.html" class="nav-link" id="nav-refacciones">Refacciones</a>
+        <a href="https://aminsamtto.github.io/Orden-de-trabajo/index.html" class="nav-link">Órdenes</a>
+        <a href="index.html" class="nav-link active">Preventivos</a>
+        <a href="https://aminsamtto.github.io/Almacen-Refacciones/index.html" class="nav-link">Refacciones</a>
       </div>
   </header>
 
@@ -1320,20 +1320,7 @@
   <script>
     // ===== VERIFICACIÓN DE SESIÓN =====
     window.addEventListener('DOMContentLoaded', () => {
-      const sesion = verificarSesion();
-      if (!sesion) return;
-      
-      // Controlar visibilidad de navegación por permisos
-      const permisos = sesion.permisos || {};
-      const navOrdenes = document.getElementById('nav-ordenes');
-      const navRefacciones = document.getElementById('nav-refacciones');
-      
-      if (navOrdenes) {
-        navOrdenes.style.display = permisos.ver_ordenes_tab !== false ? 'block' : 'none';
-      }
-      if (navRefacciones) {
-        navRefacciones.style.display = permisos.ver_refacciones_tab ? 'block' : 'none';
-      }
+      verificarSesion();
     });
 
     // ===== CONFIGURACIÓN =====
