@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mantenimientos Preventivos - AMINSA</title>
+  <title>Sistema de Almacén de Refacciones - AMINSA</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <link rel="icon" type="image/png" href="LOGO.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cormorant+SC:wght@300;400;500;600;700&family=IM+Fell+DW+Pica&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
@@ -95,6 +94,11 @@
       color: #666;
       letter-spacing: 1px;
     }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
     .header-doc-ref {
       font-family: 'Inconsolata', monospace;
       font-size: 10px;
@@ -167,6 +171,7 @@
     .stat-num.amarillo { color: #7a5500; }
     .stat-num.rojo     { color: var(--rojo-clar); }
     .stat-num.verde    { color: var(--verde-clar); }
+    .stat-num.azul     { color: var(--info); }
     .stat-label {
       font-family: 'Inconsolata', monospace;
       font-size: 10px;
@@ -209,10 +214,7 @@
       color: var(--blanco);
       border-color: var(--negro);
     }
-    .btn-primary:hover {
-      background: #333;
-      border-color: #333;
-    }
+    .btn-primary:hover { background: #333; border-color: #333; }
     .btn-danger {
       background: transparent;
       color: var(--rojo-clar);
@@ -231,8 +233,13 @@
       border: 1px solid var(--borde);
     }
     .btn-ghost:hover { background: var(--blanco); border-color: #aaa; color: var(--negro); }
+    .btn-warning {
+      background: transparent;
+      color: var(--naranja);
+      border: 1px solid var(--naranja);
+    }
+    .btn-warning:hover { background: var(--naranja); color: var(--blanco); }
 
-    /* Filtros */
     .filtros { display: flex; gap: 0; align-items: center; border: 1px solid var(--borde); }
     .filtro-btn {
       padding: 7px 18px;
@@ -249,10 +256,7 @@
       transition: all 0.2s;
     }
     .filtro-btn:last-child { border-right: none; }
-    .filtro-btn.activo {
-      background: var(--negro);
-      color: var(--blanco);
-    }
+    .filtro-btn.activo { background: var(--negro); color: var(--blanco); }
     .filtro-btn:hover:not(.activo) { background: var(--blanco); color: var(--negro); }
 
     .search-wrap {
@@ -282,27 +286,33 @@
     .search-input::placeholder { color: var(--texto-ter); }
     .search-input:focus { outline: none; border-color: var(--negro); }
 
-    /* ── FILTROS DE TABLA ── */
-    .filtros-tabla {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 12px 40px;
-      margin: 0 auto;
-      max-width: 1200px;
-      background: var(--fondo);
-      border: 1px solid var(--borde);
-      border-radius: 4px;
-      gap: 20px;
+    /* ── TABS ── */
+    .tabs-container {
+      background: var(--blanco);
+      border-bottom: 1px solid var(--borde);
     }
-    
-    .filtros-tabla-left {
+    .tabs-nav {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-      justify-content: center;
+      border-bottom: 2px solid var(--borde);
     }
+    .tab-button {
+      background: none;
+      border: none;
+      padding: 16px 24px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--texto-sec);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .tab-button:hover { color: var(--texto); background: var(--fondo-alt); }
+    .tab-button.active { color: var(--negro); border-bottom-color: var(--negro); background: var(--blanco); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     /* ── TABLA ── */
     .table-wrap {
@@ -312,9 +322,7 @@
       overflow: auto;
     }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    thead tr {
-      background: var(--negro);
-    }
+    thead tr { background: var(--negro); }
     th {
       padding: 13px 18px;
       text-align: left;
@@ -341,6 +349,29 @@
     tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: var(--fondo-alt); }
 
+    /* Stock bar visual */
+    .stock-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stock-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--borde-suave);
+      border-radius: 0;
+      min-width: 60px;
+      overflow: hidden;
+    }
+    .stock-bar-fill {
+      height: 100%;
+      transition: width 0.3s;
+    }
+    .stock-bar-fill.ok    { background: var(--verde-clar); }
+    .stock-bar-fill.bajo  { background: var(--naranja); }
+    .stock-bar-fill.critico { background: var(--rojo-clar); }
+
+    /* ── BADGES ── */
     .badge {
       display: inline-flex;
       align-items: center;
@@ -353,33 +384,19 @@
       letter-spacing: 1px;
       border: 1px solid;
     }
-    .estado-pendiente {
-      background: #fdf6e3;
-      color: #7a5500;
-      border-color: #e0c870;
-    }
-    .estado-proximo {
-      background: #f0f4fd;
-      color: #1a3a7a;
-      border-color: #a0b8e0;
-    }
-    .estado-vencido {
-      background: #fdf0f0;
-      color: var(--rojo);
-      border-color: #e0a0a0;
-    }
-    .estado-realizado {
-      background: #f0faf4;
-      color: #1a5c30;
-      border-color: #a0d8b0;
+    .estado-ok       { background: #f0faf4; color: #1a5c30; border-color: #a0d8b0; }
+    .estado-bajo     { background: #fdf6e3; color: #7a5500; border-color: #e0c870; }
+    .estado-critico  { background: #fdf0f0; color: var(--rojo); border-color: #e0a0a0; }
+    .estado-agotado  { background: #f0f0f0; color: #555; border-color: #bbb; }
+    .cat-badge {
+      background: var(--fondo-alt);
+      color: var(--texto-sec);
+      border-color: var(--borde);
+      font-size: 9px;
     }
 
     .acciones { display: flex; gap: 5px; }
-    .btn-sm {
-      padding: 4px 12px;
-      font-size: 10px;
-      letter-spacing: 1px;
-    }
+    .btn-sm { padding: 4px 12px; font-size: 10px; letter-spacing: 1px; }
 
     .empty-state {
       text-align: center;
@@ -392,11 +409,8 @@
 
     /* ── GRÁFICAS ── */
     .charts-section {
-      margin: 32px auto;
-      max-width: 1200px;
-      padding: 0 20px;
+      margin: 32px 48px;
     }
-    
     .charts-header {
       display: flex;
       justify-content: space-between;
@@ -405,7 +419,6 @@
       padding-bottom: 16px;
       border-bottom: 1px solid var(--borde);
     }
-    
     .charts-title {
       font-family: 'Cormorant SC', serif;
       font-size: 20px;
@@ -413,60 +426,16 @@
       color: var(--texto);
       letter-spacing: 1px;
     }
-    
-    .charts-filter {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    
-    .chart-filters {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 16px;
-      padding: 12px;
-      background: var(--fondo);
-      border: 1px solid var(--borde);
-      border-radius: 4px;
-    }
-    
-    .chart-filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    
-    .charts-filter select,
-    .chart-filters select {
-      padding: 8px 16px;
-      border: 1px solid var(--borde);
-      background: var(--blanco);
-      font-family: 'Inconsolata', monospace;
-      font-size: 12px;
-      color: var(--texto);
-      cursor: pointer;
-    }
-    
-    .charts-filter select:focus,
-    .chart-filters select:focus {
-      outline: none;
-      border-color: var(--negro);
-    }
-    
     .charts-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 24px;
     }
-    
     .chart-container {
       background: var(--blanco);
       border: 1px solid var(--borde);
-      border-radius: 4px;
       padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    
     .chart-title {
       font-family: 'Cormorant Garamond', serif;
       font-size: 16px;
@@ -475,12 +444,7 @@
       margin-bottom: 16px;
       text-align: center;
     }
-    
-    .chart-wrapper {
-      position: relative;
-      height: 300px;
-    }
-    
+    .chart-wrapper { position: relative; height: 260px; }
     .chart-legend {
       display: flex;
       justify-content: center;
@@ -488,7 +452,6 @@
       margin-top: 16px;
       flex-wrap: wrap;
     }
-    
     .legend-item {
       display: flex;
       align-items: center;
@@ -497,12 +460,7 @@
       font-size: 11px;
       color: var(--texto-sec);
     }
-    
-    .legend-color {
-      width: 12px;
-      height: 12px;
-      border-radius: 2px;
-    }
+    .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
     /* ── MODAL ── */
     .modal-overlay {
@@ -517,121 +475,16 @@
       backdrop-filter: blur(3px);
     }
     .modal-overlay.visible { display: flex; }
-
     .modal {
       background: var(--blanco);
       border-radius: 4px;
       width: 90%;
-      max-width: 600px;
+      max-width: 620px;
       max-height: 90vh;
       overflow-y: auto;
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
-    
-    .modal-large {
-      max-width: 1000px;
-    }
-    
-    .formato-container {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    
-    .formato {
-      border: 2px solid var(--negro);
-      padding: 20px;
-      background: var(--blanco);
-      page-break-inside: avoid;
-    }
-    
-    .formato table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: 'Inconsolata', monospace;
-      font-size: 12px;
-    }
-    
-    .formato td {
-      padding: 8px;
-      border: 1px solid var(--negro);
-      vertical-align: top;
-    }
-    
-    .campo-rojo {
-      color: #d32f2f;
-      font-weight: bold;
-    }
-    
-    .condicion-box {
-      min-height: 60px;
-      border: 1px solid var(--borde);
-      padding: 8px;
-      background: var(--fondo);
-    }
-    
-    .firmas {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    .firmas td {
-      width: 50%;
-      text-align: center;
-    }
-    
-    .firma-box {
-      height: 60px;
-      border: 1px solid var(--borde);
-      margin-top: 8px;
-      background: var(--fondo);
-    }
-    
-    /* ── TABS ── */
-    .tabs-container {
-      background: var(--blanco);
-      border-bottom: 1px solid var(--borde);
-      margin: 0 0 24px 0;
-    }
-    
-    .tabs-nav {
-      display: flex;
-      border-bottom: 2px solid var(--borde);
-    }
-    
-    .tab-button {
-      background: none;
-      border: none;
-      padding: 16px 24px;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--texto-sec);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s ease;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    
-    .tab-button:hover {
-      color: var(--texto);
-      background: var(--fondo-alt);
-    }
-    
-    .tab-button.active {
-      color: var(--negro);
-      border-bottom-color: var(--negro);
-      background: var(--blanco);
-    }
-    
-    .tab-content {
-      display: none;
-    }
-    
-    .tab-content.active {
-      display: block;
-    }
+    .modal-large { max-width: 900px; }
     .modal-header {
       background: var(--negro);
       color: var(--blanco);
@@ -646,11 +499,6 @@
       font-weight: 500;
       letter-spacing: 2.5px;
       color: #fff;
-    }
-    .modal-header h2 span {
-      color: rgba(255,255,255,0.5);
-      font-family: 'Inconsolata', monospace;
-      font-size: 13px;
     }
     .modal-close {
       background: none;
@@ -669,9 +517,9 @@
     .modal-body { padding: 28px; }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-grid.full { grid-template-columns: 1fr; }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     .form-group.span2 { grid-column: span 2; }
+    .form-group.span3 { grid-column: span 3; }
     label {
       font-family: 'Inconsolata', monospace;
       font-size: 10px;
@@ -680,7 +528,7 @@
       text-transform: uppercase;
       letter-spacing: 2px;
     }
-    input[type="text"], input[type="date"], input[type="time"], textarea, select {
+    input[type="text"], input[type="date"], input[type="number"], textarea, select {
       padding: 9px 25px;
       border: 1px solid var(--borde);
       font-size: 14px;
@@ -705,6 +553,69 @@
       background: var(--fondo-alt);
     }
 
+    /* Detalle de refacción */
+    .detalle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--borde);
+    }
+    .detalle-campo {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--borde-suave);
+      border-right: 1px solid var(--borde-suave);
+    }
+    .detalle-campo:nth-child(even) { border-right: none; }
+    .detalle-campo.full { grid-column: span 2; border-right: none; }
+    .detalle-etiqueta {
+      font-family: 'Inconsolata', monospace;
+      font-size: 9px;
+      color: var(--texto-ter);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+    .detalle-valor {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      color: var(--texto);
+      font-weight: 500;
+    }
+
+    /* Movimientos */
+    .mov-header {
+      font-family: 'Cormorant SC', serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--texto);
+      padding: 16px 0 10px;
+      border-bottom: 1px solid var(--borde);
+      margin-bottom: 12px;
+    }
+    .mov-tipo-entrada { color: var(--verde-clar); }
+    .mov-tipo-salida  { color: var(--rojo-clar); }
+    .mov-tipo-ajuste  { color: var(--naranja); }
+
+    /* Alerta stock */
+    .alerta-stock {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #fdf6e3;
+      border: 1px solid #e0c870;
+      margin-bottom: 20px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 11px;
+      color: #7a5500;
+      letter-spacing: 1px;
+    }
+    .alerta-stock.critico {
+      background: #fdf0f0;
+      border-color: #e0a0a0;
+      color: var(--rojo);
+    }
+
     /* ── TOAST ── */
     .toast {
       position: fixed;
@@ -722,11 +633,23 @@
       opacity: 0;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 9999;
-      max-width: 340px;
+      max-width: 360px;
     }
     .toast.show { transform: translateX(0); opacity: 1; }
     .toast.error   { border-left-color: var(--rojo-clar); }
     .toast.success { border-left-color: var(--verde-clar); }
+    .toast.warning { border-left-color: var(--naranja); }
+
+    /* Separador de sección */
+    .seccion-titulo {
+      font-family: 'Inconsolata', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: var(--texto-ter);
+      padding: 0 48px;
+      margin: 24px 0 0;
+    }
 
     /* ── SCROLLBAR ── */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -735,251 +658,157 @@
     ::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
     /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .search-input {
-        width: 100%;
-      }
-      .stats-bar {
-        flex-wrap: wrap;
-      }
-      .stat {
-        flex: 1 1 50%;
-        margin-right: 0;
-        border-right: none;
-        border-bottom: 1px solid var(--borde-suave);
-      }
-      .table-wrap {
-        margin: 0 24px;
-      }
-      th, td {
-        padding: 8px 12px;
-        font-size: 10px;
-      }
+    @media (max-width: 900px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .table-wrap { margin: 0 16px 24px; }
+      .toolbar { padding: 14px 16px; }
+      .stats-bar { padding: 0 16px; }
+      .charts-section { margin: 24px 16px; }
+      header { padding: 0 16px; }
+      .search-input { width: 200px; }
+    }
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.span2 { grid-column: span 1; }
+      .detalle-grid { grid-template-columns: 1fr; }
+      .detalle-campo.full { grid-column: span 1; }
+      .detalle-campo:nth-child(even) { border-right: none; }
     }
   </style>
 </head>
 <body>
-  <!-- ── HEADER ──────────────────────────────────────────────────────── -->
+
+  <!-- ── HEADER ── -->
   <header>
     <div class="header-brand">
-      <img src="LOGO.png" style="width:70px;height:70px;object-fit:contain;">
+      <img src="LOGO.png" style="width:70px;height:70px;object-fit:contain;" onerror="this.style.display='none'">
       <div class="header-divider"></div>
       <div class="header-text">
-        <h1>Mantenimientos Preventivos</h1>
+        <h1>Almacén de Refacciones</h1>
         <span>SISTEMA DE GESTIÓN</span>
       </div>
     </div>
     <div class="header-right">
       <div class="header-nav">
-        <a href="https://aminsamtto.github.io/Orden-de-trabajo/index.html" class="nav-link">Órdenes</a>  
-        <a href="index.html" class="nav-link active">Preventivos</a>
-        <a href="https://aminsamtto.github.io/Almacen-Refacciones/index.html" class="nav-link">Refacciones</a>
+        <a href="https://aminsamtto.github.io/Orden-de-trabajo/index.html" class="nav-link">Órdenes</a>
+        <a href="https://aminsamtto.github.io/Mtto-preventivo/" class="nav-link">Preventivos</a>
+        <a href="index.html" class="nav-link active">Refacciones</a>
       </div>
   </header>
 
-  <!-- ── STATS BAR ───────────────────────────────────────────────────── -->
+  <!-- ── STATS BAR ── -->
   <div class="stats-bar">
     <div class="stat">
       <div class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          <path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
         </svg>
       </div>
       <div class="stat-data">
         <div class="stat-num" id="stat-total">0</div>
-        <div class="stat-label">Total</div>
+        <div class="stat-label">Total Artículos</div>
       </div>
     </div>
     <div class="stat">
       <div class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="9"/><path d="M12 8v4l2 2"/>
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
       <div class="stat-data">
-        <div class="stat-num amarillo" id="stat-pendientes">0</div>
-        <div class="stat-label">Pendientes</div>
+        <div class="stat-num verde" id="stat-ok">0</div>
+        <div class="stat-label">Stock Normal</div>
       </div>
     </div>
     <div class="stat">
       <div class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       </div>
       <div class="stat-data">
-        <div class="stat-num verde" id="stat-proximos">0</div>
-        <div class="stat-label">Próximos 7 días</div>
+        <div class="stat-num amarillo" id="stat-bajo">0</div>
+        <div class="stat-label">Stock Bajo</div>
       </div>
     </div>
     <div class="stat">
       <div class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
         </svg>
       </div>
       <div class="stat-data">
-        <div class="stat-num rojo" id="stat-vencidos">0</div>
-        <div class="stat-label">Vencidos</div>
+        <div class="stat-num rojo" id="stat-critico">0</div>
+        <div class="stat-label">Crítico / Agotado</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+      </div>
+      <div class="stat-data">
+        <div class="stat-num azul" id="stat-valor">$0</div>
+        <div class="stat-label">Valor Inventario</div>
       </div>
     </div>
   </div>
 
-  <!-- ── GRÁFICAS ───────────────────────────────────────────────────── -->
+  <!-- ── GRÁFICAS ── -->
   <div class="charts-section">
     <div class="charts-header">
-      <h2 class="charts-title">Análisis de Mantenimientos</h2>
-      <div class="charts-filter">
-        <label for="centro-filter" style="font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--texto-sec);">Centro:</label>
-        <select id="centro-filter" onchange="actualizarGraficas()">
-          <option value="todos">Todos</option>
-          <option value="Zinc">Zinc</option>
-          <option value="Cromo">Cromo</option>
-          <option value="Doblado">Doblado</option>
-          <option value="Gral">Gral</option>
+      <h2 class="charts-title">Análisis de Inventario</h2>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <label for="cat-filter-graf" style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--texto-sec);">Categoría:</label>
+        <select id="cat-filter-graf" onchange="actualizarGraficas()" style="padding:8px 16px;border:1px solid var(--borde);background:var(--blanco);font-family:'Inconsolata',monospace;font-size:12px;">
+          <option value="todas">Todas</option>
         </select>
       </div>
     </div>
-    
     <div class="charts-grid">
       <div class="chart-container">
-        <h3 class="chart-title">Mantenimientos Cerrados vs Pendientes por Mes</h3>
-        <div class="chart-wrapper">
-          <canvas id="chart-mensual"></canvas>
-        </div>
-        <div class="chart-legend" id="legend-mensual"></div>
+        <h3 class="chart-title">Estado del Stock por Artículo</h3>
+        <div class="chart-wrapper"><canvas id="chart-stock"></canvas></div>
+        <div class="chart-legend" id="legend-stock"></div>
       </div>
-      
       <div class="chart-container">
-        <h3 class="chart-title">Porcentaje de Mantenimientos por Estado</h3>
-        <div class="chart-filters">
-          <div class="chart-filter-group">
-            <label for="mes-filter" style="font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--texto-sec);">Mes:</label>
-            <select id="mes-filter" onchange="actualizarGraficaPorcentajes()">
-              <option value="todos">Todos los meses</option>
-              <option value="0">Enero</option>
-              <option value="1">Febrero</option>
-              <option value="2">Marzo</option>
-              <option value="3">Abril</option>
-              <option value="4">Mayo</option>
-              <option value="5">Junio</option>
-              <option value="6">Julio</option>
-              <option value="7">Agosto</option>
-              <option value="8">Septiembre</option>
-              <option value="9">Octubre</option>
-              <option value="10">Noviembre</option>
-              <option value="11">Diciembre</option>
-            </select>
-          </div>
-          <div class="chart-filter-group">
-            <label for="centro-filter-2" style="font-family: 'Inconsolata', monospace; font-size: 12px; color: var(--texto-sec);">Centro:</label>
-            <select id="centro-filter-2" onchange="actualizarGraficaPorcentajes()">
-              <option value="todos">Todos</option>
-              <option value="Zinc">Zinc</option>
-              <option value="Cromo">Cromo</option>
-              <option value="Doblado">Doblado</option>
-              <option value="Gral">Gral</option>
-            </select>
-          </div>
-        </div>
-        <div class="chart-wrapper">
-          <canvas id="chart-porcentajes"></canvas>
-        </div>
-        <div class="chart-legend" id="legend-porcentajes"></div>
+        <h3 class="chart-title">Distribución por Categoría</h3>
+        <div class="chart-wrapper"><canvas id="chart-categoria"></canvas></div>
+        <div class="chart-legend" id="legend-categoria"></div>
       </div>
     </div>
   </div>
 
-  <!-- ── TABS ───────────────────────────────────────────────────── -->
+  <!-- ── TABS ── -->
   <div class="tabs-container">
     <div class="tabs-nav">
-      <button class="tab-button active" onclick="cambiarTab('preventivos', this)">Preventivos</button>
-      <button class="tab-button" onclick="cambiarTab('calendario', this)">Calendario</button>
-      <button class="tab-button" onclick="cambiarTab('historial', this)">Historial por Equipo</button>
+      <button class="tab-button active" onclick="cambiarTab('inventario', this)">Inventario</button>
+      <button class="tab-button" onclick="cambiarTab('movimientos', this)">Movimientos</button>
+      <button class="tab-button" onclick="cambiarTab('alertas', this)">Alertas de Stock</button>
     </div>
   </div>
 
-  <!-- ── TAB CONTENT: PREVENTIVOS ───────────────────────────────────── -->
-  <div id="tab-preventivos" class="tab-content active">
-    <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
-    <div class="toolbar">
-    <div class="toolbar-left">
-      <div class="filtros">
-        <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
-        <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
-        <button class="filtro-btn" onclick="filtrar('proximo', this)">Próximos</button>
-        <button class="filtro-btn" onclick="filtrar('vencido', this)">Vencidos</button>
-        <button class="filtro-btn" onclick="filtrar('realizado', this)">Realizados</button>
-      </div>
-    </div>
-    
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
-    </div>
-    
-            <a href="#" class="btn btn-ghost" onclick="imprimirFormato()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="6 9 6 2 18 2 18 9"/>
-        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-        <rect x="6" y="14" width="12" height="8"/>
-      </svg>
-      Imprimir Formato
-    </a>
-    <a href="#" class="btn btn-primary" onclick="abrirModalNuevo()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      Nuevo Preventivo
-    </a>
-  </div>
-
-  
-  <!-- ── TABLE ─────────────────────────────────────────────────────── -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Equipo</th>
-          <th>Centro</th>
-          <th>Frecuencia</th>
-          <th>Último Mantenimiento</th>
-          <th>Próximo Mantenimiento</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tabla-preventivos">
-        <!-- Las filas se generarán dinámicamente -->
-      </tbody>
-    </table>
-  </div>
-  </div>
-
-  <!-- ── TAB CONTENT: CALENDARIO ───────────────────────────────────── -->
-  <div id="tab-calendario" class="tab-content">
-    <!-- ── TOOLBAR CALENDARIO ───────────────────────────────────── -->
+  <!-- ── TAB: INVENTARIO ── -->
+  <div id="tab-inventario" class="tab-content active">
     <div class="toolbar">
       <div class="toolbar-left">
         <div class="filtros">
-          <button class="filtro-btn activo" onclick="filtrarCalendario('todos', this)">Todos</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('pendiente', this)">Pendientes</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('proximo', this)">Próximos</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('vencido', this)">Vencidos</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('realizado', this)">Realizados</button>
+          <button class="filtro-btn activo" onclick="filtrar('todos', this)">Todos</button>
+          <button class="filtro-btn" onclick="filtrar('ok', this)">Normal</button>
+          <button class="filtro-btn" onclick="filtrar('bajo', this)">Bajo</button>
+          <button class="filtro-btn" onclick="filtrar('critico', this)">Crítico</button>
+          <button class="filtro-btn" onclick="filtrar('agotado', this)">Agotado</button>
         </div>
-      </div>
-      <div class="toolbar-right">
-        <select id="filtro-centro-calendario" onchange="actualizarCalendario()">
+        <select id="filtro-categoria" onchange="renderizarTabla()" style="padding:7px 16px;border:1px solid var(--borde);background:var(--blanco);font-family:'Inconsolata',monospace;font-size:11px;letter-spacing:1px;color:var(--texto-sec);">
+          <option value="">Todas las categorías</option>
+        </select>
+        <select id="filtro-centro" onchange="renderizarTabla()" style="padding:7px 16px;border:1px solid var(--borde);background:var(--blanco);font-family:'Inconsolata',monospace;font-size:11px;letter-spacing:1px;color:var(--texto-sec);">
           <option value="">Todos los centros</option>
           <option value="Zinc">Zinc</option>
           <option value="Cromo">Cromo</option>
@@ -987,77 +816,172 @@
           <option value="Gral">Gral</option>
         </select>
       </div>
-    </div>
-
-    <!-- ── CALENDARIO ───────────────────────────────────────────── -->
-    <div class="table-wrap">
-      <div id="calendar"></div>
-    </div>
-  </div>
-
-  <!-- ── TAB CONTENT: HISTORIAL ───────────────────────────────────── -->
-  <div id="tab-historial" class="tab-content">
-    <!-- ── TOOLBAR HISTORIAL ───────────────────────────────────── -->
-    <div class="toolbar">
-      <div class="toolbar-left">
+      <div style="display:flex;gap:10px;align-items:center;">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input class="search-input" type="text" placeholder="BUSCAR EQUIPO..." id="buscar-equipo" oninput="filtrarHistorial()">
+          <input class="search-input" type="text" placeholder="BUSCAR CÓDIGO / DESCRIPCIÓN" oninput="buscar(this.value)">
         </div>
-      </div>
-      <div class="toolbar-right">
-        <select id="filtro-centro-historial" onchange="filtrarHistorial()">
-          <option value="">Todos</option>
-          <option value="Zinc">Zinc</option>
-          <option value="Cromo">Cromo</option>
-          <option value="Doblado">Doblado</option>
-          <option value="Gral">Gral</option>
-        </select>
-        <select id="filtro-equipo-historial" onchange="filtrarHistorial()">
-          <option value="">Todos los equipos</option>
-        </select>
+        <button class="btn btn-ghost" onclick="exportarCSV()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exportar
+        </button>
+        <button class="btn btn-primary" onclick="abrirModalNueva()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Nueva Refacción
+        </button>
       </div>
     </div>
 
-    <!-- ── TABLA HISTORIAL ───────────────────────────────────── -->
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Equipo</th>
-            <th>Fecha de Realización</th>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Categoría</th>
+            <th>Centro</th>
+            <th>Unidad</th>
+            <th>Stock Actual</th>
+            <th>Mín / Máx</th>
+            <th>Ubicación</th>
+            <th>Precio Unit.</th>
+            <th>Estado</th>
             <th>Acciones</th>
           </tr>
         </thead>
-        <tbody id="tabla-historial">
-          <!-- Las filas se generarán dinámicamente -->
-        </tbody>
+        <tbody id="tabla-inventario"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- ── MODAL NUEVO ───────────────────────────────────────────────── -->
-  <div class="modal-overlay" id="modal-nuevo">
+  <!-- ── TAB: MOVIMIENTOS ── -->
+  <div id="tab-movimientos" class="tab-content">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="filtros">
+          <button class="filtro-btn activo" onclick="filtrarMovimientos('todos', this)">Todos</button>
+          <button class="filtro-btn" onclick="filtrarMovimientos('entrada', this)">Entradas</button>
+          <button class="filtro-btn" onclick="filtrarMovimientos('salida', this)">Salidas</button>
+          <button class="filtro-btn" onclick="filtrarMovimientos('ajuste', this)">Ajustes</button>
+        </div>
+        <input type="date" id="filtro-fecha-mov" onchange="renderizarMovimientos()" style="padding:7px 14px;border:1px solid var(--borde);background:var(--blanco);font-family:'Inconsolata',monospace;font-size:11px;">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-success" onclick="abrirModalMovimiento('entrada')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Entrada
+        </button>
+        <button class="btn btn-danger" onclick="abrirModalMovimiento('salida')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Salida
+        </button>
+        <button class="btn btn-warning" onclick="abrirModalMovimiento('ajuste')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Ajuste
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Folio</th>
+            <th>Tipo</th>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Cantidad</th>
+            <th>Responsable</th>
+            <th>Orden de Trabajo</th>
+            <th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-movimientos"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── TAB: ALERTAS ── -->
+  <div id="tab-alertas" class="tab-content">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--texto-ter);letter-spacing:1.5px;">ARTÍCULOS QUE REQUIEREN ATENCIÓN</span>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Centro</th>
+            <th>Stock Actual</th>
+            <th>Stock Mínimo</th>
+            <th>Faltante</th>
+            <th>Proveedor</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-alertas"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── MODAL NUEVA REFACCIÓN ── -->
+  <div class="modal-overlay" id="modal-nueva">
     <div class="modal">
       <div class="modal-header">
-        <h2>Nuevo Mantenimiento Preventivo</h2>
-        <button class="modal-close" onclick="cerrarModal('modal-nuevo')">✕</button>
+        <h2>Nueva Refacción</h2>
+        <button class="modal-close" onclick="cerrarModal('modal-nueva')">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group">
-            <label for="p-id">ID *</label>
-            <input type="text" id="p-id" placeholder="ID del mantenimiento">
+            <label>Código *</label>
+            <input type="text" id="n-codigo" placeholder="REF-001">
           </div>
           <div class="form-group">
-            <label for="p-equipo">Equipo *</label>
-            <input type="text" id="p-equipo" placeholder="Nombre del equipo">
+            <label>Categoría *</label>
+            <select id="n-categoria">
+              <option value="">Seleccionar...</option>
+              <option>Eléctrico</option>
+              <option>Mecánico</option>
+              <option>Neumático</option>
+              <option>Hidráulico</option>
+              <option>Lubricantes</option>
+              <option>Rodamientos</option>
+              <option>Correas y Bandas</option>
+              <option>Sellos y Empaques</option>
+              <option>Filtros</option>
+              <option>Herramienta</option>
+              <option>Consumibles</option>
+              <option>Otros</option>
+            </select>
+          </div>
+          <div class="form-group span2">
+            <label>Descripción *</label>
+            <input type="text" id="n-descripcion" placeholder="Descripción completa del artículo">
           </div>
           <div class="form-group">
-            <label for="p-centro">Centro de Negocio *</label>
-            <select id="p-centro">
+            <label>Centro de Negocio *</label>
+            <select id="n-centro">
               <option value="">Seleccionar...</option>
               <option value="Zinc">Zinc</option>
               <option value="Cromo">Cromo</option>
@@ -1066,35 +990,52 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="p-frecuencia">Frecuencia *</label>
-            <select id="p-frecuencia">
+            <label>Unidad de Medida *</label>
+            <select id="n-unidad">
               <option value="">Seleccionar...</option>
-              <option value="Semanal">Semanal</option>
-              <option value="Quincenal">Quincenal</option>
-              <option value="Mensual">Mensual</option>
-              <option value="Bimestral">Bimestral</option>
-              <option value="Trimestral">Trimestral</option>
-              <option value="Semestral">Semestral</option>
-              <option value="Anual">Anual</option>
+              <option>Pieza</option>
+              <option>Par</option>
+              <option>Litro</option>
+              <option>Kilogramo</option>
+              <option>Metro</option>
+              <option>Caja</option>
+              <option>Juego</option>
+              <option>Rollo</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="p-ultimo">Último Mantenimiento *</label>
-            <input type="date" id="p-ultimo">
+            <label>Stock Inicial *</label>
+            <input type="number" id="n-stock" placeholder="0" min="0">
           </div>
           <div class="form-group">
-            <label for="p-tecnico">Técnico Asignado</label>
-            <input type="text" id="p-tecnico" placeholder="Nombre del técnico">
+            <label>Stock Mínimo *</label>
+            <input type="number" id="n-minimo" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Stock Máximo</label>
+            <input type="number" id="n-maximo" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Precio Unitario</label>
+            <input type="number" id="n-precio" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Ubicación en Almacén</label>
+            <input type="text" id="n-ubicacion" placeholder="Ej: Estante A-3">
+          </div>
+          <div class="form-group">
+            <label>Proveedor</label>
+            <input type="text" id="n-proveedor" placeholder="Nombre del proveedor">
           </div>
           <div class="form-group span2">
-            <label for="p-trabajo-realizado">Trabajo Realizado</label>
-            <textarea id="p-trabajo-realizado" placeholder="Descripción del trabajo realizado..."></textarea>
+            <label>Observaciones</label>
+            <textarea id="n-observaciones" placeholder="Notas adicionales, especificaciones técnicas..."></textarea>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="cerrarModal('modal-nuevo')">Cancelar</button>
-        <button class="btn btn-primary" onclick="guardarPreventivo()">
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-nueva')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarRefaccion()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
@@ -1104,580 +1045,661 @@
     </div>
   </div>
 
-  <!-- ── MODAL COMPLETAR ───────────────────────────────────────────── -->
-  <div class="modal-overlay" id="modal-completar">
+  <!-- ── MODAL EDITAR ── -->
+  <div class="modal-overlay" id="modal-editar">
     <div class="modal">
       <div class="modal-header">
-        <h2>Completar Mantenimiento</h2>
-        <button class="modal-close" onclick="cerrarModal('modal-completar')">✕</button>
+        <h2>Editar Refacción</h2>
+        <button class="modal-close" onclick="cerrarModal('modal-editar')">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group">
-            <label for="c-fecha-realizado">Fecha de Realización *</label>
-            <input type="date" id="c-fecha-realizado">
+            <label>Código</label>
+            <input type="text" id="e-codigo" readonly style="background:#eee;color:#888;">
           </div>
           <div class="form-group">
-            <label for="c-tecnico">Técnico *</label>
-            <input type="text" id="c-tecnico" placeholder="Nombre del técnico">
-          </div>
-          <div class="form-group">
-            <label for="c-responsable">Responsable *</label>
-            <input type="text" id="c-responsable" placeholder="Nombre del responsable que verifica">
-          </div>
-          <div class="form-group">
-            <label for="c-tiempo">Tiempo Requerido *</label>
-            <input type="text" id="c-tiempo" placeholder="Ej: 2 horas">
-          </div>
-          <div class="form-group">
-            <label for="c-proximo-calculado">Próximo Mantenimiento (Calculado)</label>
-            <input type="date" id="c-proximo-calculado" readonly>
-          </div>
-          <div class="form-group">
-            <label for="c-condicion-inicial">Condición Inicial *</label>
-            <textarea id="c-condicion-inicial" placeholder="Describe la condición inicial del equipo" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="c-condicion-final">Condición Final *</label>
-            <textarea id="c-condicion-final" placeholder="Describe la condición final del equipo" rows="3"></textarea>
+            <label>Categoría *</label>
+            <select id="e-categoria">
+              <option value="">Seleccionar...</option>
+              <option>Eléctrico</option>
+              <option>Mecánico</option>
+              <option>Neumático</option>
+              <option>Hidráulico</option>
+              <option>Lubricantes</option>
+              <option>Rodamientos</option>
+              <option>Correas y Bandas</option>
+              <option>Sellos y Empaques</option>
+              <option>Filtros</option>
+              <option>Herramienta</option>
+              <option>Consumibles</option>
+              <option>Otros</option>
+            </select>
           </div>
           <div class="form-group span2">
-            <label for="c-proximo-manual">Próximo Mantenimiento (Manual)</label>
-            <input type="date" id="c-proximo-manual" placeholder="Sobrescribir fecha calculada...">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="cerrarModal('modal-completar')">Cancelar</button>
-        <button class="btn btn-success" onclick="completarPreventivo()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          Completar
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── MODAL MODIFICAR ───────────────────────────────────────── -->
-  <div class="modal-overlay" id="modal-modificar">
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Modificar Mantenimiento</h2>
-        <button class="modal-close" onclick="cerrarModal('modal-modificar')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="m-equipo">Equipo *</label>
-            <input type="text" id="m-equipo" placeholder="Nombre del equipo">
+            <label>Descripción *</label>
+            <input type="text" id="e-descripcion">
           </div>
           <div class="form-group">
-            <label for="m-centro">Centro de Negocio *</label>
-            <select id="m-centro">
-              <option value="">Seleccionar...</option>
+            <label>Centro de Negocio *</label>
+            <select id="e-centro">
               <option value="Zinc">Zinc</option>
               <option value="Cromo">Cromo</option>
               <option value="Doblado">Doblado</option>
-              <option value="Oficinas">Oficinas</option>
-              <option value="Pretratamiento">Pretratamiento</option>
-              <option value="Tratamiento">Tratamiento</option>
-              <option value="Andenes">Andenes</option>
-              <option value="Laboratorio">Laboratorio</option>
-              <option value="Obra Civil">Obra Civil</option>
-              <option value="Área Periférica">Área Periférica</option>
-              <option value="Otros">Otros</option>
+              <option value="Gral">Gral</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="m-frecuencia">Frecuencia *</label>
-            <select id="m-frecuencia">
-              <option value="">Seleccionar...</option>
-              <option value="Semanal">Semanal</option>
-              <option value="Quincenal">Quincenal</option>
-              <option value="Mensual">Mensual</option>
-              <option value="Bimestral">Bimestral</option>
-              <option value="Trimestral">Trimestral</option>
-              <option value="Semestral">Semestral</option>
-              <option value="Anual">Anual</option>
+            <label>Unidad de Medida *</label>
+            <select id="e-unidad">
+              <option>Pieza</option><option>Par</option><option>Litro</option>
+              <option>Kilogramo</option><option>Metro</option><option>Caja</option>
+              <option>Juego</option><option>Rollo</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="m-ultimo">Último Mantenimiento *</label>
-            <input type="date" id="m-ultimo">
+            <label>Stock Mínimo *</label>
+            <input type="number" id="e-minimo" min="0">
           </div>
           <div class="form-group">
-            <label for="m-tecnico">Técnico Asignado</label>
-            <input type="text" id="m-tecnico" placeholder="Nombre del técnico">
+            <label>Stock Máximo</label>
+            <input type="number" id="e-maximo" min="0">
+          </div>
+          <div class="form-group">
+            <label>Precio Unitario</label>
+            <input type="number" id="e-precio" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Ubicación en Almacén</label>
+            <input type="text" id="e-ubicacion">
+          </div>
+          <div class="form-group">
+            <label>Proveedor</label>
+            <input type="text" id="e-proveedor">
           </div>
           <div class="form-group span2">
-            <label for="m-trabajo-realizado">Trabajo Realizado</label>
-            <textarea id="m-trabajo-realizado" placeholder="Descripción del trabajo realizado..."></textarea>
+            <label>Observaciones</label>
+            <textarea id="e-observaciones"></textarea>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="cerrarModal('modal-modificar')">Cancelar</button>
-        <button class="btn btn-primary" onclick="modificarPreventivo()">
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-editar')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarEdicion()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14M4 12h4"/>
+            <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Modificar
+          Guardar Cambios
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ── MODAL VER ───────────────────────────────────────────── -->
+  <!-- ── MODAL VER DETALLE ── -->
   <div class="modal-overlay" id="modal-ver">
     <div class="modal modal-large">
       <div class="modal-header">
-        <h2>Detalles del Mantenimiento</h2>
+        <h2>Detalle de Refacción — <span id="v-codigo-titulo" style="color:rgba(255,255,255,0.5);font-family:'Inconsolata',monospace;font-size:13px;"></span></h2>
         <button class="modal-close" onclick="cerrarModal('modal-ver')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="formato-container">
-          <div class="formato">
-            <table>
-              <tr>
-                <td>TECNICO: <strong id="v-tecnico-1">-</strong></td>
-                <td>MAQUINA / EQUIPO: <strong id="v-equipo-1">-</strong></td>
-                <td>TIEMPO REQUERIDO: <span class="campo-rojo"><strong id="v-frecuencia-1">-</strong></span></td>
-              </tr>
-              <tr>
-                <td>ÁREA: <strong id="v-centro-1">-</strong></td>
-                <td>FECHA: <strong id="v-fecha-1">-</strong></td>
-                <td></td>
-              </tr>
-              <tr>
-                <td colspan="3">
-                  <strong>CONDICIÓN INICIAL:</strong>
-                  <div class="condicion-box" id="v-condicion-inicial-1">-</div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="3">
-                  <strong>CONDICIÓN FINAL:</strong>
-                  <div class="condicion-box" id="v-condicion-final-1">-</div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="3">
-                  <strong>NOMBRE DEL RESPONSABLE:</strong> <strong id="v-responsable">-</strong>
-                </td>
-              </tr>
-            </table>
+        <div id="ver-alertas"></div>
+        <div class="detalle-grid">
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Código</div>
+            <div class="detalle-valor" id="v-codigo">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Categoría</div>
+            <div class="detalle-valor" id="v-categoria">—</div>
+          </div>
+          <div class="detalle-campo full">
+            <div class="detalle-etiqueta">Descripción</div>
+            <div class="detalle-valor" id="v-descripcion">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Centro de Negocio</div>
+            <div class="detalle-valor" id="v-centro">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Unidad de Medida</div>
+            <div class="detalle-valor" id="v-unidad">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Stock Actual</div>
+            <div class="detalle-valor" id="v-stock">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Stock Mínimo / Máximo</div>
+            <div class="detalle-valor" id="v-minmax">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Precio Unitario</div>
+            <div class="detalle-valor" id="v-precio">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Valor en Inventario</div>
+            <div class="detalle-valor" id="v-valor-total">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Ubicación</div>
+            <div class="detalle-valor" id="v-ubicacion">—</div>
+          </div>
+          <div class="detalle-campo">
+            <div class="detalle-etiqueta">Proveedor</div>
+            <div class="detalle-valor" id="v-proveedor">—</div>
+          </div>
+          <div class="detalle-campo full">
+            <div class="detalle-etiqueta">Observaciones</div>
+            <div class="detalle-valor" id="v-observaciones" style="font-size:13px;color:var(--texto-sec);">—</div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="cerrarModal('modal-ver')">Cerrar</button>
-        <button class="btn btn-primary" onclick="imprimirFormatoIndividual()">Imprimir</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── MODAL HISTORIAL EQUIPO ───────────────────────────────────── -->
-  <div class="modal-overlay" id="modal-historial-equipo">
-    <div class="modal modal-large">
-      <div class="modal-header">
-        <h2>Historial de Mantenimientos - <span id="nombre-equipo-modal"></span></h2>
-        <button class="modal-close" onclick="cerrarModal('modal-historial-equipo')">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="table-wrap">
+        <p class="mov-header">Últimos Movimientos</p>
+        <div class="table-wrap" style="margin:0;">
           <table>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Centro</th>
-                <th>Frecuencia</th>
-                <th>Último Mantenimiento</th>
-                <th>Próximo Mantenimiento</th>
-                <th>Técnico</th>
-                <th>Estado</th>
-                <th>Condición Inicial</th>
-                <th>Condición Final</th>
+                <th>Fecha</th>
+                <th>Folio</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Responsable</th>
+                <th>OT</th>
               </tr>
             </thead>
-            <tbody id="tabla-historial-equipo">
-              <!-- Las filas se generarán dinámicamente -->
-            </tbody>
+            <tbody id="tabla-mov-detalle"></tbody>
           </table>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="cerrarModal('modal-historial-equipo')">Cerrar</button>
-        <button class="btn btn-primary" onclick="imprimirFormatosEquipo()">Imprimir Formatos</button>
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-ver')">Cerrar</button>
+        <button class="btn btn-success" onclick="abrirModalMovDesdeDetalle('entrada')">+ Entrada</button>
+        <button class="btn btn-danger" onclick="abrirModalMovDesdeDetalle('salida')">− Salida</button>
       </div>
     </div>
   </div>
 
-  <!-- ── TOAST ───────────────────────────────────────────────────── -->
+  <!-- ── MODAL MOVIMIENTO ── -->
+  <div class="modal-overlay" id="modal-movimiento">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="titulo-modal-mov">Registrar Movimiento</h2>
+        <button class="modal-close" onclick="cerrarModal('modal-movimiento')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha *</label>
+            <input type="date" id="mv-fecha">
+          </div>
+          <div class="form-group">
+            <label>Tipo de Movimiento</label>
+            <input type="text" id="mv-tipo" readonly style="background:#eee;color:#888;text-transform:capitalize;">
+          </div>
+          <div class="form-group span2">
+            <label>Refacción *</label>
+            <select id="mv-codigo">
+              <option value="">Seleccionar artículo...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cantidad *</label>
+            <input type="number" id="mv-cantidad" placeholder="0" min="1">
+          </div>
+          <div class="form-group">
+            <label>Responsable *</label>
+            <input type="text" id="mv-responsable" placeholder="Nombre del responsable">
+          </div>
+          <div class="form-group">
+            <label>Orden de Trabajo</label>
+            <input type="text" id="mv-ot" placeholder="Ej: OT-2025-001">
+          </div>
+          <div class="form-group">
+            <label>Folio</label>
+            <input type="text" id="mv-folio" placeholder="Auto-generado" readonly style="background:#eee;color:#888;">
+          </div>
+          <div class="form-group span2">
+            <label>Observaciones</label>
+            <textarea id="mv-observaciones" placeholder="Motivo, equipo asociado, etc."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="cerrarModal('modal-movimiento')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-guardar-mov" onclick="guardarMovimiento()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Registrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ── -->
   <div class="toast" id="toast"></div>
 
   <script>
-    // ===== CONFIGURACIÓN =====
-    const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwNzXEbZY7BO_GR9k9fxttg-a46g-PokzH0G6Ndp7nFEpkff1IK2D6YGv5395iNtse7RA/exec',
-      USE_LOCAL_DATA: false,
-      FRECUENCIAS: {
-        'Semanal': 7,
-        'Quincenal': 15,
-        'Mensual': 30,
-        'Bimestral': 60,
-        'Trimestral': 90,
-        'Semestral': 180,
-        'Anual': 365
-      },
-      CENTROS: ['Zinc', 'Cromo', 'Doblado', 'Gral'],
-      COLORES_GRAFICAS: {
-        'Cerrados': '#1e6b35',
-        'Pendientes': '#7a5500'
-      }
-    };
+    // ===== CONFIGURACIÓN GOOGLE SHEETS =====
+    const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQ5K3YrqFZ4u4NWiuU7dxRY8YyD880MREne-K1LiUscO3GqCyNTMVQCvcB90vHy1WH/exec';
 
-    // ===== VARIABLES GLOBALES =====
-    let mantenimientos = [];
-    let mantenimientoActual = null;
+    // ===== ESTADO GLOBAL =====
+    let inventario = [];
+    let movimientos = [];
     let filtroActual = 'todos';
+    let filtroMovActual = 'todos';
     let terminoBusqueda = '';
-    let chartMensual = null;
-    let chartPorcentajes = null;
+    let refaccionActual = null;
+    let tipoMovActual = 'entrada';
+    let chartStock = null;
+    let chartCategoria = null;
+    let contadorFolio = 1;
 
     // ===== INICIALIZACIÓN =====
-    document.addEventListener('DOMContentLoaded', function() {
-      cargarMantenimientos();
-      configurarListeners();
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarDatos();
+      configurarFechaHoy();
       inicializarGraficas();
     });
 
-    // ===== FUNCIONES DE DATOS =====
-    async function cargarMantenimientos() {
+    async function cargarDatos() {
       try {
-        if (CONFIG.USE_LOCAL_DATA) {
-          // Usar localStorage
-          const datos = localStorage.getItem('mantenimientos');
-          if (datos) {
-            mantenimientos = JSON.parse(datos);
-            console.log('Mantenimientos cargados desde localStorage:', mantenimientos.length);
-          } else {
-            mantenimientos = [];
-            console.log('No hay mantenimientos en localStorage, iniciando vacío');
-          }
+        // Cargar inventario desde Google Sheets
+        const responseInventario = await fetch(`${APP_SCRIPT_URL}?action=getInventario`);
+        const dataInventario = await responseInventario.json();
+        if (dataInventario.success && dataInventario.data) {
+          inventario = dataInventario.data;
         } else {
-          // Usar Google Apps Script
-          await cargarMantenimientosGoogleSheets();
+          // Fallback a localStorage
+          const invGuardado = localStorage.getItem('aminsa_inventario');
+          if (invGuardado) inventario = JSON.parse(invGuardado);
         }
-        
-        actualizarEstadosPorFrecuencia();
-        renderizarTabla();
-        actualizarEstadisticas();
-        actualizarGraficasConDatos();
-      } catch (error) {
-        console.error('Error al cargar mantenimientos:', error);
-        mostrarToast('Error al cargar datos', 'error');
-        mantenimientos = [];
-        renderizarTabla();
-        actualizarEstadisticas();
-      }
-    }
 
-    async function cargarMantenimientosGoogleSheets() {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({ action: 'getAll' });
-        
-        const response = await fetch(`${url}?${params.toString()}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-          mantenimientos = result.data.map(row => ({
-            id: row.ID,
-            equipo: row.Equipo,
-            centro: row.Centro,
-            frecuencia: row.Frecuencia,
-            ultimoMantenimiento: row['Ultimo Mantenimiento'],
-            proximoMantenimiento: row['Proximo Mantenimiento'],
-            tecnico: row.Tecnico,
-            condicionInicial: row['Condición Inicial'] || '',
-            condicionFinal: row['Condición Final'] || '',
-            estado: row.Estado || 'pendiente'
-          }));
-          
-          console.log('Mantenimientos cargados:', mantenimientos.length);
-          actualizarEstadosPorFrecuencia();
-          renderizarTabla();
-          actualizarEstadisticas();
-          actualizarGraficasConDatos();
-          mostrarToast(`Se cargaron ${mantenimientos.length} mantenimientos`, 'success');
+        // Cargar movimientos desde Google Sheets
+        const responseMovimientos = await fetch(`${APP_SCRIPT_URL}?action=getMovimientos`);
+        const dataMovimientos = await responseMovimientos.json();
+        if (dataMovimientos.success && dataMovimientos.data) {
+          movimientos = dataMovimientos.data;
         } else {
-          throw new Error(result.error || 'Error desconocido');
+          // Fallback a localStorage
+          const movGuardado = localStorage.getItem('aminsa_movimientos');
+          if (movGuardado) movimientos = JSON.parse(movGuardado);
         }
-      } catch (error) {
-        console.error('Error completo al cargar:', error);
-        mostrarToast('Error al cargar datos: ' + error.message, 'error');
-        
-        // Mostrar ayuda para configuración
-        if (error.message.includes('Failed to fetch')) {
-          mostrarToast('Verifica: 1) URL correcta 2) Web App desplegada 3) Acceso "Cualquier persona"', 'error');
-        }
-        
-        mantenimientos = [];
-        renderizarTabla();
-        actualizarEstadisticas();
+
+        // Cargar contador de folio
+        const folioGuardado = localStorage.getItem('aminsa_folio');
+        if (folioGuardado) contadorFolio = parseInt(folioGuardado);
+
+      } catch(e) {
+        console.error('Error cargando datos desde Google Sheets:', e);
+        // Fallback a localStorage
+        const invGuardado = localStorage.getItem('aminsa_inventario');
+        const movGuardado = localStorage.getItem('aminsa_movimientos');
+        const folioGuardado = localStorage.getItem('aminsa_folio');
+
+        if (invGuardado) inventario = JSON.parse(invGuardado);
+        if (movGuardado) movimientos = JSON.parse(movGuardado);
+        if (folioGuardado) contadorFolio = parseInt(folioGuardado);
       }
-    }
 
-    async function guardarMantenimientos() {
-      // Los datos se guardan individualmente en las funciones CRUD
-      console.log('Sistema listo para guardar con Google Apps Script');
-    }
-
-    async function agregarMantenimientoGoogleSheets(mantenimiento) {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({
-          action: 'add',
-          id: mantenimiento.id.toString(),
-          equipo: mantenimiento.equipo,
-          centro: mantenimiento.centro,
-          frecuencia: mantenimiento.frecuencia,
-          ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
-          proximoMantenimiento: mantenimiento.proximoMantenimiento,
-          tecnico: mantenimiento.tecnico,
-          condicionInicial: mantenimiento.condicionInicial || '',
-          condicionFinal: mantenimiento.condicionFinal || '',
-          estado: mantenimiento.estado
-        });
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params.toString()
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          mostrarToast('Mantenimiento guardado', 'success');
-        } else {
-          throw new Error(result.error || 'Error al guardar');
-        }
-      } catch (error) {
-        console.error('Error al guardar:', error);
-        mostrarToast('Error al guardar: ' + error.message, 'error');
-      }
-    }
-
-    async function actualizarMantenimientoGoogleSheets(mantenimiento) {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({
-          action: 'update',
-          id: mantenimiento.id.toString(),
-          equipo: mantenimiento.equipo,
-          centro: mantenimiento.centro,
-          frecuencia: mantenimiento.frecuencia,
-          ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
-          proximoMantenimiento: mantenimiento.proximoMantenimiento,
-          tecnico: mantenimiento.tecnico,
-          condicionInicial: mantenimiento.condicionInicial || '',
-          condicionFinal: mantenimiento.condicionFinal || '',
-          estado: mantenimiento.estado
-        });
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params.toString()
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          mostrarToast('Mantenimiento actualizado', 'success');
-        } else {
-          throw new Error(result.error || 'Error al actualizar');
-        }
-      } catch (error) {
-        console.error('Error al actualizar:', error);
-        mostrarToast('Error al actualizar: ' + error.message, 'error');
-      }
-    }
-
-    async function eliminarMantenimientoGoogleSheets(id) {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({
-          action: 'delete',
-          id: id.toString()
-        });
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: params.toString()
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          mostrarToast('Mantenimiento eliminado', 'success');
-        } else {
-          throw new Error(result.error || 'Error al eliminar');
-        }
-      } catch (error) {
-        console.error('Error al eliminar:', error);
-        mostrarToast('Error al eliminar: ' + error.message, 'error');
-      }
-    }
-
-    // ===== FUNCIONES DE CÁLCULO =====
-    function calcularProximoMantenimiento(fechaUltimo, frecuencia) {
-      const dias = CONFIG.FRECUENCIAS[frecuencia];
-      if (!dias) return null;
-      
-      const fecha = new Date(fechaUltimo);
-      fecha.setDate(fecha.getDate() + dias);
-      return fecha.toISOString().split('T')[0];
-    }
-
-    function determinarEstado(fechaProximo, frecuencia, ultimoRealizado) {
-      // Si no hay fecha de próximo mantenimiento, está pendiente
-      if (!fechaProximo) return 'pendiente';
-      
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      
-      const proximo = new Date(fechaProximo);
-      proximo.setHours(0, 0, 0, 0);
-      
-      const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
-      
-      if (diasDiff < 0) {
-        return 'vencido';
-      } else if (diasDiff <= 7) {
-        return 'proximo';
-      } else {
-        return 'pendiente';
-      }
-    }
-
-    function actualizarEstadosPorFrecuencia() {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      
-      mantenimientos.forEach((mantenimiento, index) => {
-        if (mantenimiento.estado === 'realizado') return; // No actualizar los realizados
-        
-        let nuevoProximo;
-        
-        switch (mantenimiento.frecuencia) {
-            case 'Mensual':
-                // Para mensuales: actualizar al inicio de cada mes basado en último realizado
-                if (mantenimiento.ultimoMantenimiento) {
-                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
-                    const proximoMantenimiento = new Date(ultimo.getFullYear(), ultimo.getMonth() + 1, 1);
-                    nuevoProximo = proximoMantenimiento.toISOString().split('T')[0];
-                }
-                break;
-                
-            case 'Semanal':
-                // Para semanales: cada 7 días desde el último realizado
-                if (mantenimiento.ultimoMantenimiento) {
-                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
-                    nuevoProximo = new Date(ultimo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                }
-                break;
-                
-            case 'Quincenal':
-                // Para quincenales: cada 15 días desde el último realizado
-                if (mantenimiento.ultimoMantenimiento) {
-                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
-                    nuevoProximo = new Date(ultimo.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                }
-                break;
-                
-            case 'Bimestral':
-                // Para bimestrales: cada 2 meses desde el último realizado
-                if (mantenimiento.ultimoMantenimiento) {
-                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
-                    nuevoProximo = new Date(ultimo.getFullYear(), ultimo.getMonth() + 2, 1).toISOString().split('T')[0];
-                }
-                break;
-                
-            case 'Trimestral':
-                // Para trimestrales: cada 3 meses desde el último realizado
-                if (mantenimiento.ultimoMantenimiento) {
-                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
-                    nuevoProximo = new Date(ultimo.getFullYear(), ultimo.getMonth() + 3, 1).toISOString().split('T')[0];
-                }
-                break;
-                
-            case 'Semestral':
-                // Para semestrales: cada 6 meses desde el último realizado
-                if (mantenimiento.ultimoMantenimiento) {
-                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
-                    nuevoProximo = new Date(ultimo.getFullYear(), ultimo.getMonth() + 6, 1).toISOString().split('T')[0];
-                }
-                break;
-                
-            case 'Anual':
-                // Para anuales: cada 12 meses desde el último realizado
-                if (mantenimiento.ultimoMantenimiento) {
-                    const ultimo = new Date(mantenimiento.ultimoMantenimiento);
-                    nuevoProximo = new Date(ultimo.getFullYear() + 1, ultimo.getMonth(), 1).toISOString().split('T')[0];
-                }
-                break;
-                
-            default:
-                // Para otros casos, usar la lógica original
-                nuevoProximo = mantenimiento.proximoMantenimiento;
-                break;
-        }
-        
-        // Actualizar el próximo mantenimiento si cambió
-        if (nuevoProximo && nuevoProximo !== mantenimiento.proximoMantenimiento) {
-            mantenimientos[index].proximoMantenimiento = nuevoProximo;
-            mantenimientos[index].estado = determinarEstado(nuevoProximo, mantenimiento.frecuencia, mantenimiento.ultimoMantenimiento);
-        }
-    });
-    }
-
-    function obtenerEstadoBadge(estado) {
-      const badges = {
-        'pendiente': '<span class="badge estado-pendiente">Pendiente</span>',
-        'proximo': '<span class="badge estado-proximo">Próximo</span>',
-        'vencido': '<span class="badge estado-vencido">Vencido</span>',
-        'realizado': '<span class="badge estado-realizado">Realizado</span>'
-      };
-      return badges[estado] || badges['pendiente'];
-    }
-
-    // ===== FUNCIONES DE FILTRADO Y BÚSQUEDA =====
-    function filtrar(tipo, boton) {
-      filtroActual = tipo;
-      
-      // Actualizar botones
-      document.querySelectorAll('.filtro-btn').forEach(btn => {
-        btn.classList.remove('activo');
-      });
-      boton.classList.add('activo');
-      
+      actualizarEstadisticas();
       renderizarTabla();
+      renderizarMovimientos();
+      renderizarAlertas();
+      actualizarSelectCategorias();
+      actualizarGraficas();
+    }
+
+    function guardarInventario() {
+      localStorage.setItem('aminsa_inventario', JSON.stringify(inventario));
+    }
+
+    function guardarMovimientosLS() {
+      localStorage.setItem('aminsa_movimientos', JSON.stringify(movimientos));
+      localStorage.setItem('aminsa_folio', contadorFolio.toString());
+    }
+
+    // ===== FUNCIONES GOOGLE SHEETS =====
+    async function guardarInventarioGoogleSheets(refaccion) {
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'addRefaccion');
+        params.append('codigo', refaccion.codigo);
+        params.append('descripcion', refaccion.descripcion);
+        params.append('categoria', refaccion.categoria);
+        params.append('centro', refaccion.centro);
+        params.append('unidad', refaccion.unidad);
+        params.append('stock', refaccion.stock);
+        params.append('minimo', refaccion.minimo);
+        params.append('maximo', refaccion.maximo);
+        params.append('precio', refaccion.precio);
+        params.append('ubicacion', refaccion.ubicacion || '');
+        params.append('proveedor', refaccion.proveedor || '');
+        params.append('observaciones', refaccion.observaciones || '');
+
+        const response = await fetch(APP_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+        console.log('Refacción guardada en Google Sheets:', refaccion.codigo);
+      } catch(e) {
+        console.error('Error guardando en Google Sheets:', e);
+      }
+    }
+
+    async function actualizarInventarioGoogleSheets(refaccion) {
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'updateRefaccion');
+        params.append('codigo', refaccion.codigo);
+        params.append('descripcion', refaccion.descripcion);
+        params.append('categoria', refaccion.categoria);
+        params.append('centro', refaccion.centro);
+        params.append('unidad', refaccion.unidad);
+        params.append('minimo', refaccion.minimo);
+        params.append('maximo', refaccion.maximo);
+        params.append('precio', refaccion.precio);
+        params.append('ubicacion', refaccion.ubicacion || '');
+        params.append('proveedor', refaccion.proveedor || '');
+        params.append('observaciones', refaccion.observaciones || '');
+
+        const response = await fetch(APP_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+        console.log('Refacción actualizada en Google Sheets:', refaccion.codigo);
+      } catch(e) {
+        console.error('Error actualizando en Google Sheets:', e);
+      }
+    }
+
+    async function actualizarStockGoogleSheets(codigo, stock) {
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'updateStock');
+        params.append('codigo', codigo);
+        params.append('stock', stock);
+
+        const response = await fetch(APP_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+        console.log('Stock actualizado en Google Sheets:', codigo, stock);
+      } catch(e) {
+        console.error('Error actualizando stock en Google Sheets:', e);
+      }
+    }
+
+    async function eliminarInventarioGoogleSheets(codigo) {
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'deleteRefaccion');
+        params.append('codigo', codigo);
+
+        const response = await fetch(APP_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+        console.log('Refacción eliminada en Google Sheets:', codigo);
+      } catch(e) {
+        console.error('Error eliminando en Google Sheets:', e);
+      }
+    }
+
+    async function guardarMovimientoGoogleSheets(movimiento) {
+      try {
+        const params = new URLSearchParams();
+        params.append('action', 'addMovimiento');
+        params.append('folio', movimiento.folio);
+        params.append('fecha', movimiento.fecha);
+        params.append('tipo', movimiento.tipo);
+        params.append('codigo', movimiento.codigo);
+        params.append('descripcion', movimiento.descripcion || '');
+        params.append('cantidad', movimiento.cantidad);
+        params.append('responsable', movimiento.responsable);
+        params.append('ot', movimiento.ot || '');
+        params.append('observaciones', movimiento.observaciones || '');
+
+        const response = await fetch(APP_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+        console.log('Movimiento guardado en Google Sheets:', movimiento.folio);
+      } catch(e) {
+        console.error('Error guardando movimiento en Google Sheets:', e);
+      }
+    }
+
+    function configurarFechaHoy() {
+      const hoy = new Date().toISOString().split('T')[0];
+      const fechaInput = document.getElementById('mv-fecha');
+      if (fechaInput) fechaInput.value = hoy;
+    }
+
+    // ===== ESTADO DEL STOCK =====
+    function calcularEstado(ref) {
+      if (ref.stock <= 0) return 'agotado';
+      if (ref.stock <= ref.minimo * 0.5) return 'critico';
+      if (ref.stock < ref.minimo) return 'bajo';
+      return 'ok';
+    }
+
+    function badgeEstado(estado) {
+      const mapa = {
+        ok:      '<span class="badge estado-ok">Normal</span>',
+        bajo:    '<span class="badge estado-bajo">Stock Bajo</span>',
+        critico: '<span class="badge estado-critico">Crítico</span>',
+        agotado: '<span class="badge estado-agotado">Agotado</span>'
+      };
+      return mapa[estado] || mapa.ok;
+    }
+
+    function porcentajeStock(ref) {
+      if (!ref.maximo || ref.maximo === 0) return Math.min((ref.stock / (ref.minimo * 2)) * 100, 100);
+      return Math.min((ref.stock / ref.maximo) * 100, 100);
+    }
+
+    function claseBarraStock(estado) {
+      const mapa = { ok:'ok', bajo:'bajo', critico:'critico', agotado:'critico' };
+      return mapa[estado] || 'ok';
+    }
+
+    // ===== ESTADÍSTICAS ── =====
+    function actualizarEstadisticas() {
+      const estados = inventario.map(r => calcularEstado(r));
+      document.getElementById('stat-total').textContent = inventario.length;
+      document.getElementById('stat-ok').textContent = estados.filter(e => e === 'ok').length;
+      document.getElementById('stat-bajo').textContent = estados.filter(e => e === 'bajo').length;
+      document.getElementById('stat-critico').textContent = estados.filter(e => e === 'critico' || e === 'agotado').length;
+      const valorTotal = inventario.reduce((acc, r) => acc + (r.stock * r.precio), 0);
+      document.getElementById('stat-valor').textContent = '$' + valorTotal.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    // ===== RENDERIZADO TABLA INVENTARIO =====
+    function renderizarTabla() {
+      const tbody = document.getElementById('tabla-inventario');
+      const filtroCat = document.getElementById('filtro-categoria').value;
+      const filtroCentro = document.getElementById('filtro-centro').value;
+
+      let filtrados = inventario.filter(r => {
+        const estado = calcularEstado(r);
+        if (filtroActual !== 'todos' && estado !== filtroActual) return false;
+        if (filtroCat && r.categoria !== filtroCat) return false;
+        if (filtroCentro && r.centro !== filtroCentro) return false;
+        if (terminoBusqueda) {
+          const t = terminoBusqueda.toLowerCase();
+          return r.codigo.toLowerCase().includes(t) || r.descripcion.toLowerCase().includes(t);
+        }
+        return true;
+      });
+
+      if (filtrados.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="11">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+              <p>No se encontraron artículos</p>
+              <small>${filtroActual !== 'todos' ? 'CON EL FILTRO SELECCIONADO' : 'AGREGA TU PRIMERA REFACCIÓN'}</small>
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtrados.map(r => {
+        const estado = calcularEstado(r);
+        const pct = porcentajeStock(r);
+        return `
+        <tr>
+          <td><strong style="font-family:'Inconsolata',monospace;font-size:12px;">${r.codigo}</strong></td>
+          <td>${r.descripcion}</td>
+          <td><span class="badge cat-badge">${r.categoria}</span></td>
+          <td>${r.centro}</td>
+          <td style="font-family:'Inconsolata',monospace;font-size:12px;">${r.unidad}</td>
+          <td>
+            <div class="stock-bar-wrap">
+              <strong style="min-width:28px;">${r.stock}</strong>
+              <div class="stock-bar">
+                <div class="stock-bar-fill ${claseBarraStock(estado)}" style="width:${pct}%"></div>
+              </div>
+            </div>
+          </td>
+          <td style="font-family:'Inconsolata',monospace;font-size:12px;color:var(--texto-ter);">${r.minimo} / ${r.maximo || '—'}</td>
+          <td style="font-family:'Inconsolata',monospace;font-size:11px;">${r.ubicacion || '—'}</td>
+          <td style="font-family:'Inconsolata',monospace;font-size:12px;">$${r.precio.toFixed(2)}</td>
+          <td>${badgeEstado(estado)}</td>
+          <td>
+            <div class="acciones">
+              <button class="btn btn-ghost btn-sm" onclick="verDetalle('${r.codigo}')">Ver</button>
+              <button class="btn btn-ghost btn-sm" onclick="abrirEditar('${r.codigo}')">Editar</button>
+              <button class="btn btn-danger btn-sm" onclick="eliminarRefaccion('${r.codigo}')">Eliminar</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ===== RENDERIZADO MOVIMIENTOS =====
+    function renderizarMovimientos() {
+      const tbody = document.getElementById('tabla-movimientos');
+      const fechaFiltro = document.getElementById('filtro-fecha-mov').value;
+
+      let filtrados = movimientos.filter(m => {
+        if (filtroMovActual !== 'todos' && m.tipo !== filtroMovActual) return false;
+        if (fechaFiltro && m.fecha !== fechaFiltro) return false;
+        return true;
+      });
+
+      filtrados = [...filtrados].reverse();
+
+      if (filtrados.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="9">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 17H5a2 2 0 00-2 2"/><path d="M19 17h-7"/><path d="M14 17V5a2 2 0 00-2-2H5a2 2 0 00-2 2v12"/><path d="M19 17v-6a2 2 0 00-2-2h-4"/></svg>
+              <p>Sin movimientos registrados</p>
+              <small>USA LOS BOTONES ENTRADA / SALIDA / AJUSTE</small>
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtrados.map(m => {
+        const claseColor = m.tipo === 'entrada' ? 'mov-tipo-entrada' : m.tipo === 'salida' ? 'mov-tipo-salida' : 'mov-tipo-ajuste';
+        const signo = m.tipo === 'entrada' ? '+' : m.tipo === 'salida' ? '−' : '~';
+        return `
+        <tr>
+          <td style="font-family:'Inconsolata',monospace;font-size:12px;">${formatFecha(m.fecha)}</td>
+          <td style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--texto-ter);">${m.folio}</td>
+          <td><span class="badge ${m.tipo === 'entrada' ? 'estado-ok' : m.tipo === 'salida' ? 'estado-critico' : 'estado-bajo'}">${m.tipo}</span></td>
+          <td style="font-family:'Inconsolata',monospace;font-size:12px;">${m.codigo}</td>
+          <td>${m.descripcion || '—'}</td>
+          <td><strong class="${claseColor}" style="font-family:'Inconsolata',monospace;">${signo}${m.cantidad}</strong></td>
+          <td>${m.responsable}</td>
+          <td style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--texto-ter);">${m.ot || '—'}</td>
+          <td style="font-size:13px;color:var(--texto-sec);">${m.observaciones || '—'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ===== RENDERIZADO ALERTAS =====
+    function renderizarAlertas() {
+      const tbody = document.getElementById('tabla-alertas');
+      const alertas = inventario.filter(r => calcularEstado(r) !== 'ok').sort((a,b) => {
+        const ord = { agotado:0, critico:1, bajo:2 };
+        return ord[calcularEstado(a)] - ord[calcularEstado(b)];
+      });
+
+      if (alertas.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="9">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <p>Todo el inventario en orden</p>
+              <small>NO HAY ARTÍCULOS CON STOCK BAJO O CRÍTICO</small>
+            </div>
+          </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = alertas.map(r => {
+        const estado = calcularEstado(r);
+        const faltante = Math.max(0, r.minimo - r.stock);
+        return `
+        <tr>
+          <td style="font-family:'Inconsolata',monospace;font-size:12px;"><strong>${r.codigo}</strong></td>
+          <td>${r.descripcion}</td>
+          <td>${r.centro}</td>
+          <td><strong style="${r.stock === 0 ? 'color:var(--rojo-clar)' : ''}">${r.stock}</strong></td>
+          <td>${r.minimo}</td>
+          <td><strong style="color:var(--rojo-clar);font-family:'Inconsolata',monospace;">${faltante}</strong></td>
+          <td style="font-size:13px;">${r.proveedor || '—'}</td>
+          <td>${badgeEstado(estado)}</td>
+          <td>
+            <div class="acciones">
+              <button class="btn btn-success btn-sm" onclick="abrirModalMovimiento('entrada', '${r.codigo}')">+ Entrada</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ===== ACTUALIZAR SELECTS CATEGORÍAS =====
+    function actualizarSelectCategorias() {
+      const cats = [...new Set(inventario.map(r => r.categoria))].sort();
+      const selectFiltro = document.getElementById('filtro-categoria');
+      const selectGraf = document.getElementById('cat-filter-graf');
+      const opBase = '<option value="">Todas las categorías</option>';
+      const opBaseGraf = '<option value="todas">Todas</option>';
+      const opts = cats.map(c => `<option>${c}</option>`).join('');
+      selectFiltro.innerHTML = opBase + opts;
+      selectGraf.innerHTML = opBaseGraf + opts;
+    }
+
+    // ===== FILTROS =====
+    function filtrar(tipo, btn) {
+      filtroActual = tipo;
+      document.querySelectorAll('#tab-inventario .filtro-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+      renderizarTabla();
+    }
+
+    function filtrarMovimientos(tipo, btn) {
+      filtroMovActual = tipo;
+      document.querySelectorAll('#tab-movimientos .filtro-btn').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+      renderizarMovimientos();
     }
 
     function buscar(termino) {
@@ -1685,722 +1707,403 @@
       renderizarTabla();
     }
 
-    function obtenerMantenimientosFiltrados() {
-      let filtrados = [...mantenimientos];
-      
-      // Aplicar filtro de estado
-      if (filtroActual !== 'todos') {
-        filtrados = filtrados.filter(m => m.estado === filtroActual);
-      }
-      
-      // Aplicar búsqueda
-      if (terminoBusqueda) {
-        filtrados = filtrados.filter(m => 
-          m.equipo.toLowerCase().includes(terminoBusqueda) ||
-          m.centro.toLowerCase().includes(terminoBusqueda) ||
-          (m.tecnico && m.tecnico.toLowerCase().includes(terminoBusqueda))
-        );
-      }
-      
-      // Ordenar por fecha de próximo mantenimiento
-      filtrados.sort((a, b) => new Date(a.proximoMantenimiento) - new Date(b.proximoMantenimiento));
-      
-      return filtrados;
+    // ===== TABS =====
+    function cambiarTab(tabName, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      btn.classList.add('active');
+      if (tabName === 'alertas') renderizarAlertas();
     }
 
-    // ===== FUNCIONES DE RENDERIZADO =====
-    function renderizarTabla() {
-      const tbody = document.getElementById('tabla-preventivos');
-      const filtrados = obtenerMantenimientosFiltrados();
-      
-      if (filtrados.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <p>No se encontraron mantenimientos</p>
-                        <small>${filtroActual !== 'todos' ? 'CON EL FILTRO SELECCIONADO' : 'HAZ CLIC EN "NUEVO PREVENTIVO" PARA COMENZAR'}${terminoBusqueda ? ' PARA LA BÚSQUEDA "' + terminoBusqueda + '"' : ''}</small>
-                    </div>
-                </td>
-            </tr>
-        `;
+    // ===== MODALES =====
+    function cerrarModal(id) {
+      document.getElementById(id).classList.remove('visible');
+    }
+
+    function abrirModalNueva() {
+      ['n-codigo','n-descripcion','n-stock','n-minimo','n-maximo','n-precio','n-ubicacion','n-proveedor','n-observaciones']
+        .forEach(id => document.getElementById(id).value = '');
+      document.getElementById('n-categoria').value = '';
+      document.getElementById('n-centro').value = '';
+      document.getElementById('n-unidad').value = '';
+      document.getElementById('modal-nueva').classList.add('visible');
+    }
+
+    async function guardarRefaccion() {
+      const codigo = document.getElementById('n-codigo').value.trim();
+      const descripcion = document.getElementById('n-descripcion').value.trim();
+      const categoria = document.getElementById('n-categoria').value;
+      const centro = document.getElementById('n-centro').value;
+      const unidad = document.getElementById('n-unidad').value;
+      const stock = parseInt(document.getElementById('n-stock').value) || 0;
+      const minimo = parseInt(document.getElementById('n-minimo').value) || 0;
+      const maximo = parseInt(document.getElementById('n-maximo').value) || 0;
+      const precio = parseFloat(document.getElementById('n-precio').value) || 0;
+      const ubicacion = document.getElementById('n-ubicacion').value.trim();
+      const proveedor = document.getElementById('n-proveedor').value.trim();
+      const observaciones = document.getElementById('n-observaciones').value.trim();
+
+      if (!codigo || !descripcion || !categoria || !centro || !unidad) {
+        mostrarToast('Completa todos los campos obligatorios', 'error');
         return;
       }
-      
-      tbody.innerHTML = filtrados.map(mantenimiento => `
-        <tr>
-            <td><strong>${mantenimiento.id}</strong></td>
-            <td><strong>${mantenimiento.equipo}</strong></td>
-            <td>${mantenimiento.centro}</td>
-            <td>${mantenimiento.frecuencia}</td>
-            <td>${formatearFecha(mantenimiento.ultimoMantenimiento)}</td>
-            <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
-            <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
-            <td>
-              <div class="acciones">
-                <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar(${mantenimiento.id})">Completar</button>
-                <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento(${mantenimiento.id})">Eliminar</button>
-              </div>
-            </td>
-        </tr>
-      `).join('');
+      if (inventario.some(r => r.codigo === codigo)) {
+        mostrarToast('Ya existe una refacción con ese código', 'error');
+        return;
+      }
+
+      const nuevaRefaccion = { codigo, descripcion, categoria, centro, unidad, stock, minimo, maximo, precio, ubicacion, proveedor, observaciones };
+      inventario.push(nuevaRefaccion);
+      guardarInventario();
+
+      actualizarEstadisticas();
+      actualizarSelectCategorias();
+      renderizarTabla();
+      actualizarGraficas();
+      cerrarModal('modal-nueva');
+      mostrarToast('Refacción registrada correctamente', 'success');
+
+      // Sincronizar con Google Sheets en segundo plano
+      guardarInventarioGoogleSheets(nuevaRefaccion);
     }
 
-    function actualizarEstadisticas() {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      
-      const stats = {
-        total: mantenimientos.length,
-        pendientes: 0,
-        proximos: 0,
-        vencidos: 0
-      };
-      
-      mantenimientos.forEach(m => {
-        const proximo = new Date(m.proximoMantenimiento);
-        proximo.setHours(0, 0, 0, 0);
-        const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
-        
-        if (diasDiff < 0) {
-          stats.vencidos++;
-        } else if (diasDiff <= 7) {
-          stats.proximos++;
-        } else if (m.estado === 'pendiente') {
-          stats.pendientes++;
-        }
-      });
-      
-      document.getElementById('stat-total').textContent = stats.total;
-      document.getElementById('stat-pendientes').textContent = stats.pendientes;
-      document.getElementById('stat-proximos').textContent = stats.proximos;
-      document.getElementById('stat-vencidos').textContent = stats.vencidos;
+    function abrirEditar(codigo) {
+      const r = inventario.find(x => x.codigo === codigo);
+      if (!r) return;
+      refaccionActual = r;
+      document.getElementById('e-codigo').value = r.codigo;
+      document.getElementById('e-descripcion').value = r.descripcion;
+      document.getElementById('e-categoria').value = r.categoria;
+      document.getElementById('e-centro').value = r.centro;
+      document.getElementById('e-unidad').value = r.unidad;
+      document.getElementById('e-minimo').value = r.minimo;
+      document.getElementById('e-maximo').value = r.maximo;
+      document.getElementById('e-precio').value = r.precio;
+      document.getElementById('e-ubicacion').value = r.ubicacion;
+      document.getElementById('e-proveedor').value = r.proveedor;
+      document.getElementById('e-observaciones').value = r.observaciones;
+      document.getElementById('modal-editar').classList.add('visible');
     }
 
-    // ===== FUNCIONES DE MODALES =====
-    function abrirModalNuevo() {
-      document.getElementById('modal-nuevo').classList.add('visible');
-      limpiarFormularioNuevo();
+    async function guardarEdicion() {
+      if (!refaccionActual) return;
+      const idx = inventario.findIndex(r => r.codigo === refaccionActual.codigo);
+      if (idx === -1) return;
+
+      inventario[idx].descripcion = document.getElementById('e-descripcion').value.trim();
+      inventario[idx].categoria = document.getElementById('e-categoria').value;
+      inventario[idx].centro = document.getElementById('e-centro').value;
+      inventario[idx].unidad = document.getElementById('e-unidad').value;
+      inventario[idx].minimo = parseInt(document.getElementById('e-minimo').value) || 0;
+      inventario[idx].maximo = parseInt(document.getElementById('e-maximo').value) || 0;
+      inventario[idx].precio = parseFloat(document.getElementById('e-precio').value) || 0;
+      inventario[idx].ubicacion = document.getElementById('e-ubicacion').value.trim();
+      inventario[idx].proveedor = document.getElementById('e-proveedor').value.trim();
+      inventario[idx].observaciones = document.getElementById('e-observaciones').value.trim();
+
+      guardarInventario();
+
+      actualizarEstadisticas();
+      renderizarTabla();
+      renderizarAlertas();
+      actualizarGraficas();
+      cerrarModal('modal-editar');
+      mostrarToast('Refacción actualizada', 'success');
+
+      // Sincronizar con Google Sheets en segundo plano
+      actualizarInventarioGoogleSheets(inventario[idx]);
     }
 
-    function abrirModalCompletar(id) {
-      mantenimientoActual = mantenimientos.find(m => m.id === id);
-      if (!mantenimientoActual) return;
-      
-      // Limpiar formulario
-      document.getElementById('c-condicion-inicial').value = '';
-      document.getElementById('c-condicion-final').value = '';
-      document.getElementById('c-proximo-manual').value = '';
-      document.getElementById('c-fecha-realizado').value = '';
-      document.getElementById('c-proximo-calculado').value = '';
-      document.getElementById('c-tecnico').value = '';
-      document.getElementById('c-responsable').value = '';
-      document.getElementById('c-tiempo').value = '';
-      
-      document.getElementById('modal-completar').classList.add('visible');
+    async function eliminarRefaccion(codigo) {
+      if (!confirm(`¿Eliminar la refacción ${codigo}? Esta acción no se puede deshacer.`)) return;
+      inventario = inventario.filter(r => r.codigo !== codigo);
+      guardarInventario();
+
+      actualizarEstadisticas();
+      actualizarSelectCategorias();
+      renderizarTabla();
+      renderizarAlertas();
+      actualizarGraficas();
+      mostrarToast('Refacción eliminada', 'success');
+
+      // Sincronizar con Google Sheets en segundo plano
+      eliminarInventarioGoogleSheets(codigo);
     }
 
-    function abrirModalModificar(id) {
-      mantenimientoActual = mantenimientos.find(m => m.id === id);
-      if (!mantenimientoActual) return;
-      
-      // Llenar formulario con datos existentes
-      document.getElementById('m-equipo').value = mantenimientoActual.equipo || '';
-      document.getElementById('m-centro').value = mantenimientoActual.centro || '';
-      document.getElementById('m-frecuencia').value = mantenimientoActual.frecuencia || '';
-      document.getElementById('m-ultimo').value = mantenimientoActual.ultimoMantenimiento || '';
-      document.getElementById('m-tecnico').value = mantenimientoActual.tecnico || '';
-      document.getElementById('m-trabajo-realizado').value = mantenimientoActual.trabajoRealizado || mantenimientoActual.observaciones || '';
-      
-      document.getElementById('modal-modificar').classList.add('visible');
-    }
+    function verDetalle(codigo) {
+      const r = inventario.find(x => x.codigo === codigo);
+      if (!r) return;
+      refaccionActual = r;
 
-    function limpiarFormularioModificar() {
-      document.getElementById('m-equipo').value = '';
-      document.getElementById('m-centro').value = '';
-      document.getElementById('m-frecuencia').value = '';
-      document.getElementById('m-ultimo').value = '';
-      document.getElementById('m-tecnico').value = '';
-      document.getElementById('m-trabajo-realizado').value = '';
-    }
+      document.getElementById('v-codigo-titulo').textContent = r.codigo;
+      document.getElementById('v-codigo').textContent = r.codigo;
+      document.getElementById('v-descripcion').textContent = r.descripcion;
+      document.getElementById('v-categoria').textContent = r.categoria;
+      document.getElementById('v-centro').textContent = r.centro;
+      document.getElementById('v-unidad').textContent = r.unidad;
+      document.getElementById('v-stock').textContent = r.stock + ' ' + r.unidad + '(s)';
+      document.getElementById('v-minmax').textContent = r.minimo + ' / ' + (r.maximo || '—');
+      document.getElementById('v-precio').textContent = '$' + r.precio.toFixed(2);
+      document.getElementById('v-valor-total').textContent = '$' + (r.stock * r.precio).toLocaleString('es-MX', {minimumFractionDigits:2});
+      document.getElementById('v-ubicacion').textContent = r.ubicacion || '—';
+      document.getElementById('v-proveedor').textContent = r.proveedor || '—';
+      document.getElementById('v-observaciones').textContent = r.observaciones || '—';
 
-    function abrirModalVer(id) {
-      mantenimientoActual = mantenimientos.find(m => m.id === id);
-      if (!mantenimientoActual) return;
-      
-      // Llenar el modal con los datos del mantenimiento
-      const datos = mantenimientoActual;
-      
-      document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
-      document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
-      document.getElementById('v-frecuencia-1').textContent = datos.tiempoRequerido || '-';
-      document.getElementById('v-centro-1').textContent = datos.centro || '-';
-      document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-      document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
-      document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
-      document.getElementById('v-responsable').textContent = datos.responsable || '-';
-      
+      // Alertas
+      const estado = calcularEstado(r);
+      const alertasDiv = document.getElementById('ver-alertas');
+      if (estado === 'agotado') {
+        alertasDiv.innerHTML = '<div class="alerta-stock critico">⚠ ARTÍCULO AGOTADO — Se requiere reabastecimiento inmediato</div>';
+      } else if (estado === 'critico') {
+        alertasDiv.innerHTML = '<div class="alerta-stock critico">⚠ STOCK CRÍTICO — Quedan ' + r.stock + ' unidad(es), mínimo requerido: ' + r.minimo + '</div>';
+      } else if (estado === 'bajo') {
+        alertasDiv.innerHTML = '<div class="alerta-stock">⚠ Stock por debajo del mínimo — ' + r.stock + ' / ' + r.minimo + ' unidades</div>';
+      } else {
+        alertasDiv.innerHTML = '';
+      }
+
+      // Movimientos del artículo
+      const movRef = movimientos.filter(m => m.codigo === codigo).reverse().slice(0, 10);
+      const tbodyMov = document.getElementById('tabla-mov-detalle');
+      if (movRef.length === 0) {
+        tbodyMov.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;font-family:\'Inconsolata\',monospace;font-size:11px;color:var(--texto-ter);">SIN MOVIMIENTOS REGISTRADOS</td></tr>';
+      } else {
+        tbodyMov.innerHTML = movRef.map(m => {
+          const signo = m.tipo === 'entrada' ? '+' : m.tipo === 'salida' ? '−' : '~';
+          const cls = m.tipo === 'entrada' ? 'mov-tipo-entrada' : m.tipo === 'salida' ? 'mov-tipo-salida' : 'mov-tipo-ajuste';
+          return `
+          <tr>
+            <td style="font-family:'Inconsolata',monospace;font-size:11px;">${formatFecha(m.fecha)}</td>
+            <td style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--texto-ter);">${m.folio}</td>
+            <td><span class="badge ${m.tipo === 'entrada' ? 'estado-ok' : m.tipo === 'salida' ? 'estado-critico' : 'estado-bajo'}">${m.tipo}</span></td>
+            <td><strong class="${cls}" style="font-family:'Inconsolata',monospace;">${signo}${m.cantidad}</strong></td>
+            <td>${m.responsable}</td>
+            <td style="font-family:'Inconsolata',monospace;font-size:11px;color:var(--texto-ter);">${m.ot || '—'}</td>
+          </tr>`;
+        }).join('');
+      }
+
       document.getElementById('modal-ver').classList.add('visible');
     }
 
-    function cambiarTab(tabName, button) {
-      // Ocultar todos los contenidos de pestañas
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      
-      // Desactivar todos los botones de pestaña
-      document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      // Mostrar la pestaña seleccionada
-      document.getElementById(`tab-${tabName}`).classList.add('active');
-      button.classList.add('active');
-      
-      // Si es la pestaña de historial, cargar los datos
-      if (tabName === 'historial') {
-        cargarHistorial();
-      }
-      
-      // Si es la pestaña de calendario, inicializar el calendario
-      if (tabName === 'calendario') {
-        inicializarCalendario();
-      }
+    // ===== MOVIMIENTOS =====
+    function abrirModalMovimiento(tipo, codigoPreseleccionado = null) {
+      tipoMovActual = tipo;
+      const titulos = { entrada:'Registrar Entrada', salida:'Registrar Salida', ajuste:'Registrar Ajuste de Inventario' };
+      document.getElementById('titulo-modal-mov').textContent = titulos[tipo] || 'Registrar Movimiento';
+      document.getElementById('mv-tipo').value = tipo;
+
+      // Folio auto-generado
+      const folio = `${tipo.toUpperCase().slice(0,3)}-${new Date().getFullYear()}-${String(contadorFolio).padStart(4,'0')}`;
+      document.getElementById('mv-folio').value = folio;
+
+      // Poblar select de refacciones
+      const select = document.getElementById('mv-codigo');
+      select.innerHTML = '<option value="">Seleccionar artículo...</option>' +
+        inventario.map(r => `<option value="${r.codigo}">${r.codigo} — ${r.descripcion} (${r.stock} ${r.unidad})</option>`).join('');
+
+      if (codigoPreseleccionado) select.value = codigoPreseleccionado;
+
+      // Limpiar otros campos
+      document.getElementById('mv-cantidad').value = '';
+      document.getElementById('mv-responsable').value = '';
+      document.getElementById('mv-ot').value = '';
+      document.getElementById('mv-observaciones').value = '';
+
+      const hoy = new Date().toISOString().split('T')[0];
+      document.getElementById('mv-fecha').value = hoy;
+
+      document.getElementById('modal-movimiento').classList.add('visible');
     }
 
-    let calendar = null;
-    let filtroCalendarioEstado = 'todos';
+    function abrirModalMovDesdeDetalle(tipo) {
+      cerrarModal('modal-ver');
+      setTimeout(() => abrirModalMovimiento(tipo, refaccionActual?.codigo), 150);
+    }
 
-    function inicializarCalendario() {
-      if (calendar) {
-        calendar.destroy();
+    async function guardarMovimiento() {
+      const fecha = document.getElementById('mv-fecha').value;
+      const codigo = document.getElementById('mv-codigo').value;
+      const cantidad = parseInt(document.getElementById('mv-cantidad').value);
+      const responsable = document.getElementById('mv-responsable').value.trim();
+      const ot = document.getElementById('mv-ot').value.trim();
+      const observaciones = document.getElementById('mv-observaciones').value.trim();
+      const folio = document.getElementById('mv-folio').value;
+
+      if (!fecha || !codigo || !cantidad || cantidad <= 0 || !responsable) {
+        mostrarToast('Completa todos los campos obligatorios', 'error');
+        return;
       }
 
-      const calendarEl = document.getElementById('calendar');
-      calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'es',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        buttonText: {
-          today: 'Hoy',
-          month: 'Mes',
-          week: 'Semana',
-          day: 'Día',
-          list: 'Lista'
-        },
-        allDayText: 'Todo el día',
-        events: obtenerEventosCalendario(),
-        eventClick: function(info) {
-          abrirModalVer(info.event.id);
-        },
-        eventColor: function(info) {
-          const estado = info.event.extendedProps.estado;
-          switch(estado) {
-            case 'pendiente': return '#7a5500';
-            case 'proximo': return '#1a3a7a';
-            case 'vencido': return '#8b1a1a';
-            case 'realizado': return '#1a5c30';
-            default: return '#2e2e2e';
+      const idx = inventario.findIndex(r => r.codigo === codigo);
+      if (idx === -1) { mostrarToast('Artículo no encontrado', 'error'); return; }
+
+      // Validar suficiente stock en salidas
+      if (tipoMovActual === 'salida' && inventario[idx].stock < cantidad) {
+        mostrarToast(`Stock insuficiente. Disponible: ${inventario[idx].stock}`, 'error');
+        return;
+      }
+
+      // Aplicar movimiento
+      if (tipoMovActual === 'entrada') inventario[idx].stock += cantidad;
+      else if (tipoMovActual === 'salida') inventario[idx].stock -= cantidad;
+      else inventario[idx].stock = cantidad; // ajuste = valor absoluto
+
+      const nuevoMov = {
+        folio, fecha, tipo: tipoMovActual, codigo,
+        descripcion: inventario[idx].descripcion,
+        cantidad, responsable, ot, observaciones
+      };
+
+      movimientos.push(nuevoMov);
+      contadorFolio++;
+
+      guardarInventario();
+      guardarMovimientosLS();
+
+      // Actualizar UI inmediatamente
+      actualizarEstadisticas();
+      renderizarTabla();
+      renderizarMovimientos();
+      renderizarAlertas();
+      actualizarGraficas();
+      cerrarModal('modal-movimiento');
+
+      const msgs = { entrada:'Entrada registrada correctamente', salida:'Salida registrada correctamente', ajuste:'Ajuste de inventario aplicado' };
+      mostrarToast(msgs[tipoMovActual], 'success');
+
+      // Sincronizar con Google Sheets en segundo plano (sin await)
+      actualizarStockGoogleSheets(inventario[idx].codigo, inventario[idx].stock);
+      guardarMovimientoGoogleSheets(nuevoMov);
+    }
+
+    // ===== EXPORTAR CSV =====
+    function exportarCSV() {
+      const headers = ['Código','Descripción','Categoría','Centro','Unidad','Stock','Mínimo','Máximo','Precio','Ubicación','Proveedor','Estado'];
+      const filas = inventario.map(r => [
+        r.codigo, r.descripcion, r.categoria, r.centro, r.unidad,
+        r.stock, r.minimo, r.maximo, r.precio, r.ubicacion, r.proveedor, calcularEstado(r)
+      ]);
+      const csv = [headers, ...filas].map(f => f.join(',')).join('\n');
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `inventario_aminsa_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      mostrarToast('Inventario exportado', 'success');
+    }
+
+    // ===== GRÁFICAS =====
+    function inicializarGraficas() {
+      Chart.defaults.font.family = "'Cormorant Garamond', serif";
+      Chart.defaults.color = '#2e2e2e';
+
+      const ctxStock = document.getElementById('chart-stock');
+      if (ctxStock) {
+        chartStock = new Chart(ctxStock, {
+          type: 'bar',
+          data: { labels: [], datasets: [] },
+          options: {
+            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+            plugins: { legend: { display: false }, tooltip: { backgroundColor:'rgba(0,0,0,0.8)', titleFont:{ family:"'Inconsolata',monospace" }, bodyFont:{ family:"'Inconsolata',monospace" } } },
+            scales: {
+              x: { beginAtZero: true, ticks: { stepSize:1, font:{ family:"'Inconsolata',monospace", size:10 } }, grid: { color:'rgba(0,0,0,0.04)' } },
+              y: { ticks: { font:{ family:"'Inconsolata',monospace", size:10 } }, grid: { display: false } }
+            }
           }
-        }
-      });
-
-      calendar.render();
-    }
-
-    function obtenerEventosCalendario() {
-      const centroFiltro = document.getElementById('filtro-centro-calendario').value;
-      
-      return mantenimientos
-        .filter(m => {
-          // Filtrar por centro
-          if (centroFiltro && m.centro !== centroFiltro) return false;
-          
-          // Filtrar por estado
-          if (filtroCalendarioEstado !== 'todos' && m.estado !== filtroCalendarioEstado) return false;
-          
-          return true;
-        })
-        .map(m => ({
-          id: m.id,
-          title: `${m.equipo} - ${m.centro}`,
-          start: m.proximoMantenimiento || m.ultimoMantenimiento,
-          backgroundColor: getColorPorEstado(m.estado),
-          borderColor: getColorPorEstado(m.estado),
-          extendedProps: {
-            estado: m.estado,
-            centro: m.centro,
-            equipo: m.equipo
-          }
-        }));
-    }
-
-    function getColorPorEstado(estado) {
-      switch(estado) {
-        case 'pendiente': return '#7a5500';
-        case 'proximo': return '#1a3a7a';
-        case 'vencido': return '#8b1a1a';
-        case 'realizado': return '#1a5c30';
-        default: return '#2e2e2e';
-      }
-    }
-
-    function actualizarCalendario() {
-      if (calendar) {
-        calendar.removeAllEvents();
-        calendar.addEventSource(obtenerEventosCalendario());
-      }
-    }
-
-    function filtrarCalendario(estado, button) {
-      filtroCalendarioEstado = estado;
-      
-      // Actualizar botones activos
-      document.querySelectorAll('#tab-calendario .filtro-btn').forEach(btn => {
-        btn.classList.remove('activo');
-      });
-      button.classList.add('activo');
-      
-      actualizarCalendario();
-    }
-
-    function cerrarModal(modalId) {
-      document.getElementById(modalId).classList.remove('visible');
-      mantenimientoActual = null;
-    }
-
-    function cargarHistorial() {
-      // Agrupar mantenimientos por equipo (solo los realizados)
-      const historialPorEquipo = {};
-      
-      mantenimientos.forEach(mantenimiento => {
-        // Solo considerar mantenimientos realizados
-        if (mantenimiento.estado === 'realizado') {
-          if (!historialPorEquipo[mantenimiento.equipo]) {
-            historialPorEquipo[mantenimiento.equipo] = {
-              fechaRealizacion: null,
-              mantenimientos: []
-            };
-          }
-          
-          const equipo = historialPorEquipo[mantenimiento.equipo];
-          equipo.mantenimientos.push(mantenimiento);
-          
-          // Guardar la fecha de realización más reciente
-          if (!equipo.fechaRealizacion || new Date(mantenimiento.ultimoMantenimiento) > new Date(equipo.fechaRealizacion)) {
-            equipo.fechaRealizacion = mantenimiento.ultimoMantenimiento;
-          }
-        }
-      });
-      
-      // Actualizar filtro de equipos
-      actualizarFiltroEquipos(Object.keys(historialPorEquipo));
-      
-      // Renderizar tabla de historial
-      renderizarTablaHistorial(historialPorEquipo);
-    }
-
-    function actualizarFiltroEquipos(equipos) {
-      const filtro = document.getElementById('filtro-equipo-historial');
-      const valorActual = filtro.value;
-      
-      filtro.innerHTML = '<option value="">Todos los equipos</option>';
-      equipos.sort().forEach(equipo => {
-        filtro.innerHTML += `<option value="${equipo}">${equipo}</option>`;
-      });
-      
-      filtro.value = valorActual;
-    }
-
-    function renderizarTablaHistorial(historialPorEquipo) {
-      const tbody = document.getElementById('tabla-historial');
-      const terminoBusqueda = document.getElementById('buscar-equipo').value.toLowerCase();
-      const filtroCentro = document.getElementById('filtro-centro-historial').value;
-      const filtroEquipo = document.getElementById('filtro-equipo-historial').value;
-      
-      let historialFiltrado = Object.entries(historialPorEquipo);
-      
-      // Aplicar filtros
-      if (terminoBusqueda) {
-        historialFiltrado = historialFiltrado.filter(([equipo]) => 
-          equipo.toLowerCase().includes(terminoBusqueda)
-        );
-      }
-      
-      if (filtroEquipo) {
-        historialFiltrado = historialFiltrado.filter(([equipo]) => equipo === filtroEquipo);
-      }
-      
-      // Filtrar por centro de negocios
-      if (filtroCentro) {
-        historialFiltrado = historialFiltrado.filter(([equipo, datos]) => {
-          // Verificar si algún mantenimiento del equipo pertenece al centro seleccionado
-          return datos.mantenimientos.some(m => {
-            // Mapear centros a las 4 opciones principales
-            const centroMapeado = mapearCentro(m.centro);
-            return centroMapeado === filtroCentro;
-          });
         });
       }
-      
-      if (historialFiltrado.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="3">
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <p>No se encontraron equipos</p>
-                        <small>${terminoBusqueda || filtroEquipo ? 'CON LOS FILTROS SELECCIONADOS' : 'NO HAY MANTENIMIENTOS REGISTRADOS'}</small>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
+
+      const ctxCat = document.getElementById('chart-categoria');
+      if (ctxCat) {
+        chartCategoria = new Chart(ctxCat, {
+          type: 'doughnut',
+          data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 2 }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor:'rgba(0,0,0,0.8)',
+                callbacks: {
+                  label: ctx => {
+                    const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+                    const pct = total > 0 ? ((ctx.parsed / total)*100).toFixed(1) : 0;
+                    return `${ctx.label}: ${ctx.parsed} artículo(s) (${pct}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
       }
-      
-      tbody.innerHTML = historialFiltrado.map(([equipo, datos]) => `
-        <tr>
-            <td><strong>${equipo}</strong></td>
-            <td>${datos.fechaRealizacion ? formatearFecha(datos.fechaRealizacion) : 'Sin realizaciones'}</td>
-            <td>
-              <div class="acciones">
-                <button class="btn btn-info btn-sm" onclick="verDetallesEquipo('${equipo}')">Ver Detalles</button>
-              </div>
-            </td>
-        </tr>
-      `).join('');
+
+      setTimeout(actualizarGraficas, 300);
     }
 
-    function filtrarHistorial() {
-      // Volver a cargar y renderizar el historial con los filtros aplicados
-      cargarHistorial();
-    }
+    function actualizarGraficas() {
+      const catFiltro = document.getElementById('cat-filter-graf')?.value || 'todas';
+      let datos = catFiltro === 'todas' ? inventario : inventario.filter(r => r.categoria === catFiltro);
 
-    function mapearCentro(centro) {
-      // Mapear todos los centros a las 4 opciones principales
-      const centrosMapeados = {
-        'Zinc': 'Zinc',
-        'Cromo': 'Cromo', 
-        'Doblado': 'Doblado',
-        'Gral': 'Gral',
-        'Oficinas': 'Gral',
-        'Pretratamiento': 'Gral',
-        'Tratamiento': 'Gral',
-        'Andenes': 'Gral',
-        'Laboratorio': 'Gral',
-        'Obra Civil': 'Gral',
-        'Área Periférica': 'Gral',
-        'Otros': 'Gral'
-      };
-      
-      return centrosMapeados[centro] || 'Gral';
-    }
-
-    function verDetallesEquipo(equipo) {
-      // Buscar el mantenimiento más reciente del equipo
-      const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo);
-      
-      if (mantenimientosEquipo.length === 0) {
-        mostrarToast('No hay mantenimientos registrados para este equipo', 'error');
-        return;
+      // Gráfica de barras horizontal (top artículos por stock)
+      if (chartStock) {
+        const top = datos.slice().sort((a,b) => b.stock - a.stock).slice(0, 8);
+        const colores = top.map(r => {
+          const e = calcularEstado(r);
+          return e === 'ok' ? '#1e6b3580' : e === 'bajo' ? '#b55a0080' : '#b5202080';
+        });
+        const borders = top.map(r => {
+          const e = calcularEstado(r);
+          return e === 'ok' ? '#1e6b35' : e === 'bajo' ? '#b55a00' : '#b52020';
+        });
+        chartStock.data.labels = top.map(r => r.codigo);
+        chartStock.data.datasets = [{
+          label: 'Stock Actual',
+          data: top.map(r => r.stock),
+          backgroundColor: colores,
+          borderColor: borders,
+          borderWidth: 2,
+          borderRadius: 2
+        }];
+        chartStock.update();
+        actualizarLeyenda('legend-stock', [
+          { label:'Normal', color:'#1e6b35' },
+          { label:'Stock Bajo', color:'#b55a00' },
+          { label:'Crítico / Agotado', color:'#b52020' }
+        ]);
       }
-      
-      // Obtener el mantenimiento más reciente
-      const mantenimientoMasReciente = mantenimientosEquipo.reduce((masReciente, actual) => {
-        return new Date(actual.ultimoMantenimiento) > new Date(masReciente.ultimoMantenimiento) ? actual : masReciente;
-      });
-      
-      // Abrir el modal de ver detalles con los datos del mantenimiento más reciente
-      abrirModalVer(mantenimientoMasReciente.id);
+
+      // Gráfica de dona por categoría
+      if (chartCategoria) {
+        const catCount = {};
+        datos.forEach(r => { catCount[r.categoria] = (catCount[r.categoria] || 0) + 1; });
+        const cats = Object.keys(catCount);
+        const palette = ['#1e6b35','#8b1a1a','#b55a00','#1a3a7a','#4a4a4a','#7a5500','#1a4a2a','#555555','#2e6b8a','#6b2e1a','#2e8a6b','#8a6b2e'];
+        chartCategoria.data.labels = cats;
+        chartCategoria.data.datasets[0].data = cats.map(c => catCount[c]);
+        chartCategoria.data.datasets[0].backgroundColor = cats.map((_, i) => palette[i % palette.length] + '99');
+        chartCategoria.data.datasets[0].borderColor = cats.map((_, i) => palette[i % palette.length]);
+        chartCategoria.update();
+        actualizarLeyenda('legend-categoria', cats.map((c, i) => ({ label:`${c} (${catCount[c]})`, color: palette[i % palette.length] })));
+      }
     }
 
-    function abrirModalHistorialEquipo(equipo, mantenimientosEquipo) {
-      // Mostrar nombre del equipo en el título
-      document.getElementById('nombre-equipo-modal').textContent = equipo;
-      
-      // Ordenar mantenimientos por fecha (más reciente primero)
-      mantenimientosEquipo.sort((a, b) => new Date(b.ultimoMantenimiento) - new Date(a.ultimoMantenimiento));
-      
-      // Renderizar tabla con todos los mantenimientos del equipo
-      const tbody = document.getElementById('tabla-historial-equipo');
-      
-      if (mantenimientosEquipo.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="empty-state">
-                        <p>No hay mantenimientos registrados para este equipo</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-      }
-      
-      tbody.innerHTML = mantenimientosEquipo.map(mantenimiento => `
-        <tr>
-            <td><strong>${mantenimiento.id}</strong></td>
-            <td>${mantenimiento.centro}</td>
-            <td>${mantenimiento.frecuencia}</td>
-            <td>${formatearFecha(mantenimiento.ultimoMantenimiento)}</td>
-            <td>${formatearFecha(mantenimiento.proximoMantenimiento)}</td>
-            <td>${mantenimiento.tecnico || '-'}</td>
-            <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
-            <td>${mantenimiento.condicionInicial || '-'}</td>
-            <td>${mantenimiento.condicionFinal || '-'}</td>
-        </tr>
-      `).join('');
-      
-      // Mostrar el modal
-      document.getElementById('modal-historial-equipo').classList.add('visible');
+    function actualizarLeyenda(id, items) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = items.map(item => `
+        <div class="legend-item">
+          <div class="legend-color" style="background:${item.color}"></div>
+          <span>${item.label}</span>
+        </div>`).join('');
     }
 
-    function imprimirFormatosEquipo() {
-      const equipo = document.getElementById('nombre-equipo-modal').textContent;
-      const mantenimientosEquipo = mantenimientos.filter(m => m.equipo === equipo && m.estado === 'realizado');
-      
-      if (mantenimientosEquipo.length === 0) {
-        mostrarToast('No hay mantenimientos realizados para imprimir', 'error');
-        return;
-      }
-      
-      // Abrir múltiples ventanas para cada formato
-      mantenimientosEquipo.forEach((mantenimiento, index) => {
-        setTimeout(() => {
-          const params = new URLSearchParams({
-            equipo: mantenimiento.equipo,
-            centro: mantenimiento.centro,
-            frecuencia: mantenimiento.frecuencia,
-            tecnico: mantenimiento.tecnico || '',
-            condicionInicial: mantenimiento.condicionInicial || '',
-            condicionFinal: mantenimiento.condicionFinal || ''
-          });
-          
-          const ventanaImpresion = window.open(`ver_detalles.html?${params.toString()}`, `_blank`);
-          
-          ventanaImpresion.onload = function() {
-            setTimeout(() => {
-              ventanaImpresion.print();
-              // Cerrar la ventana después de imprimir
-              setTimeout(() => {
-                ventanaImpresion.close();
-              }, 1000);
-            }, 500);
-          };
-        }, index * 200); // Abrir cada ventana con 200ms de diferencia
-      });
-      
-      mostrarToast(`Abriendo ${mantenimientosEquipo.length} formato(s) para impresión...`, 'success');
-    }
-
-    function limpiarFormularioNuevo() {
-      document.getElementById('p-id').value = '';
-      document.getElementById('p-equipo').value = '';
-      document.getElementById('p-centro').value = '';
-      document.getElementById('p-frecuencia').value = '';
-      document.getElementById('p-ultimo').value = '';
-      document.getElementById('p-tecnico').value = '';
-      document.getElementById('p-trabajo-realizado').value = '';
-    }
-
-    // ===== FUNCIONES DE CRUD =====
-    async function guardarPreventivo() {
-      const id = document.getElementById('p-id').value.trim();
-      const equipo = document.getElementById('p-equipo').value.trim();
-      const centro = document.getElementById('p-centro').value;
-      const frecuencia = document.getElementById('p-frecuencia').value;
-      const ultimo = document.getElementById('p-ultimo').value;
-      const tecnico = document.getElementById('p-tecnico').value.trim();
-      const trabajoRealizado = document.getElementById('p-trabajo-realizado').value.trim();
-      
-      // Validaciones
-      if (!id || !equipo || !centro || !frecuencia || !ultimo) {
-        mostrarToast('Por favor completa todos los campos obligatorios', 'error');
-        return;
-      }
-      
-      // Verificar que el ID no exista
-      if (mantenimientos.some(m => m.id === id)) {
-        mostrarToast('Este ID ya existe. Por favor usa otro ID.', 'error');
-        return;
-      }
-      
-      // Calcular próximo mantenimiento
-      const proximo = calcularProximoMantenimiento(ultimo, frecuencia);
-      const estado = determinarEstado(proximo);
-      
-      // Crear nuevo mantenimiento
-      const nuevoMantenimiento = {
-        id: id,
-        equipo,
-        centro,
-        frecuencia,
-        ultimoMantenimiento: ultimo,
-        proximoMantenimiento: proximo,
-        tecnico,
-        trabajoRealizado,
-        estado
-      };
-      
-      // Guardar en Google Apps Script
-      await agregarMantenimientoGoogleSheets(nuevoMantenimiento);
-      
-      // Agregar a la lista local
-      mantenimientos.push(nuevoMantenimiento);
-      
-      // Guardar en localStorage
-      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
-      
-      // Actualizar UI
-      renderizarTabla();
-      actualizarEstadisticas();
-      actualizarGraficasConDatos();
-      cerrarModal('modal-nuevo');
-      
-      mostrarToast('Mantenimiento preventivo creado exitosamente', 'success');
-    }
-
-    async function completarPreventivo() {
-      if (!mantenimientoActual) return;
-      
-      const fechaRealizado = document.getElementById('c-fecha-realizado').value;
-      const tecnico = document.getElementById('c-tecnico').value.trim();
-      const responsable = document.getElementById('c-responsable').value.trim();
-      const tiempo = document.getElementById('c-tiempo').value.trim();
-      const condicionInicial = document.getElementById('c-condicion-inicial').value.trim();
-      const condicionFinal = document.getElementById('c-condicion-final').value.trim();
-      const proximoManual = document.getElementById('c-proximo-manual').value;
-      
-      // Validaciones
-      if (!fechaRealizado || !tecnico || !responsable || !tiempo || !condicionInicial || !condicionFinal) {
-        mostrarToast('Por favor completa todos los campos obligatorios', 'error');
-        return;
-      }
-      
-      // Actualizar mantenimiento
-      const index = mantenimientos.findIndex(m => m.id === mantenimientoActual.id);
-      if (index === -1) return;
-      
-      mantenimientos[index].ultimoMantenimiento = fechaRealizado;
-      mantenimientos[index].tecnico = tecnico;
-      mantenimientos[index].responsable = responsable;
-      mantenimientos[index].tiempoRequerido = tiempo;
-      mantenimientos[index].condicionInicial = condicionInicial;
-      mantenimientos[index].condicionFinal = condicionFinal;
-      
-      if (proximoManual) {
-        mantenimientos[index].proximoMantenimiento = proximoManual;
-      } else {
-        mantenimientos[index].proximoMantenimiento = calcularProximoMantenimiento(
-          fechaRealizado,
-          mantenimientoActual.frecuencia
-        );
-      }
-      
-      mantenimientos[index].estado = 'realizado';
-      
-      // Actualizar en Google Apps Script
-      await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
-      
-      // Guardar en localStorage
-      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
-      
-      // Actualizar estados según frecuencia y UI
-      actualizarEstadosPorFrecuencia();
-      renderizarTabla();
-      actualizarEstadisticas();
-      actualizarGraficasConDatos();
-      cerrarModal('modal-completar');
-    }
-
-    async function modificarPreventivo() {
-      if (!mantenimientoActual) return;
-      
-      const equipo = document.getElementById('m-equipo').value.trim();
-      const centro = document.getElementById('m-centro').value;
-      const frecuencia = document.getElementById('m-frecuencia').value;
-      const ultimo = document.getElementById('m-ultimo').value;
-      const tecnico = document.getElementById('m-tecnico').value.trim();
-      const trabajoRealizado = document.getElementById('m-trabajo-realizado').value.trim();
-      
-      // Validaciones
-      if (!equipo || !centro || !frecuencia || !ultimo) {
-        mostrarToast('Por favor completa todos los campos obligatorios', 'error');
-        return;
-      }
-      
-      // Actualizar mantenimiento
-      const index = mantenimientos.findIndex(m => m.id === mantenimientoActual.id);
-      if (index === -1) return;
-      
-      mantenimientos[index].equipo = equipo;
-      mantenimientos[index].centro = centro;
-      mantenimientos[index].frecuencia = frecuencia;
-      mantenimientos[index].ultimoMantenimiento = ultimo;
-      mantenimientos[index].tecnico = tecnico;
-      mantenimientos[index].trabajoRealizado = trabajoRealizado;
-      
-      // Recalcular próximo mantenimiento
-      mantenimientos[index].proximoMantenimiento = calcularProximoMantenimiento(ultimo, frecuencia);
-      mantenimientos[index].estado = determinarEstado(mantenimientos[index].proximoMantenimiento);
-      
-      // Actualizar en Google Apps Script
-      await actualizarMantenimientoGoogleSheets(mantenimientos[index]);
-      
-      // Guardar en localStorage
-      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
-      
-      // Actualizar UI
-      actualizarEstadosPorFrecuencia();
-      renderizarTabla();
-      actualizarEstadisticas();
-      actualizarGraficasConDatos();
-      cerrarModal('modal-modificar');
-      
-      mostrarToast('Mantenimiento modificado exitosamente', 'success');
-    }
-
-    async function eliminarMantenimiento(id) {
-      if (!confirm('¿Estás seguro de que quieres eliminar este mantenimiento preventivo?')) {
-        return;
-      }
-      
-      const index = mantenimientos.findIndex(m => m.id === id);
-      if (index === -1) return;
-      
-      // Eliminar de Google Apps Script
-      await eliminarMantenimientoGoogleSheets(id);
-      
-      // Eliminar de la lista local
-      mantenimientos.splice(index, 1);
-      
-      // Guardar en localStorage
-      localStorage.setItem('mantenimientos', JSON.stringify(mantenimientos));
-      
-      // Actualizar UI
-      renderizarTabla();
-      actualizarEstadisticas();
-      actualizarGraficasConDatos();
-    }
-
-    // ===== FUNCIONES AUXILIARES =====
-    function formatearFecha(fechaISO) {
-      const fecha = new Date(fechaISO);
-      return fecha.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
+    // ===== UTILIDADES =====
+    function formatFecha(fechaISO) {
+      if (!fechaISO) return '—';
+      const f = new Date(fechaISO + 'T00:00:00');
+      return f.toLocaleDateString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric' });
     }
 
     function mostrarToast(mensaje, tipo = 'info') {
@@ -2408,475 +2111,26 @@
       toast.textContent = mensaje;
       toast.className = `toast ${tipo}`;
       toast.classList.add('show');
-      
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
+      setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
-    function imprimirFormato() {
-      // Abrir el formato de impresión en una nueva ventana
-      const ventanaImpresion = window.open('formato_impresion.html', '_blank');
-      
-      // Esperar a que la ventana se cargue y luego imprimir
-      ventanaImpresion.onload = function() {
-        setTimeout(() => {
-          ventanaImpresion.print();
-        }, 500);
-      };
-    }
-
-    function imprimirFormatoIndividual(id) {
-      const mantenimiento = mantenimientos.find(m => m.id === id);
-      if (!mantenimiento) {
-        mostrarToast('Mantenimiento no encontrado', 'error');
-        return;
-      }
-
-      // Abrir el formato de impresión con parámetros
-      const params = new URLSearchParams({
-        equipo: mantenimiento.equipo,
-        centro: mantenimiento.centro,
-        frecuencia: mantenimiento.frecuencia,
-        tecnico: mantenimiento.tecnico || '',
-        condicionInicial: mantenimiento.condicionInicial || '',
-        condicionFinal: mantenimiento.condicionFinal || ''
-      });
-      
-      const ventanaImpresion = window.open(`ver_detalles.html?${params.toString()}`, '_blank');
-      
-      // Esperar a que la ventana se cargue y luego imprimir
-      ventanaImpresion.onload = function() {
-        setTimeout(() => {
-          ventanaImpresion.print();
-        }, 500);
-      };
-    }
-
-    function toggleModoDatos() {
-      CONFIG.USE_LOCAL_DATA = !CONFIG.USE_LOCAL_DATA;
-      actualizarModoTexto();
-      
-      if (!CONFIG.USE_LOCAL_DATA) {
-        // Cambiar a Google Sheets
-        if (CONFIG.GOOGLE_SHEET_ID === 'TU_SHEET_ID_AQUI') {
-          mostrarToast('Por favor configura tu Google Sheet ID primero', 'warning');
-          CONFIG.USE_LOCAL_DATA = true; // Volver a local
-          actualizarModoTexto();
-          return;
-        }
-        cargarMantenimientos();
-      } else {
-        // Cambiar a localStorage
-        cargarMantenimientos();
-      }
-    }
-
-    function actualizarModoTexto() {
-      const modoTexto = document.getElementById('modo-texto');
-      if (modoTexto) {
-        modoTexto.textContent = CONFIG.USE_LOCAL_DATA ? 'Modo: Local' : 'Modo: Google Sheets';
-      }
-    }
-
-    function configurarListeners() {
-      // Listener para calcular fecha cuando cambia la fecha de realización
-      const fechaRealizado = document.getElementById('c-fecha-realizado');
-      if (fechaRealizado) {
-        fechaRealizado.addEventListener('change', function() {
-          if (mantenimientoActual) {
-            const proximoCalculado = calcularProximoMantenimiento(
-              this.value,
-              mantenimientoActual.frecuencia
-            );
-            document.getElementById('c-proximo-calculado').value = proximoCalculado;
-          }
-        });
-      }
-      
-      // Cerrar modales con Escape
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          document.querySelectorAll('.modal.visible').forEach(modal => {
-            modal.classList.remove('visible');
-          });
-          mantenimientoActual = null;
-        }
-      });
-      
-      // Cerrar modals al hacer clic fuera
-      document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-          if (e.target === this) {
-            this.classList.remove('visible');
-            mantenimientoActual = null;
-          }
-        });
-      });
-    }
-
-    // ===== FUNCIONES DE GRÁFICAS =====
-    function inicializarGraficas() {
-      // Configurar Chart.js
-      Chart.defaults.font.family = "'Cormorant Garamond', serif";
-      Chart.defaults.color = '#2e2e2e';
-      
-      // Inicializar gráfica mensual comparativa
-      const ctxMensual = document.getElementById('chart-mensual');
-      if (ctxMensual) {
-        chartMensual = new Chart(ctxMensual, {
-          type: 'bar',
-          data: {
-            labels: obtenerMesesAnio(),
-            datasets: [
-              {
-                label: 'Cerrados',
-                data: [],
-                backgroundColor: CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
-                borderColor: CONFIG.COLORES_GRAFICAS['Cerrados'],
-                borderWidth: 2,
-                borderRadius: 4
-              },
-              {
-                label: 'Pendientes',
-                data: [],
-                backgroundColor: CONFIG.COLORES_GRAFICAS['Pendientes'] + '80',
-                borderColor: CONFIG.COLORES_GRAFICAS['Pendientes'],
-                borderWidth: 2,
-                borderRadius: 4
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false
-              },
-              tooltip: {
-                backgroundColor: 'rgba(0,0,0,0.8)',
-                titleFont: {
-                  family: "'Inconsolata', monospace"
-                },
-                bodyFont: {
-                  family: "'Inconsolata', monospace"
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  stepSize: 1,
-                  font: {
-                    family: "'Inconsolata', monospace",
-                    size: 11
-                  }
-                },
-                grid: {
-                  color: 'rgba(0,0,0,0.05)'
-                }
-              },
-              x: {
-                ticks: {
-                  font: {
-                    family: "'Inconsolata', monospace",
-                    size: 11
-                  }
-                },
-                grid: {
-                  display: false
-                }
-              }
-            }
-          }
-        });
-      }
-      
-      // Inicializar gráfica de porcentajes
-      const ctxPorcentajes = document.getElementById('chart-porcentajes');
-      if (ctxPorcentajes) {
-        chartPorcentajes = new Chart(ctxPorcentajes, {
-          type: 'doughnut',
-          data: {
-            labels: ['Cerrados', 'Pendientes'],
-            datasets: [{
-              data: [0, 0],
-              backgroundColor: [
-                CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
-                CONFIG.COLORES_GRAFICAS['Pendientes'] + '80'
-              ],
-              borderColor: [
-                CONFIG.COLORES_GRAFICAS['Cerrados'],
-                CONFIG.COLORES_GRAFICAS['Pendientes']
-              ],
-              borderWidth: 2
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false
-              },
-              tooltip: {
-                backgroundColor: 'rgba(0,0,0,0.8)',
-                titleFont: {
-                  family: "'Inconsolata', monospace"
-                },
-                bodyFont: {
-                  family: "'Inconsolata', monospace"
-                },
-                callbacks: {
-                  label: function(context) {
-                    const label = context.label || '';
-                    const value = context.parsed || 0;
-                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                    return `${label}: ${value} (${percentage}%)`;
-                  }
-                }
-              }
-            }
-          }
-        });
-      }
-      
-      // Actualizar gráficas con datos iniciales
-      setTimeout(() => {
-        actualizarGraficas();
-        actualizarGraficaPorcentajes();
-      }, 500);
-    }
-
-    function obtenerMesesAnio() {
-      // Devolver meses en orden cronológico de enero a diciembre
-      return ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-              'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    }
-
-    function calcularDatosMensuales(centroSeleccionado) {
-      const datosCerrados = {};
-      const datosPendientes = {};
-      const meses = obtenerMesesAnio();
-      const añoActual = new Date().getFullYear();
-      const hoy = new Date();
-      
-      // Inicializar todos los meses en 0
-      meses.forEach(mes => {
-        datosCerrados[mes] = 0;
-        datosPendientes[mes] = 0;
-      });
-      
-      // Filtrar mantenimientos por centro si es necesario
-      let mantenimientosFiltrados = mantenimientos;
-      if (centroSeleccionado !== 'todos') {
-        mantenimientosFiltrados = mantenimientos.filter(m => 
-          m.centro === centroSeleccionado
-        );
-      }
-      
-      // Contar mantenimientos por mes y estado
-      mantenimientosFiltrados.forEach(mantenimiento => {
-        if (mantenimiento.ultimoMantenimiento) {
-          const fecha = new Date(mantenimiento.ultimoMantenimiento);
-          if (fecha.getFullYear() === añoActual) {
-            const mesIndex = fecha.getMonth();
-            // Usar el array de meses estándar, no el reordenado
-            const mesesEstandard = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            const mesNombre = mesesEstandard[mesIndex];
-            
-            if (mantenimiento.estado === 'realizado') {
-              datosCerrados[mesNombre]++;
-            } else {
-              datosPendientes[mesNombre]++;
-            }
-          }
-        }
-      });
-      
-      return {
-        cerrados: datosCerrados,
-        pendientes: datosPendientes
-      };
-    }
-
-    function calcularDatosCentros() {
-      const datosCentros = {};
-      
-      // Inicializar centros en 0
-      CONFIG.CENTROS.forEach(centro => {
-        datosCentros[centro] = 0;
-      });
-      
-      // Contar mantenimientos por centro
-      mantenimientos.forEach(mantenimiento => {
-        if (mantenimiento.centro && datosCentros.hasOwnProperty(mantenimiento.centro)) {
-          datosCentros[mantenimiento.centro]++;
-        }
-      });
-      
-      return datosCentros;
-    }
-
-    function actualizarGraficas() {
-      const centroSeleccionado = document.getElementById('centro-filter').value;
-      
-      // Actualizar gráfica mensual comparativa
-      if (chartMensual) {
-        const datos = calcularDatosMensuales(centroSeleccionado);
-        const meses = obtenerMesesAnio();
-        
-        chartMensual.data.datasets[0].data = meses.map(mes => datos.cerrados[mes] || 0);
-        chartMensual.data.datasets[1].data = meses.map(mes => datos.pendientes[mes] || 0);
-        
-        // Actualizar etiquetas según el centro seleccionado
-        const tituloCentro = centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado;
-        chartMensual.data.datasets[0].label = `Cerrados - ${tituloCentro}`;
-        chartMensual.data.datasets[1].label = `Pendientes - ${tituloCentro}`;
-        
-        chartMensual.update();
-        
-        // Actualizar leyenda
-        actualizarLeyenda('legend-mensual', [
-          {
-            label: `Cerrados - ${tituloCentro}`,
-            color: CONFIG.COLORES_GRAFICAS['Cerrados']
-          },
-          {
-            label: `Pendientes - ${tituloCentro}`,
-            color: CONFIG.COLORES_GRAFICAS['Pendientes']
-          }
-        ]);
-      }
-    }
-
-    function actualizarLeyenda(legendId, items) {
-      const legendContainer = document.getElementById(legendId);
-      if (!legendContainer) return;
-      
-      legendContainer.innerHTML = '';
-      items.forEach(item => {
-        const legendItem = document.createElement('div');
-        legendItem.className = 'legend-item';
-        
-        const colorBox = document.createElement('div');
-        colorBox.className = 'legend-color';
-        colorBox.style.backgroundColor = item.color;
-        
-        const label = document.createElement('span');
-        label.textContent = item.label;
-        
-        legendItem.appendChild(colorBox);
-        legendItem.appendChild(label);
-        legendContainer.appendChild(legendItem);
-      });
-    }
-
-    function calcularPorcentajes(mesSeleccionado, centroSeleccionado) {
-      let mantenimientosFiltrados = mantenimientos;
-      
-      // Filtrar por centro si es necesario
-      if (centroSeleccionado !== 'todos') {
-        mantenimientosFiltrados = mantenimientosFiltrados.filter(m => 
-          m.centro === centroSeleccionado
-        );
-      }
-      
-      // Filtrar por mes si es necesario
-      if (mesSeleccionado !== 'todos') {
-        const añoActual = new Date().getFullYear();
-        mantenimientosFiltrados = mantenimientosFiltrados.filter(m => {
-          if (m.ultimoMantenimiento) {
-            const fecha = new Date(m.ultimoMantenimiento);
-            return fecha.getFullYear() === añoActual && fecha.getMonth() === parseInt(mesSeleccionado);
-          }
-          return false;
-        });
-      }
-      
-      // Contar por estado
-      let cerrados = 0;
-      let pendientes = 0;
-      
-      mantenimientosFiltrados.forEach(mantenimiento => {
-        if (mantenimiento.estado === 'realizado') {
-          cerrados++;
-        } else {
-          pendientes++;
-        }
-      });
-      
-      return { cerrados, pendientes };
-    }
-
-    function actualizarGraficaPorcentajes() {
-      if (!chartPorcentajes) return;
-      
-      const mesSeleccionado = document.getElementById('mes-filter').value;
-      const centroSeleccionado = document.getElementById('centro-filter-2').value;
-      
-      const datos = calcularPorcentajes(mesSeleccionado, centroSeleccionado);
-      
-      // Actualizar datos de la gráfica
-      chartPorcentajes.data.datasets[0].data = [datos.cerrados, datos.pendientes];
-      chartPorcentajes.update();
-      
-      // Actualizar leyenda
-      const mesTexto = mesSeleccionado === 'todos' ? 'Todos los meses' : 
-                      ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][parseInt(mesSeleccionado)];
-      const centroTexto = centroSeleccionado === 'todos' ? 'Todos los centros' : centroSeleccionado;
-      
-      actualizarLeyenda('legend-porcentajes', [
-        {
-          label: `Cerrados - ${mesTexto} - ${centroTexto}`,
-          color: CONFIG.COLORES_GRAFICAS['Cerrados']
-        },
-        {
-          label: `Pendientes - ${mesTexto} - ${centroTexto}`,
-          color: CONFIG.COLORES_GRAFICAS['Pendientes']
-        }
-      ]);
-    }
-
-    // Actualizar gráficas automáticamente cuando cambien los datos
-    function actualizarGraficasConDatos() {
-      if (chartMensual || chartPorcentajes) {
-        setTimeout(() => {
-          actualizarGraficas();
-          actualizarGraficaPorcentajes();
-        }, 100);
-      }
-    }
-
-    // ===== EXPORTAR FUNCIONES =====
+    // ===== EXPORTS =====
     window.filtrar = filtrar;
+    window.filtrarMovimientos = filtrarMovimientos;
     window.buscar = buscar;
-    window.abrirModalNuevo = abrirModalNuevo;
-    window.abrirModalCompletar = abrirModalCompletar;
-    window.cerrarModal = cerrarModal;
-    window.guardarPreventivo = guardarPreventivo;
-    window.completarPreventivo = completarPreventivo;
-    window.eliminarMantenimiento = eliminarMantenimiento;
-    window.imprimirFormato = imprimirFormato;
-    window.imprimirFormatoIndividual = imprimirFormatoIndividual;
-    window.cargarMantenimientos = cargarMantenimientos;
-    window.actualizarGraficas = actualizarGraficas;
-    window.actualizarGraficaPorcentajes = actualizarGraficaPorcentajes;
-    window.abrirModalModificar = abrirModalModificar;
-    window.abrirModalVer = abrirModalVer;
     window.cambiarTab = cambiarTab;
-    window.cargarHistorial = cargarHistorial;
-    window.filtrarHistorial = filtrarHistorial;
-    window.verDetallesEquipo = verDetallesEquipo;
-    window.modificarPreventivo = modificarPreventivo;
-    window.inicializarCalendario = inicializarCalendario;
-    window.actualizarCalendario = actualizarCalendario;
-    window.filtrarCalendario = filtrarCalendario;
+    window.cerrarModal = cerrarModal;
+    window.abrirModalNueva = abrirModalNueva;
+    window.guardarRefaccion = guardarRefaccion;
+    window.abrirEditar = abrirEditar;
+    window.guardarEdicion = guardarEdicion;
+    window.eliminarRefaccion = eliminarRefaccion;
+    window.verDetalle = verDetalle;
+    window.abrirModalMovimiento = abrirModalMovimiento;
+    window.abrirModalMovDesdeDetalle = abrirModalMovDesdeDetalle;
+    window.guardarMovimiento = guardarMovimiento;
+    window.actualizarGraficas = actualizarGraficas;
+    window.exportarCSV = exportarCSV;
   </script>
 </body>
 </html>
