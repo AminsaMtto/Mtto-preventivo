@@ -1930,8 +1930,13 @@
 
     function calcularProximoMantenimiento(ultimo, frecuencia) {
       // Usar meses calendario en lugar de días fijos
+      if (!ultimo) return null;
+      
       const [y, m, d] = ultimo.split('-').map(Number);
       const fecha = new Date(y, m - 1, d);
+      
+      // Verificar que la fecha sea válida
+      if (isNaN(fecha.getTime())) return null;
       
       switch(frecuencia) {
         case 'Semanal':
@@ -1977,8 +1982,8 @@
         if (plan.estado === 'realizado' && plan.ultimoMantenimiento && plan.frecuencia) {
           const nuevoProximo = calcularProximoMantenimiento(plan.ultimoMantenimiento, plan.frecuencia);
           
-          // Actualizar el próximo mantenimiento si cambió
-          if (nuevoProximo !== plan.proximoMantenimiento) {
+          // Actualizar el próximo mantenimiento si cambió y es válido
+          if (nuevoProximo && nuevoProximo !== plan.proximoMantenimiento) {
             planes[index].proximoMantenimiento = nuevoProximo;
             planes[index].estado = determinarEstado(nuevoProximo);
             
