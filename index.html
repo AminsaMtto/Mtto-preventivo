@@ -3287,13 +3287,22 @@
 
     function formatearFecha(fechaISO) {
       if (!fechaISO) return '-';
-      const [y, m, d] = fechaISO.split('-').map(Number);
-      const fecha = new Date(y, m - 1, d);
-      return fecha.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
+      
+      try {
+        const [y, m, d] = fechaISO.split('-').map(Number);
+        const fecha = new Date(y, m - 1, d);
+        
+        // Verificar que la fecha sea válida
+        if (isNaN(fecha.getTime())) return '-';
+        
+        return fecha.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      } catch (error) {
+        return '-';
+      }
     }
 
     function mostrarToast(mensaje, tipo = 'info') {
