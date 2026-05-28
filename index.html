@@ -1629,7 +1629,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwhorSj-A4zGXF684x9Tv8IYZYZHXRYoAkwVOw1hBiddrdjPus1iTXO1gfsfLT_yhNnXg/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzsL6aOZLsqw8jqknMnvqSOxyXw6GXPIXbBmc1JTFwVcaWQ43DaPtqkgMMND-fKRk6Uug/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1700,6 +1700,16 @@
         const result = await response.json();
         
         if (result.success && result.data) {
+          // Mostrar información de debugging
+          if (result.debug) {
+            console.log('=== DEBUG INFO DEL BACKEND ===');
+            console.log('Tipo fila[4]:', result.debug.tipoFila4);
+            console.log('Valor fila[4]:', result.debug.valorFila4);
+            console.log('Tipo fila[5]:', result.debug.tipoFila5);
+            console.log('Valor fila[5]:', result.debug.valorFila5);
+            console.log('===============================');
+          }
+          
           mantenimientos = result.data.map(row => ({
             id: row.ID,
             equipo: row.Equipo,
@@ -1712,11 +1722,6 @@
             condicionFinal: row['Condición Final'] || '',
             estado: row.Estado || 'pendiente'
           }));
-
-          // Debug temporal para ver qué está devolviendo el backend
-          console.log('Backend devolvió:', result.data[0]);
-          console.log('ultimoMantenimiento:', result.data[0]?.['Ultimo Mantenimiento']);
-          console.log('proximoMantenimiento:', result.data[0]?.['Proximo Mantenimiento']);
 
           // Durante la transición, planes = mantenimientos para mantener compatibilidad
           // Cuando se complete la separación, planes tendrá solo la definición del plan
