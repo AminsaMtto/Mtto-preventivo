@@ -1713,6 +1713,11 @@
             estado: row.Estado || 'pendiente'
           }));
 
+          // Debug: Ver formato de fechas
+          console.log('Primer mantenimiento:', mantenimientos[0]);
+          console.log('Formato ultimoMantenimiento:', typeof mantenimientos[0]?.ultimoMantenimiento, mantenimientos[0]?.ultimoMantenimiento);
+          console.log('Formato proximoMantenimiento:', typeof mantenimientos[0]?.proximoMantenimiento, mantenimientos[0]?.proximoMantenimiento);
+
           // Durante la transición, planes = mantenimientos para mantener compatibilidad
           // Cuando se complete la separación, planes tendrá solo la definición del plan
           planes = [...mantenimientos];
@@ -3289,8 +3294,16 @@
       if (!fechaISO) return '-';
       
       try {
-        const [y, m, d] = fechaISO.split('-').map(Number);
-        const fecha = new Date(y, m - 1, d);
+        let fecha;
+        
+        // Si es un objeto Date, usarlo directamente
+        if (fechaISO instanceof Date) {
+          fecha = fechaISO;
+        } else {
+          // Si es un string, parsearlo como fecha local
+          const [y, m, d] = fechaISO.split('-').map(Number);
+          fecha = new Date(y, m - 1, d);
+        }
         
         // Verificar que la fecha sea válida
         if (isNaN(fecha.getTime())) return '-';
@@ -3301,6 +3314,7 @@
           year: 'numeric'
         });
       } catch (error) {
+        console.error('Error al formatear fecha:', error, fechaISO);
         return '-';
       }
     }
