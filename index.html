@@ -1713,12 +1713,10 @@
             estado: row.Estado || 'pendiente'
           }));
 
-          // Debug: Ver formato de fechas
-          console.log('Primer mantenimiento:', mantenimientos[0]);
-          console.log('Formato ultimoMantenimiento:', typeof mantenimientos[0]?.ultimoMantenimiento, mantenimientos[0]?.ultimoMantenimiento);
-          console.log('Formato proximoMantenimiento:', typeof mantenimientos[0]?.proximoMantenimiento, mantenimientos[0]?.proximoMantenimiento);
-          console.log('Normalizado ultimoMantenimiento:', normalizarFecha(mantenimientos[0]?.ultimoMantenimiento));
-          console.log('Normalizado proximoMantenimiento:', normalizarFecha(mantenimientos[0]?.proximoMantenimiento));
+          // Debug temporal para ver qué está devolviendo el backend
+          console.log('Backend devolvió:', result.data[0]);
+          console.log('ultimoMantenimiento:', result.data[0]?.['Ultimo Mantenimiento']);
+          console.log('proximoMantenimiento:', result.data[0]?.['Proximo Mantenimiento']);
 
           // Durante la transición, planes = mantenimientos para mantener compatibilidad
           // Cuando se complete la separación, planes tendrá solo la definición del plan
@@ -3376,7 +3374,14 @@
           // (YYYY-MM-DD, ISO con T, "Sat May 16 2026 GMT-0600...", etc.)
           const normalizada = normalizarFecha(fechaISO);
           if (!normalizada) return '-';
-          const [y, m, d] = normalizada.split('-').map(Number);
+          
+          // Validar que normalizada tenga el formato esperado
+          const parts = normalizada.split('-');
+          if (parts.length !== 3) return '-';
+          
+          const [y, m, d] = parts.map(Number);
+          if (isNaN(y) || isNaN(m) || isNaN(d)) return '-';
+          
           fecha = new Date(y, m - 1, d);
         }
         
