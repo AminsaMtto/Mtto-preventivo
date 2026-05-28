@@ -3372,10 +3372,11 @@
         if (fechaISO instanceof Date) {
           fecha = fechaISO;
         } else {
-          // Si es un string ISO con zona horaria (ej: '2026-05-16T06:00:00.000Z')
-          // Extraer solo la parte de la fecha (YYYY-MM-DD)
-          const fechaPart = fechaISO.split('T')[0];
-          const [y, m, d] = fechaPart.split('-').map(Number);
+          // Normalizar primero para manejar cualquier formato
+          // (YYYY-MM-DD, ISO con T, "Sat May 16 2026 GMT-0600...", etc.)
+          const normalizada = normalizarFecha(fechaISO);
+          if (!normalizada) return '-';
+          const [y, m, d] = normalizada.split('-').map(Number);
           fecha = new Date(y, m - 1, d);
         }
         
