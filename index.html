@@ -1629,7 +1629,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyyT4vvlEPFm5eYCGd57_oULMW_zG__LsGiq9g3svdQbGx01hio3TneD6W94r9px4lM0g/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby_W_-oGn1q7RLsgvBBraAIknwc1Gwvdoho8NNtU1s00W2COhCzPCWUTwUAV4tVxfKwpg/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1712,11 +1712,6 @@
             condicionFinal: row['Condición Final'] || '',
             estado: row.Estado || 'pendiente'
           }));
-
-          // Debug: Ver formato de fechas
-          console.log('Primer mantenimiento:', mantenimientos[0]);
-          console.log('Formato ultimoMantenimiento:', typeof mantenimientos[0]?.ultimoMantenimiento, mantenimientos[0]?.ultimoMantenimiento);
-          console.log('Formato proximoMantenimiento:', typeof mantenimientos[0]?.proximoMantenimiento, mantenimientos[0]?.proximoMantenimiento);
 
           // Durante la transición, planes = mantenimientos para mantener compatibilidad
           // Cuando se complete la separación, planes tendrá solo la definición del plan
@@ -1899,7 +1894,8 @@
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
       
-      const [y, m, d] = fechaProximo.split('-').map(Number);
+      const fechaNormalizada = normalizarFecha(fechaProximo);
+      const [y, m, d] = fechaNormalizada.split('-').map(Number);
       const proximo = new Date(y, m - 1, d);
       proximo.setHours(0, 0, 0, 0);
       
@@ -1918,7 +1914,8 @@
       // Usar meses calendario en lugar de días fijos
       if (!ultimo) return null;
       
-      const [y, m, d] = ultimo.split('-').map(Number);
+      const fechaNormalizada = normalizarFecha(ultimo);
+      const [y, m, d] = fechaNormalizada.split('-').map(Number);
       const fecha = new Date(y, m - 1, d);
       
       // Verificar que la fecha sea válida
@@ -2055,8 +2052,10 @@
 
       // Ordenar por fecha de próximo mantenimiento
       filtrados.sort((a, b) => {
-        const [ya, ma, da] = a.proximoMantenimiento.split('-').map(Number);
-        const [yb, mb, db] = b.proximoMantenimiento.split('-').map(Number);
+        const fechaNormalizadaA = normalizarFecha(a.proximoMantenimiento);
+        const fechaNormalizadaB = normalizarFecha(b.proximoMantenimiento);
+        const [ya, ma, da] = fechaNormalizadaA.split('-').map(Number);
+        const [yb, mb, db] = fechaNormalizadaB.split('-').map(Number);
         return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
       });
 
@@ -2094,8 +2093,10 @@
         if (estadoA !== estadoB) return estadoA - estadoB;
         
         // Si mismo estado, ordenar por fecha de próximo mantenimiento
-        const [ya, ma, da] = a.proximoMantenimiento.split('-').map(Number);
-        const [yb, mb, db] = b.proximoMantenimiento.split('-').map(Number);
+        const fechaNormalizadaA = normalizarFecha(a.proximoMantenimiento);
+        const fechaNormalizadaB = normalizarFecha(b.proximoMantenimiento);
+        const [ya, ma, da] = fechaNormalizadaA.split('-').map(Number);
+        const [yb, mb, db] = fechaNormalizadaB.split('-').map(Number);
         return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
       });
 
@@ -2236,7 +2237,8 @@
 
         stats.total++;
 
-        const [yp, mp, dp] = mantenimiento.proximoMantenimiento.split('-').map(Number);
+        const fechaNormalizada = normalizarFecha(mantenimiento.proximoMantenimiento);
+        const [yp, mp, dp] = fechaNormalizada.split('-').map(Number);
         const proximo = new Date(yp, mp - 1, dp);
         proximo.setHours(0, 0, 0, 0);
         const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
@@ -2274,7 +2276,8 @@
         // Filtrar por centro si está seleccionado
         if (centroFiltro && mantenimiento.centro !== centroFiltro) return;
 
-        const [yp, mp, dp] = mantenimiento.proximoMantenimiento.split('-').map(Number);
+        const fechaNormalizada = normalizarFecha(mantenimiento.proximoMantenimiento);
+        const [yp, mp, dp] = fechaNormalizada.split('-').map(Number);
         const proximo = new Date(yp, mp - 1, dp);
         proximo.setHours(0, 0, 0, 0);
         const diasDiff = Math.floor((proximo - hoy) / (1000 * 60 * 60 * 24));
@@ -2635,8 +2638,10 @@
         if (!equipo.fechaRealizacion) {
           equipo.fechaRealizacion = fecha;
         } else {
-          const [y1, m1, d1] = fecha.split('-').map(Number);
-          const [y2, m2, d2] = equipo.fechaRealizacion.split('-').map(Number);
+          const fechaNormalizada1 = normalizarFecha(fecha);
+          const fechaNormalizada2 = normalizarFecha(equipo.fechaRealizacion);
+          const [y1, m1, d1] = fechaNormalizada1.split('-').map(Number);
+          const [y2, m2, d2] = fechaNormalizada2.split('-').map(Number);
           if (new Date(y1, m1 - 1, d1) > new Date(y2, m2 - 1, d2)) {
             equipo.fechaRealizacion = fecha;
           }
@@ -2884,8 +2889,10 @@
 
       // Ordenar por fecha de realización (más reciente primero)
       todosLosMantenimientos.sort((a, b) => {
-        const [ya, ma, da] = b.mantenimiento.ultimoMantenimiento.split('-').map(Number);
-        const [yb, mb, db] = a.mantenimiento.ultimoMantenimiento.split('-').map(Number);
+        const fechaNormalizadaA = normalizarFecha(b.mantenimiento.ultimoMantenimiento);
+        const fechaNormalizadaB = normalizarFecha(a.mantenimiento.ultimoMantenimiento);
+        const [ya, ma, da] = fechaNormalizadaA.split('-').map(Number);
+        const [yb, mb, db] = fechaNormalizadaB.split('-').map(Number);
         return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
       });
 
@@ -2910,8 +2917,10 @@
         // Calcular si fue a tiempo
         let aTiempo = '-';
         if (mantenimiento.fechaProgramada) {
-          const [y1, m1, d1] = mantenimiento.ultimoMantenimiento.split('-').map(Number);
-          const [y2, m2, d2] = mantenimiento.fechaProgramada.split('-').map(Number);
+          const fechaNormalizada1 = normalizarFecha(mantenimiento.ultimoMantenimiento);
+          const fechaNormalizada2 = normalizarFecha(mantenimiento.fechaProgramada);
+          const [y1, m1, d1] = fechaNormalizada1.split('-').map(Number);
+          const [y2, m2, d2] = fechaNormalizada2.split('-').map(Number);
           const fechaReal = new Date(y1, m1 - 1, d1);
           const fechaProgramada = new Date(y2, m2 - 1, d2);
           aTiempo = fechaReal <= fechaProgramada ? 'Sí' : 'No';
@@ -2967,8 +2976,10 @@
       
       // Obtener el mantenimiento más reciente
       const mantenimientoMasReciente = mantenimientosEquipo.reduce((masReciente, actual) => {
-        const [ya, ma, da] = actual.ultimoMantenimiento.split('-').map(Number);
-        const [yb, mb, db] = masReciente.ultimoMantenimiento.split('-').map(Number);
+        const fechaNormalizadaA = normalizarFecha(actual.ultimoMantenimiento);
+        const fechaNormalizadaB = normalizarFecha(masReciente.ultimoMantenimiento);
+        const [ya, ma, da] = fechaNormalizadaA.split('-').map(Number);
+        const [yb, mb, db] = fechaNormalizadaB.split('-').map(Number);
         return new Date(ya, ma - 1, da) > new Date(yb, mb - 1, db) ? actual : masReciente;
       });
       
@@ -2982,8 +2993,10 @@
       
       // Ordenar mantenimientos por fecha (más reciente primero)
       mantenimientosEquipo.sort((a, b) => {
-        const [ya, ma, da] = b.ultimoMantenimiento.split('-').map(Number);
-        const [yb, mb, db] = a.ultimoMantenimiento.split('-').map(Number);
+        const fechaNormalizadaA = normalizarFecha(b.ultimoMantenimiento);
+        const fechaNormalizadaB = normalizarFecha(a.ultimoMantenimiento);
+        const [ya, ma, da] = fechaNormalizadaA.split('-').map(Number);
+        const [yb, mb, db] = fechaNormalizadaB.split('-').map(Number);
         return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
       });
       
@@ -3271,6 +3284,15 @@
     }
 
     // ===== FUNCIONES AUXILIARES =====
+    
+    // Función auxiliar para normalizar fechas (extraer YYYY-MM-DD de formato ISO)
+    function normalizarFecha(fecha) {
+      if (!fecha) return '';
+      // Si es un string ISO con zona horaria (ej: '2026-05-16T06:00:00.000Z')
+      // Extraer solo la parte de la fecha (YYYY-MM-DD)
+      return fecha.split('T')[0];
+    }
+    
     function mostrarLoading() {
       document.getElementById('loading-indicator').style.display = 'flex';
     }
@@ -3300,8 +3322,10 @@
         if (fechaISO instanceof Date) {
           fecha = fechaISO;
         } else {
-          // Si es un string, parsearlo como fecha local
-          const [y, m, d] = fechaISO.split('-').map(Number);
+          // Si es un string ISO con zona horaria (ej: '2026-05-16T06:00:00.000Z')
+          // Extraer solo la parte de la fecha (YYYY-MM-DD)
+          const fechaPart = fechaISO.split('T')[0];
+          const [y, m, d] = fechaPart.split('-').map(Number);
           fecha = new Date(y, m - 1, d);
         }
         
@@ -3639,7 +3663,8 @@
       // Contar mantenimientos por mes y estado
       mantenimientosFiltrados.forEach(mantenimiento => {
         if (mantenimiento.ultimoMantenimiento) {
-          const [y, m, d] = mantenimiento.ultimoMantenimiento.split('-').map(Number);
+          const fechaNormalizada = normalizarFecha(mantenimiento.ultimoMantenimiento);
+          const [y, m, d] = fechaNormalizada.split('-').map(Number);
           const fecha = new Date(y, m - 1, d);
           if (fecha.getFullYear() === año) {
             const mesIndex = fecha.getMonth();
@@ -3778,7 +3803,8 @@
         const añoActual = new Date().getFullYear();
         mantenimientosFiltrados = mantenimientosFiltrados.filter(m => {
           if (m.ultimoMantenimiento) {
-            const [y, m, d] = m.ultimoMantenimiento.split('-').map(Number);
+            const fechaNormalizada = normalizarFecha(m.ultimoMantenimiento);
+            const [y, m, d] = fechaNormalizada.split('-').map(Number);
             const fecha = new Date(y, m - 1, d);
             return fecha.getFullYear() === añoActual && fecha.getMonth() === parseInt(mesSeleccionado);
           }
