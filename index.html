@@ -3285,12 +3285,30 @@
 
     // ===== FUNCIONES AUXILIARES =====
     
-    // Función auxiliar para normalizar fechas (extraer YYYY-MM-DD de formato ISO)
+    // Función auxiliar para normalizar fechas (extraer YYYY-MM-DD de formato ISO o toString)
     function normalizarFecha(fecha) {
       if (!fecha) return '';
+      
       // Si es un string ISO con zona horaria (ej: '2026-05-16T06:00:00.000Z')
       // Extraer solo la parte de la fecha (YYYY-MM-DD)
-      return fecha.split('T')[0];
+      if (fecha.includes('T')) {
+        return fecha.split('T')[0];
+      }
+      
+      // Si es un string en formato Date.toString() (ej: 'Sat May 16 2026 00:00:00 GMT-0600')
+      // Convertir a objeto Date y luego a YYYY-MM-DD
+      if (fecha.includes('GMT') || fecha.includes('UTC')) {
+        const fechaObj = new Date(fecha);
+        if (!isNaN(fechaObj.getTime())) {
+          const año = fechaObj.getFullYear();
+          const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+          const día = String(fechaObj.getDate()).padStart(2, '0');
+          return `${año}-${mes}-${día}`;
+        }
+      }
+      
+      // Si ya está en formato YYYY-MM-DD, devolverlo tal cual
+      return fecha;
     }
     
     function mostrarLoading() {
