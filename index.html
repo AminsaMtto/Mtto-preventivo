@@ -2441,7 +2441,7 @@
       document.getElementById('v-centro-1').textContent = datos.centro || '-';
       document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
       document.getElementById('v-proximo-1').textContent = datos.proximoMantenimiento ? formatearFecha(datos.proximoMantenimiento) : '-';
-      document.getElementById('v-estado-1').textContent = datos.estado ? obtenerEstadoBadge(datos.estado) : '-';
+      document.getElementById('v-estado-1').innerHTML = datos.estado ? obtenerEstadoBadge(datos.estado) : '-';
       document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
       document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
       document.getElementById('v-responsable').textContent = datos.responsable || '-';
