@@ -1713,6 +1713,13 @@
             estado: row.Estado || 'pendiente'
           }));
 
+          // Debug: Ver formato de fechas
+          console.log('Primer mantenimiento:', mantenimientos[0]);
+          console.log('Formato ultimoMantenimiento:', typeof mantenimientos[0]?.ultimoMantenimiento, mantenimientos[0]?.ultimoMantenimiento);
+          console.log('Formato proximoMantenimiento:', typeof mantenimientos[0]?.proximoMantenimiento, mantenimientos[0]?.proximoMantenimiento);
+          console.log('Normalizado ultimoMantenimiento:', normalizarFecha(mantenimientos[0]?.ultimoMantenimiento));
+          console.log('Normalizado proximoMantenimiento:', normalizarFecha(mantenimientos[0]?.proximoMantenimiento));
+
           // Durante la transición, planes = mantenimientos para mantener compatibilidad
           // Cuando se complete la separación, planes tendrá solo la definición del plan
           planes = [...mantenimientos];
