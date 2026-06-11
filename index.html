@@ -1866,7 +1866,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyuqdSPviMMno28qLlo3IaIewsp28L6dNv9WsqSakFzRBsA-aTWwSBiUsN8QoHae0D8zA/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyzJKmY-dx6Z0IxLpqW6OS6d3LIpPMu_RJlMQjoS4lsZnaw0QyreznKJ2yICFZAYbTJSg/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1918,13 +1918,10 @@
         if (!usuario) return;
 
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({ action: 'getRol', usuario: usuario });
+        const params = new URLSearchParams({ action: 'getRol', usuario: usuario, token: obtenerToken() });
 
         const response = await fetch(`${url}?${params.toString()}`, {
-          method: 'GET',
-          headers: {
-            'X-Auth-Token': obtenerToken()
-          }
+          method: 'GET'
         });
 
         const result = await response.json();
@@ -2256,12 +2253,10 @@
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
         const params = new URLSearchParams({ action: 'getAll' });
         params.set('usuario', obtenerUsuario());
+        params.set('token', obtenerToken());
         
         const response = await fetch(`${url}?${params.toString()}`, {
-          method: 'GET',
-          headers: {
-            'X-Auth-Token': obtenerToken()
-          }
+          method: 'GET'
         });
         
         const result = await response.json();
@@ -3513,12 +3508,10 @@
           action: 'getAllChecklists'
         });
         params.set('usuario', obtenerUsuario());
+        params.set('token', obtenerToken());
 
         const response = await fetch(`${url}?${params.toString()}`, {
-          method: 'GET',
-          headers: {
-            'X-Auth-Token': obtenerToken()
-          }
+          method: 'GET'
         });
         const result = await response.json();
 
