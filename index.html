@@ -1866,8 +1866,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz-x3HGvYNOtiGO2N3MDrhADwvg8AHp1q5aCQGCXcDtYwjLXavE59pTqgCArJ0pyYMpZw/exec',
-      CORS_PROXY: 'https://cors-anywhere.herokuapp.com/',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwE7TLw2jIBTaP0ssr-UAv3WM7-iuU6Dkqsd6tH-fvZDG2tiIIjCzBKGViw8J8rrmT_qA/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1920,9 +1919,8 @@
 
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
         const params = new URLSearchParams({ action: 'getRol', usuario: usuario, token: obtenerToken() });
-        const proxyUrl = CONFIG.CORS_PROXY + url + '?' + params.toString();
 
-        const response = await fetch(proxyUrl, {
+        const response = await fetch(url + '?' + params.toString(), {
           method: 'GET'
         });
 
@@ -2256,9 +2254,8 @@
         const params = new URLSearchParams({ action: 'getAll' });
         params.set('usuario', obtenerUsuario());
         params.set('token', obtenerToken());
-        const proxyUrl = CONFIG.CORS_PROXY + url + '?' + params.toString();
         
-        const response = await fetch(proxyUrl, {
+        const response = await fetch(url + '?' + params.toString(), {
           method: 'GET'
         });
         
@@ -3512,9 +3509,8 @@
         });
         params.set('usuario', obtenerUsuario());
         params.set('token', obtenerToken());
-        const proxyUrl = CONFIG.CORS_PROXY + url + '?' + params.toString();
 
-        const response = await fetch(proxyUrl, {
+        const response = await fetch(url + '?' + params.toString(), {
           method: 'GET'
         });
         const result = await response.json();
