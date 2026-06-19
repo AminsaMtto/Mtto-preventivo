@@ -1308,12 +1308,12 @@
             <input type="date" id="p-ultimo">
           </div>
           <div class="form-group">
-            <label for="p-tecnico">Técnico Asignado</label>
-            <input type="text" id="p-tecnico" placeholder="Nombre del técnico">
+            <label for="p-tiempo-estimado">Tiempo Estimado *</label>
+            <input type="text" id="p-tiempo-estimado" placeholder="Ej: 2 horas">
           </div>
           <div class="form-group span2">
-            <label for="p-trabajo-realizado">Trabajo Realizado</label>
-            <textarea id="p-trabajo-realizado" placeholder="Descripción del trabajo realizado..."></textarea>
+            <label for="p-tecnico">Técnico Asignado</label>
+            <input type="text" id="p-tecnico" placeholder="Nombre del técnico">
           </div>
         </div>
       </div>
@@ -1351,10 +1351,6 @@
             <input type="text" id="c-responsable" placeholder="Nombre del responsable que verifica">
           </div>
           <div class="form-group">
-            <label for="c-tiempo">Tiempo Estimado *</label>
-            <input type="text" id="c-tiempo" placeholder="Ej: 2 horas">
-          </div>
-          <div class="form-group">
             <label for="c-tiempo-real">Tiempo Real (horas) *</label>
             <input type="number" id="c-tiempo-real" placeholder="Ej: 2.5" step="0.5" min="0">
           </div>
@@ -1369,10 +1365,6 @@
           <div class="form-group">
             <label for="c-condicion-final">Condición Final *</label>
             <textarea id="c-condicion-final" placeholder="Describe la condición final del equipo" rows="3"></textarea>
-          </div>
-          <div class="form-group span2">
-            <label for="c-trabajo-realizado">Trabajo Realizado</label>
-            <textarea id="c-trabajo-realizado" placeholder="Describe el trabajo realizado..." rows="3"></textarea>
           </div>
           <div class="form-group span2">
             <label for="c-proximo-manual">Próximo Mantenimiento (Manual)</label>
@@ -1442,10 +1434,6 @@
           <div class="form-group">
             <label for="m-tecnico">Técnico Asignado</label>
             <input type="text" id="m-tecnico" placeholder="Nombre del técnico">
-          </div>
-          <div class="form-group span2">
-            <label for="m-trabajo-realizado">Trabajo Realizado</label>
-            <textarea id="m-trabajo-realizado" placeholder="Descripción del trabajo realizado..."></textarea>
           </div>
         </div>
       </div>
@@ -2414,7 +2402,6 @@
       document.getElementById('c-proximo-calculado').value = '';
       document.getElementById('c-tecnico').value = '';
       document.getElementById('c-responsable').value = '';
-      document.getElementById('c-tiempo').value = '';
       document.getElementById('c-tiempo-real').value = '';
 
       document.getElementById('modal-completar').classList.add('visible');
@@ -2431,7 +2418,6 @@
       document.getElementById('m-frecuencia').value = mantenimientoActual.frecuencia || '';
       document.getElementById('m-ultimo').value = mantenimientoActual.ultimoMantenimiento || '';
       document.getElementById('m-tecnico').value = mantenimientoActual.tecnico || '';
-      document.getElementById('m-trabajo-realizado').value = mantenimientoActual.trabajoRealizado || mantenimientoActual.observaciones || '';
       
       document.getElementById('modal-modificar').classList.add('visible');
     }
@@ -2442,7 +2428,6 @@
       document.getElementById('m-frecuencia').value = '';
       document.getElementById('m-ultimo').value = '';
       document.getElementById('m-tecnico').value = '';
-      document.getElementById('m-trabajo-realizado').value = '';
     }
 
     function abrirModalReprogramar(id) {
@@ -2711,7 +2696,7 @@
             equipo: nombreEquipo,
             centro: planes.find(p => p.id === registro.planId)?.centro || '-',
             frecuencia: planes.find(p => p.id === registro.planId)?.frecuencia || '-',
-            ultimoMantenimiento: registro.fechaReal,
+            ultimoMantenimiento: registro.fechaEjecucion,
             tecnico: registro.tecnico,
             condicionInicial: registro.condicionInicial,
             condicionFinal: registro.condicionFinal,
@@ -2723,7 +2708,7 @@
         }
 
         // Guardar la fecha de realización más reciente
-        const fecha = registro.planId ? registro.fechaReal : registro.ultimoMantenimiento;
+        const fecha = registro.planId ? registro.fechaEjecucion : registro.ultimoMantenimiento;
         if (!equipo.fechaRealizacion) {
           equipo.fechaRealizacion = fecha;
         } else {
@@ -3171,8 +3156,8 @@
       document.getElementById('p-centro').value = '';
       document.getElementById('p-frecuencia').value = '';
       document.getElementById('p-ultimo').value = '';
+      document.getElementById('p-tiempo-estimado').value = '';
       document.getElementById('p-tecnico').value = '';
-      document.getElementById('p-trabajo-realizado').value = '';
     }
 
     // ===== FUNCIONES DE CRUD =====
@@ -3182,11 +3167,11 @@
       const centro = document.getElementById('p-centro').value;
       const frecuencia = document.getElementById('p-frecuencia').value;
       const ultimo = document.getElementById('p-ultimo').value;
+      const tiempoEstimado = sanitizarInput(document.getElementById('p-tiempo-estimado').value.trim());
       const tecnico = sanitizarInput(document.getElementById('p-tecnico').value.trim());
-      const trabajoRealizado = sanitizarInput(document.getElementById('p-trabajo-realizado').value.trim());
       
       // Validaciones
-      if (!id || !equipo || !centro || !frecuencia || !ultimo) {
+      if (!id || !equipo || !centro || !frecuencia || !ultimo || !tiempoEstimado) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
       }
@@ -3209,8 +3194,8 @@
         frecuencia,
         ultimoMantenimiento: ultimo,
         proximoMantenimiento: proximo,
+        tiempoRequerido: tiempoEstimado,
         tecnico,
-        trabajoRealizado,
         estado
       };
 
@@ -3238,31 +3223,22 @@
       const fechaRealizado = document.getElementById('c-fecha-realizado').value;
       const tecnico = sanitizarInput(document.getElementById('c-tecnico').value.trim());
       const responsable = sanitizarInput(document.getElementById('c-responsable').value.trim());
-      const tiempo = sanitizarInput(document.getElementById('c-tiempo').value.trim());
       const tiempoReal = sanitizarInput(document.getElementById('c-tiempo-real').value.trim());
       const condicionInicial = sanitizarInput(document.getElementById('c-condicion-inicial').value.trim());
       const condicionFinal = sanitizarInput(document.getElementById('c-condicion-final').value.trim());
-      const trabajoRealizado = sanitizarInput(document.getElementById('c-trabajo-realizado').value.trim());
       const proximoManual = document.getElementById('c-proximo-manual').value;
 
       // Validaciones
-      if (!fechaRealizado || !tecnico || !responsable || !tiempo || !tiempoReal || !condicionInicial || !condicionFinal) {
+      if (!fechaRealizado || !tecnico || !responsable || !tiempoReal || !condicionInicial || !condicionFinal) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
       }
       
-      // Actualizar mantenimiento
+      // Actualizar mantenimiento (solo guardar datos básicos en plan principal)
       const index = planes.findIndex(m => String(m.id) === String(mantenimientoActual.id));
       if (index === -1) return;
 
       planes[index].ultimoMantenimiento = fechaRealizado;
-      planes[index].tecnico = tecnico;
-      planes[index].responsable = responsable;
-      planes[index].tiempoRequerido = tiempo;
-      planes[index].tiempoReal = tiempoReal;
-      planes[index].condicionInicial = condicionInicial;
-      planes[index].condicionFinal = condicionFinal;
-      planes[index].trabajoRealizado = trabajoRealizado;
 
       if (proximoManual) {
         planes[index].proximoMantenimiento = proximoManual;
@@ -3275,19 +3251,17 @@
 
       planes[index].estado = 'realizado';
 
-      // Crear registro de ejecución
+      // Crear registro de ejecución (guardar todos los datos aquí)
       const nuevaEjecucion = {
         id: Date.now().toString(), // ID temporal para la ejecución
         planId: planes[index].id,
-        fechaReal: fechaRealizado,
+        fechaEjecucion: fechaRealizado, // Fecha en que se hizo la ejecución
         tecnico: tecnico,
         responsable: responsable,
-        tiempoEstimado: tiempo,
         tiempoReal: tiempoReal,
         condicionInicial: condicionInicial,
         condicionFinal: condicionFinal,
-        fechaProgramada: planes[index].proximoMantenimiento, // Fecha que estaba programada originalmente
-        trabajoRealizado: trabajoRealizado
+        fechaProgramada: planes[index].proximoMantenimiento // Fecha que estaba programada originalmente
       };
       ejecuciones.push(nuevaEjecucion);
 
@@ -3316,7 +3290,6 @@
       const frecuencia = document.getElementById('m-frecuencia').value;
       const ultimo = document.getElementById('m-ultimo').value;
       const tecnico = sanitizarInput(document.getElementById('m-tecnico').value.trim());
-      const trabajoRealizado = sanitizarInput(document.getElementById('m-trabajo-realizado').value.trim());
       
       // Validaciones
       if (!equipo || !centro || !frecuencia || !ultimo) {
@@ -3324,7 +3297,7 @@
         return;
       }
       
-      // Actualizar mantenimiento
+      // Actualizar mantenimiento (solo guardar datos básicos en plan principal)
       const index = planes.findIndex(m => String(m.id) === String(mantenimientoActual.id));
       if (index === -1) return;
 
@@ -3333,7 +3306,6 @@
       planes[index].frecuencia = frecuencia;
       planes[index].ultimoMantenimiento = ultimo;
       planes[index].tecnico = tecnico;
-      planes[index].trabajoRealizado = trabajoRealizado;
 
       // Recalcular próximo mantenimiento
       planes[index].proximoMantenimiento = calcularProximoMantenimiento(ultimo, frecuencia);
@@ -4036,7 +4008,9 @@
 
       const tiemposEstimados = datosFiltrados.map(item => {
         if (item.planId) {
-          return parseFloat(item.tiempoEstimado) || 0;
+          // Get tiempo estimado from the plan associated with the execution
+          const plan = planes.find(p => p.id === item.planId);
+          return plan ? parseFloat(plan.tiempoRequerido) || 0 : 0;
         }
         return parseFloat(item.tiempoRequerido) || 0;
       });
