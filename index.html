@@ -1071,11 +1071,11 @@
   <!-- ── AREA TABS ───────────────────────────────────────────────────── -->
   <div class="area-tabs-container">
     <div class="area-tabs-nav">
-      <button class="area-tab-button active" onclick="cambiarArea('todos', this)">Todas las Áreas</button>
-      <button class="area-tab-button" onclick="cambiarArea('Zinc', this)">Zinc</button>
+      <button class="area-tab-button active" onclick="cambiarArea('Zinc', this)">Zinc</button>
       <button class="area-tab-button" onclick="cambiarArea('Cromo', this)">Cromo</button>
       <button class="area-tab-button" onclick="cambiarArea('Doblado', this)">Doblado</button>
       <button class="area-tab-button" onclick="cambiarArea('Gral', this)">Gral</button>
+      <button class="area-tab-button" onclick="cambiarArea('todos', this)">Todas las Áreas</button>
     </div>
   </div>
 
@@ -1107,7 +1107,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
+      <input class="search-input" type="text" placeholder="BUSCAR EQUIPO" oninput="buscar(this.value)">
     </div>
 
             <a href="#" class="btn btn-ghost" onclick="imprimirFormato()">
@@ -1195,7 +1195,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input class="search-input" type="text" placeholder="BUSCAR EQUIPO..." id="buscar-equipo" oninput="filtrarHistorial()">
+          <input class="search-input" type="text" placeholder="BUSCAR EQUIPO" id="buscar-equipo" oninput="filtrarHistorial()">
         </div>
       </div>
       <div class="toolbar-right">
