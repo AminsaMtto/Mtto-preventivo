@@ -2254,9 +2254,7 @@
         const params = new URLSearchParams({ action: 'getAll' });
         params.set('usuario', obtenerUsuario());
         params.set('token', obtenerToken());
-        const proxyUrl = CONFIG.CORS_PROXY + encodeURIComponent(url + '?' + params.toString());
-        
-        const response = await fetch(proxyUrl, {
+        const response = await fetch(url + '?' + params.toString(), {
           method: 'GET'
         });
         
