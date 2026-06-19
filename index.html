@@ -2215,7 +2215,7 @@
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
               <div class="acciones">
-                <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar('${mantenimiento.id}')">Completar</button>
+                ${mantenimiento.estado !== 'realizado' ? `<button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar('${mantenimiento.id}')">Completar</button>` : ''}
                 <button class="btn btn-info btn-sm" onclick="abrirModalModificar('${mantenimiento.id}')">Modificar</button>
                 <button class="btn btn-warning btn-sm" onclick="abrirModalReprogramar('${mantenimiento.id}')">Reprogramar</button>
                 <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento('${mantenimiento.id}')">Eliminar</button>
