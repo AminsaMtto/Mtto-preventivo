@@ -684,6 +684,44 @@
       background: var(--fondo);
     }
     
+    /* ── AREA TABS ── */
+    .area-tabs-container {
+      background: var(--blanco);
+      border-bottom: 1px solid var(--borde);
+      margin: 24px 0 24px 0;
+    }
+    
+    .area-tabs-nav {
+      display: flex;
+      border-bottom: 2px solid var(--borde);
+    }
+    
+    .area-tab-button {
+      background: none;
+      border: none;
+      padding: 14px 20px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--texto-sec);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .area-tab-button:hover {
+      color: var(--texto);
+      background: var(--fondo-alt);
+    }
+    
+    .area-tab-button.active {
+      color: var(--negro);
+      border-bottom-color: var(--negro);
+      background: var(--fondo-alt);
+    }
+    
     /* ── TABS ── */
     .tabs-container {
       background: var(--blanco);
@@ -1024,6 +1062,17 @@
         </div>
         <div class="chart-legend" id="legend-tiempos"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── AREA TABS ───────────────────────────────────────────────────── -->
+  <div class="area-tabs-container">
+    <div class="area-tabs-nav">
+      <button class="area-tab-button active" onclick="cambiarArea('todos', this)">Todas las Áreas</button>
+      <button class="area-tab-button" onclick="cambiarArea('Zinc', this)">Zinc</button>
+      <button class="area-tab-button" onclick="cambiarArea('Cromo', this)">Cromo</button>
+      <button class="area-tab-button" onclick="cambiarArea('Doblado', this)">Doblado</button>
+      <button class="area-tab-button" onclick="cambiarArea('Gral', this)">Gral</button>
     </div>
   </div>
 
@@ -1643,7 +1692,8 @@
       COLORES_GRAFICAS: {
         'Cerrados': '#1e6b35',
         'Pendientes': '#7a5500'
-      }
+      },
+      AREA_SELECCIONADA: 'todos'
     };
 
     // ===== HELPER PARA OBTENER TOKEN DE AUTENTICACIÓN =====
@@ -2067,7 +2117,12 @@
       let filtrados = [...planes];
       const centroFiltro = document.getElementById('filtro-centro-preventivos').value;
 
-      // Aplicar filtro de centro
+      // Aplicar filtro de área seleccionada (pestañas)
+      if (CONFIG.AREA_SELECCIONADA !== 'todos') {
+        filtrados = filtrados.filter(m => m.centro === CONFIG.AREA_SELECCIONADA);
+      }
+
+      // Aplicar filtro de centro (dropdown)
       if (centroFiltro) {
         filtrados = filtrados.filter(m => m.centro === centroFiltro);
       }
@@ -2493,6 +2548,21 @@
       // Por ahora, mostramos la información del plan actual
 
       document.getElementById('modal-ver').classList.add('visible');
+    }
+
+    function cambiarArea(area, button) {
+      CONFIG.AREA_SELECCIONADA = area;
+      
+      // Actualizar clases de botones
+      document.querySelectorAll('.area-tab-button').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      
+      // Actualizar gráficas y tabla
+      actualizarGraficas();
+      actualizarGraficaPorcentajes();
+      actualizarGraficaTiempos();
+      renderizarTabla();
+      actualizarEstadisticas();
     }
 
     function cambiarTab(tabName, button) {
@@ -3815,7 +3885,7 @@
     }
 
     function actualizarGraficas() {
-      const centroSeleccionado = document.getElementById('centro-filter').value;
+      const centroSeleccionado = CONFIG.AREA_SELECCIONADA === 'todos' ? document.getElementById('centro-filter').value : CONFIG.AREA_SELECCIONADA;
       const anioSeleccionado = document.getElementById('year-filter').value;
 
       // Actualizar gráfica mensual comparativa
@@ -3925,7 +3995,7 @@
       if (!chartPorcentajes) return;
       
       const mesSeleccionado = document.getElementById('mes-filter').value;
-      const centroSeleccionado = document.getElementById('centro-filter-2').value;
+      const centroSeleccionado = CONFIG.AREA_SELECCIONADA === 'todos' ? document.getElementById('centro-filter-2').value : CONFIG.AREA_SELECCIONADA;
       
       const datos = calcularPorcentajes(mesSeleccionado, centroSeleccionado);
       
@@ -3957,8 +4027,8 @@
       // Usar ejecuciones si hay datos, sino usar planes con tiempoReal
       const datosFuente = ejecuciones.length > 0 ? ejecuciones : planes.filter(p => p.tiempoReal && p.tiempoRequerido);
 
-      // Filtrar por centro si está seleccionado
-      const centroSeleccionado = document.getElementById('centro-filter')?.value || '';
+      // Filtrar por área seleccionada (pestañas)
+      const centroSeleccionado = CONFIG.AREA_SELECCIONADA === 'todos' ? (document.getElementById('centro-filter')?.value || '') : CONFIG.AREA_SELECCIONADA;
       let datosFiltrados = datosFuente;
       if (centroSeleccionado !== 'todos') {
         if (ejecuciones.length > 0) {
