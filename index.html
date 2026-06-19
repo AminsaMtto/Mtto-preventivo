@@ -1629,7 +1629,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzB8GqNUvOo59NTBs8Aj5mqBDg3KITBdkolO9tVdq1zF3nZzrVjaSyGTh63PCEMFTQlcg/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxuJk4jusJYkPqsFj2-jJrAFUbFJOhh6o584JGIlSqDd3Pw9KbVIsNkq64xRo8GoSEgrg/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1790,10 +1790,8 @@
         const params = new URLSearchParams();
         Object.keys(data).forEach(key => params.append(key, data[key]));
         
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params
+        const response = await fetch(url + '?' + params.toString(), {
+          method: 'GET'
         });
         
         const result = await response.json();
