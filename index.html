@@ -686,40 +686,43 @@
     
     /* ── AREA TABS ── */
     .area-tabs-container {
-      background: var(--blanco);
-      border-bottom: 1px solid var(--borde);
+      background: var(--fondo-alt);
+      border-bottom: 2px solid var(--negro);
       margin: 24px 0 24px 0;
+      padding: 8px 0;
     }
     
     .area-tabs-nav {
       display: flex;
-      border-bottom: 2px solid var(--borde);
+      gap: 8px;
+      padding: 0 24px;
     }
     
     .area-tab-button {
-      background: none;
-      border: none;
-      padding: 14px 20px;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 14px;
-      font-weight: 500;
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      padding: 12px 20px;
+      font-family: 'Inconsolata', monospace;
+      font-size: 13px;
+      font-weight: 600;
       color: var(--texto-sec);
       cursor: pointer;
-      border-bottom: 3px solid transparent;
       transition: all 0.2s ease;
       text-transform: uppercase;
       letter-spacing: 1px;
+      border-radius: 4px;
     }
     
     .area-tab-button:hover {
-      color: var(--texto);
-      background: var(--fondo-alt);
+      color: var(--negro);
+      border-color: var(--negro);
+      background: var(--fondo);
     }
     
     .area-tab-button.active {
-      color: var(--negro);
-      border-bottom-color: var(--negro);
-      background: var(--fondo-alt);
+      color: var(--blanco);
+      background: var(--negro);
+      border-color: var(--negro);
     }
     
     /* ── TABS ── */
@@ -1107,14 +1110,6 @@
       <input class="search-input" type="text" placeholder="BUSCAR EQUIPO / CENTRO / TÉCNICO" oninput="buscar(this.value)">
     </div>
 
-    <select id="filtro-centro-preventivos" onchange="filtrarPreventivosPorCentro()">
-      <option value="">Todos los centros</option>
-      <option value="Zinc">Zinc</option>
-      <option value="Cromo">Cromo</option>
-      <option value="Doblado">Doblado</option>
-      <option value="Gral">Gral</option>
-    </select>
-
             <a href="#" class="btn btn-ghost" onclick="imprimirFormato()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="6 9 6 2 18 2 18 9"/>
@@ -1122,14 +1117,6 @@
         <rect x="6" y="14" width="12" height="8"/>
       </svg>
       Imprimir Formato
-    </a>
-    <a href="#" class="btn btn-ghost" onclick="exportarCSV()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Exportar CSV
     </a>
     <a href="#" class="btn btn-primary" onclick="abrirModalNuevo()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
