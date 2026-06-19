@@ -1913,7 +1913,7 @@
       return fecha.toISOString().split('T')[0];
     }
 
-    function determinarEstado(fechaProximo) {
+    function determinarEstado(fechaProximo, frecuencia = 'Mensual') {
       // Si no hay fecha de próximo mantenimiento, está pendiente
       if (!fechaProximo) return 'pendiente';
       
@@ -1929,10 +1929,27 @@
       
       if (diasDiff < 0) {
         return 'vencido';
-      } else if (diasDiff <= 7) {
-        return 'proximo';
+      }
+      
+      // Umbrales según frecuencia
+      const frecuenciasCortas = ['Semanal', 'Quincenal'];
+      
+      if (frecuenciasCortas.includes(frecuencia)) {
+        // Semanal/Quincenal: 3 días = proximo, 4+ días = pendiente
+        if (diasDiff <= 3) {
+          return 'proximo';
+        } else {
+          return 'pendiente';
+        }
       } else {
-        return 'pendiente';
+        // Mensual+: 7 días = proximo, 8-15 días = pendiente, 16+ días = realizado
+        if (diasDiff <= 7) {
+          return 'proximo';
+        } else if (diasDiff <= 15) {
+          return 'pendiente';
+        } else {
+          return 'realizado';
+        }
       }
     }
 
@@ -1991,7 +2008,7 @@
 
         // Calcular estado dinámicamente basado en proximoMantenimiento
         if (plan.proximoMantenimiento) {
-          const nuevoEstado = determinarEstado(plan.proximoMantenimiento);
+          const nuevoEstado = determinarEstado(plan.proximoMantenimiento, plan.frecuencia);
           
           // Auto-reset para frecuencias mensuales+: cambiar a pendiente cuando coincide el mes
           // SOLO si el estado era "realizado" (no si ya está vencido o proximo)
