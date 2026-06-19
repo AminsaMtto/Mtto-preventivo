@@ -10,7 +10,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Preventivos">
-  <link rel="manifest" href="/manifest.json">
+  <!-- <link rel="manifest" href="/manifest.json"> -->
   <link rel="apple-touch-icon" href="/icon-192.png">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -1866,7 +1866,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzIa-RdemLMkBSooGFSM50GIt7ylH7Jmu3HNc01cMltrY0x7LA7KZY7XMN1Hcfo7MJsUQ/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw-ui_23eb-iBuD-Z4Wl43d2RpYl9aj7xQVKtB5k0QIP7y29Da502MYBjxXpa_z5nUxpg/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -2027,11 +2027,12 @@
       inicializarGraficas();
       
       // Registrar Service Worker para PWA
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(registration => console.log('Service Worker registrado:', registration.scope))
-          .catch(error => console.log('Error al registrar Service Worker:', error));
-      }
+      // Comentado temporalmente debido a errores 404
+      // if ('serviceWorker' in navigator) {
+      //   navigator.serviceWorker.register('/service-worker.js')
+      //     .then(registration => console.log('Service Worker registrado:', registration.scope))
+      //     .catch(error => console.log('Error al registrar Service Worker:', error));
+      // }
     });
 
     // ===== FUNCIONES DE DATOS =====
