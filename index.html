@@ -1994,10 +1994,11 @@
           const nuevoEstado = determinarEstado(plan.proximoMantenimiento);
           
           // Auto-reset para frecuencias mensuales+: cambiar a pendiente cuando coincide el mes
+          // SOLO si el estado era "realizado" (no si ya está vencido)
           const frecuenciasMensuales = ['Mensual', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
           if (frecuenciasMensuales.includes(plan.frecuencia)) {
             const proximoDate = new Date(plan.proximoMantenimiento);
-            if (proximoDate.getMonth() === mesActual && proximoDate.getFullYear() === anioActual) {
+            if (proximoDate.getMonth() === mesActual && proximoDate.getFullYear() === anioActual && nuevoEstado !== 'vencido') {
               planes[index].estado = 'pendiente';
             } else {
               planes[index].estado = nuevoEstado;
