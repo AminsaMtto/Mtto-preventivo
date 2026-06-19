@@ -2102,16 +2102,9 @@
     function obtenerMantenimientosFiltrados() {
       // Durante la transición, usar planes que es igual a mantenimientos
       let filtrados = [...planes];
-      const centroFiltro = document.getElementById('filtro-centro-preventivos').value;
-
       // Aplicar filtro de área seleccionada (pestañas)
       if (CONFIG.AREA_SELECCIONADA !== 'todos') {
         filtrados = filtrados.filter(m => m.centro === CONFIG.AREA_SELECCIONADA);
-      }
-
-      // Aplicar filtro de centro (dropdown)
-      if (centroFiltro) {
-        filtrados = filtrados.filter(m => m.centro === centroFiltro);
       }
 
       // Aplicar filtro de estado
@@ -2301,8 +2294,6 @@
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
 
-      const centroFiltro = document.getElementById('filtro-centro-preventivos')?.value || '';
-
       const stats = {
         total: 0,
         pendientes: 0,
@@ -2313,8 +2304,10 @@
 
       // Usar planes durante la transición
       planes.forEach(mantenimiento => {
-        // Filtrar por centro si está seleccionado
-        if (centroFiltro && mantenimiento.centro !== centroFiltro) return;
+        // Filtrar por área seleccionada (pestañas)
+        if (CONFIG.AREA_SELECCIONADA !== 'todos' && mantenimiento.centro !== CONFIG.AREA_SELECCIONADA) {
+          return;
+        }
 
         stats.total++;
 
@@ -2347,15 +2340,15 @@
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
 
-      const centroFiltro = document.getElementById('filtro-centro-preventivos')?.value || '';
-
       let vencidos = 0;
       let vencenHoy = 0;
 
       // Usar planes durante la transición
       planes.forEach(mantenimiento => {
-        // Filtrar por centro si está seleccionado
-        if (centroFiltro && mantenimiento.centro !== centroFiltro) return;
+        // Filtrar por área seleccionada (pestañas)
+        if (CONFIG.AREA_SELECCIONADA !== 'todos' && mantenimiento.centro !== CONFIG.AREA_SELECCIONADA) {
+          return;
+        }
 
         const fechaNormalizada = normalizarFecha(mantenimiento.proximoMantenimiento);
         const [yp, mp, dp] = fechaNormalizada.split('-').map(Number);
