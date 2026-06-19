@@ -1867,6 +1867,7 @@
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
       GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwTcMbLRnVMw44VHVvb_qUOc-EczkklRjI9kFGfki-2iU1Z03icsW6ER6NvPwXxtLMFiA/exec',
+      CORS_PROXY: 'https://corsproxy.io/?',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1919,7 +1920,8 @@
 
         const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
         const params = new URLSearchParams({ action: 'getRol', usuario: usuario, token: obtenerToken() });
-        const response = await fetch(url + '?' + params.toString(), {
+        const proxyUrl = CONFIG.CORS_PROXY + encodeURIComponent(url + '?' + params.toString());
+        const response = await fetch(proxyUrl, {
           method: 'GET'
         });
 
@@ -2254,7 +2256,8 @@
         const params = new URLSearchParams({ action: 'getAll' });
         params.set('usuario', obtenerUsuario());
         params.set('token', obtenerToken());
-        const response = await fetch(url + '?' + params.toString(), {
+        const proxyUrl = CONFIG.CORS_PROXY + encodeURIComponent(url + '?' + params.toString());
+        const response = await fetch(proxyUrl, {
           method: 'GET'
         });
         
@@ -3508,7 +3511,8 @@
         });
         params.set('usuario', obtenerUsuario());
         params.set('token', obtenerToken());
-        const response = await fetch(url + '?' + params.toString(), {
+        const proxyUrl = CONFIG.CORS_PROXY + encodeURIComponent(url + '?' + params.toString());
+        const response = await fetch(proxyUrl, {
           method: 'GET'
         });
         const result = await response.json();
@@ -3583,6 +3587,7 @@
 
         const response = await fetch(url, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
           },
