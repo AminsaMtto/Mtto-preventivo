@@ -1629,7 +1629,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyerJGFhiLpTlw7xU4Wr48iqFNha0ROkmKQQL1MpkkpSheGJF9gOHNaym-4sfn2c1U7Gg/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbztBAC6tcLO4Iliaue9l3B3ghmQGKqgdSxWuGJaH0VRK4Pu_Jnct5hJvEOEfVDbtYC6iQ/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1728,8 +1728,7 @@
             proximoMantenimiento: row['Proximo Mantenimiento'],
             tecnico: row.Tecnico,
             condicionInicial: row['Condición Inicial'] || '',
-            condicionFinal: row['Condición Final'] || '',
-            estado: row.Estado || 'pendiente'
+            condicionFinal: row['Condición Final'] || ''
           }));
 
           // Durante la transición, planes = mantenimientos para mantener compatibilidad
@@ -1782,7 +1781,6 @@
           tecnico: mantenimiento.tecnico,
           condicionInicial: mantenimiento.condicionInicial || '',
           condicionFinal: mantenimiento.condicionFinal || '',
-          estado: mantenimiento.estado,
           token: obtenerToken(),
           usuario: obtenerUsuario()
         };
@@ -1820,7 +1818,6 @@
           tecnico: mantenimiento.tecnico,
           condicionInicial: mantenimiento.condicionInicial || '',
           condicionFinal: mantenimiento.condicionFinal || '',
-          estado: mantenimiento.estado,
           token: obtenerToken(),
           usuario: obtenerUsuario()
         };
@@ -1984,34 +1981,29 @@
     function actualizarEstadosPorFrecuencia() {
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
+      const mesActual = hoy.getMonth();
+      const anioActual = hoy.getFullYear();
 
       // Usar planes durante la transición
       planes.forEach((plan, index) => {
         // No actualizar si está reprogramado (mantener estado manual)
         if (plan.estado === 'reprogramado') return;
 
-        // Si está realizado, calcular el próximo mantenimiento basado en la fecha de realización
-        if (plan.estado === 'realizado' && plan.ultimoMantenimiento && plan.frecuencia) {
-          const nuevoProximo = calcularProximoMantenimiento(plan.ultimoMantenimiento, plan.frecuencia);
-          
-          // Actualizar el próximo mantenimiento si cambió y es válido
-          if (nuevoProximo && nuevoProximo !== plan.proximoMantenimiento) {
-            planes[index].proximoMantenimiento = nuevoProximo;
-            planes[index].estado = determinarEstado(nuevoProximo);
-            
-            // Persistir cambios en GAS
-            actualizarMantenimientoGoogleSheets(planes[index]);
-          }
-        }
-        
-        // Si está pendiente o próximo, verificar si debe cambiar de estado
-        if ((plan.estado === 'pendiente' || plan.estado === 'proximo') && plan.proximoMantenimiento) {
+        // Calcular estado dinámicamente basado en proximoMantenimiento
+        if (plan.proximoMantenimiento) {
           const nuevoEstado = determinarEstado(plan.proximoMantenimiento);
-          if (nuevoEstado !== plan.estado) {
+          
+          // Auto-reset para frecuencias mensuales+: cambiar a pendiente cuando coincide el mes
+          const frecuenciasMensuales = ['Mensual', 'Bimestral', 'Trimestral', 'Semestral', 'Anual'];
+          if (frecuenciasMensuales.includes(plan.frecuencia)) {
+            const proximoDate = new Date(plan.proximoMantenimiento);
+            if (proximoDate.getMonth() === mesActual && proximoDate.getFullYear() === anioActual) {
+              planes[index].estado = 'pendiente';
+            } else {
+              planes[index].estado = nuevoEstado;
+            }
+          } else {
             planes[index].estado = nuevoEstado;
-            
-            // Persistir cambios en GAS
-            actualizarMantenimientoGoogleSheets(planes[index]);
           }
         }
       });
@@ -2170,7 +2162,7 @@
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
               <div class="acciones">
-                ${mantenimiento.estado !== 'realizado' ? `<button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar('${mantenimiento.id}')">Completar</button>` : ''}
+                <button class="btn btn-ghost btn-sm" onclick="abrirModalCompletar('${mantenimiento.id}')">Completar</button>
                 <button class="btn btn-info btn-sm" onclick="abrirModalModificar('${mantenimiento.id}')">Modificar</button>
                 <button class="btn btn-warning btn-sm" onclick="abrirModalReprogramar('${mantenimiento.id}')">Reprogramar</button>
                 <button class="btn btn-danger btn-sm" onclick="eliminarMantenimiento('${mantenimiento.id}')">Eliminar</button>
