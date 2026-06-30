@@ -1818,98 +1818,107 @@
       }
     }
 
-    async function actualizarMantenimientoGoogleSheets(mantenimiento) {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const data = {
-          action: 'update',
-          id: mantenimiento.id.toString(),
-          equipo: mantenimiento.equipo,
-          centro: mantenimiento.centro,
-          frecuencia: mantenimiento.frecuencia,
-          tiempoRequerido: mantenimiento.tiempoRequerido,
-          token: obtenerToken(),
-          usuario: obtenerUsuario()
-        };
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-        
-        // Con mode: no-cors no podemos leer la respuesta, asumimos éxito si no hay error de red
-        mostrarToast('Mantenimiento actualizado', 'success');
-      } catch (error) {
-        console.error('Error al actualizar:', error);
-        mostrarToast('Error al actualizar: ' + error.message, 'error');
-      }
+async function actualizarMantenimientoGoogleSheets(mantenimiento) {
+  try {
+    const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+    const params = new URLSearchParams({
+      action: 'update',
+      id: mantenimiento.id.toString(),
+      equipo: mantenimiento.equipo,
+      centro: mantenimiento.centro,
+      frecuencia: mantenimiento.frecuencia,
+      tiempoRequerido: mantenimiento.tiempoRequerido || '',
+      token: obtenerToken(),
+      usuario: obtenerUsuario()
+    });
+ 
+    const response = await fetch(url, {
+      method: 'POST',
+      body: params
+    });
+ 
+    const result = await response.json();
+ 
+    if (result.success) {
+      mostrarToast('Mantenimiento actualizado', 'success');
+    } else {
+      mostrarToast('Error al actualizar: ' + (result.error || 'desconocido'), 'error');
     }
+    return result.success;
+  } catch (error) {
+    console.error('Error al actualizar:', error);
+    mostrarToast('Error al actualizar: ' + error.message, 'error');
+    return false;
+  }
+}
 
     async function agregarEjecucionGoogleSheets(ejecucion) {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const data = {
-          action: 'addEjecucion',
-          id: ejecucion.id,
-          planId: ejecucion.planId,
-          fechaEjecucion: ejecucion.fechaEjecucion,
-          tecnico: ejecucion.tecnico,
-          responsable: ejecucion.responsable,
-          tiempoReal: ejecucion.tiempoReal,
-          condicionInicial: ejecucion.condicionInicial,
-          condicionFinal: ejecucion.condicionFinal,
-          fechaProgramada: ejecucion.fechaProgramada,
-          token: obtenerToken(),
-          usuario: obtenerUsuario()
-        };
-
-        const response = await fetch(url, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-
-        // Con mode: no-cors no podemos leer la respuesta, asumimos éxito si no hay error de red
-        console.log('Ejecución guardada en backend');
-      } catch (error) {
-        console.error('Error al guardar ejecución:', error);
-        mostrarToast('Error al guardar ejecución: ' + error.message, 'error');
-      }
+  try {
+    const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+    const params = new URLSearchParams({
+      action: 'addEjecucion',
+      id: ejecucion.id,
+      planId: ejecucion.planId,
+      fechaEjecucion: ejecucion.fechaEjecucion,
+      tecnico: ejecucion.tecnico,
+      responsable: ejecucion.responsable,
+      tiempoReal: ejecucion.tiempoReal,
+      condicionInicial: ejecucion.condicionInicial,
+      condicionFinal: ejecucion.condicionFinal,
+      fechaProgramada: ejecucion.fechaProgramada,
+      token: obtenerToken(),
+      usuario: obtenerUsuario()
+    });
+ 
+    const response = await fetch(url, {
+      method: 'POST',
+      body: params
+    });
+ 
+    const result = await response.json();
+ 
+    if (result.success) {
+      console.log('Ejecución guardada en backend');
+    } else {
+      mostrarToast('Error al guardar ejecución: ' + (result.error || 'desconocido'), 'error');
     }
+    return result.success;
+  } catch (error) {
+    console.error('Error al guardar ejecución:', error);
+    mostrarToast('Error al guardar ejecución: ' + error.message, 'error');
+    return false;
+  }
+}
 
     async function eliminarMantenimientoGoogleSheets(id) {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const data = {
-          action: 'delete',
-          id: id.toString(),
-          token: obtenerToken(),
-          usuario: obtenerUsuario()
-        };
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-        
-        // Con mode: no-cors no podemos leer la respuesta, asumimos éxito si no hay error de red
-        mostrarToast('Mantenimiento eliminado', 'success');
-      } catch (error) {
-        console.error('Error al eliminar:', error);
-        mostrarToast('Error al eliminar: ' + error.message, 'error');
-      }
+  try {
+    const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+    const params = new URLSearchParams({
+      action: 'delete',
+      id: id.toString(),
+      token: obtenerToken(),
+      usuario: obtenerUsuario()
+    });
+ 
+    const response = await fetch(url, {
+      method: 'POST',
+      body: params
+    });
+ 
+    const result = await response.json();
+ 
+    if (result.success) {
+      mostrarToast('Mantenimiento eliminado', 'success');
+    } else {
+      mostrarToast('Error al eliminar: ' + (result.error || 'desconocido'), 'error');
     }
+    return result.success;
+  } catch (error) {
+    console.error('Error al eliminar:', error);
+    mostrarToast('Error al eliminar: ' + error.message, 'error');
+    return false;
+  }
+}
 
     async function cargarEjecucionesGoogleSheets() {
       try {
@@ -2854,40 +2863,38 @@
     }
 
     async function agregarChecklistGoogleSheets(checklist) {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const data = {
-          action: 'addChecklist',
-          id: checklist.id,
-          nombre: checklist.nombre,
-          frecuencia: checklist.frecuencia,
-          items: checklist.items,
-          activo: checklist.activo,
-          token: obtenerToken(),
-          usuario: obtenerUsuario()
-        };
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          console.log('Checklist guardado en backend');
-        } else {
-          throw new Error(result.error || 'Error al guardar checklist');
-        }
-      } catch (error) {
-        console.error('Error al guardar checklist:', error);
-        mostrarToast('Error al guardar checklist: ' + error.message, 'error');
-      }
+  try {
+    const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+    const params = new URLSearchParams({
+      action: 'addChecklist',
+      id: checklist.id,
+      nombre: checklist.nombre,
+      frecuencia: checklist.frecuencia,
+      items: checklist.items,
+      activo: checklist.activo,
+      token: obtenerToken(),
+      usuario: obtenerUsuario()
+    });
+ 
+    const response = await fetch(url, {
+      method: 'POST',
+      body: params
+    });
+ 
+    const result = await response.json();
+ 
+    if (result.success) {
+      console.log('Checklist guardado en backend');
+    } else {
+      mostrarToast('Error al guardar checklist: ' + (result.error || 'desconocido'), 'error');
     }
-
+    return result.success;
+  } catch (error) {
+    console.error('Error al guardar checklist:', error);
+    mostrarToast('Error al guardar checklist: ' + error.message, 'error');
+    return false;
+  }
+}
     function renderizarTablaChecklists() {
       const tbody = document.getElementById('tabla-checklists');
 
