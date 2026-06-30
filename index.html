@@ -1304,10 +1304,6 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="p-ultimo">Último Mantenimiento *</label>
-            <input type="date" id="p-ultimo">
-          </div>
-          <div class="form-group">
             <label for="p-tiempo-estimado">Tiempo Estimado *</label>
             <input type="text" id="p-tiempo-estimado" placeholder="Ej: 2 horas">
           </div>
@@ -1426,10 +1422,6 @@
               <option value="Semestral">Semestral</option>
               <option value="Anual">Anual</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label for="m-ultimo">Último Mantenimiento *</label>
-            <input type="date" id="m-ultimo">
           </div>
           <div class="form-group">
             <label for="m-tecnico">Técnico Asignado</label>
@@ -1653,7 +1645,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbztBAC6tcLO4Iliaue9l3B3ghmQGKqgdSxWuGJaH0VRK4Pu_Jnct5hJvEOEfVDbtYC6iQ/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwQPdkMLNUactyN6FcCbtST6c7xownHJYAyg-CN3R-ywo0pMXaPm_o3zzfYv-529zOu/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -1744,29 +1736,30 @@
         const result = await response.json();
         
         if (result.success && result.data) {
-          mantenimientos = result.data.map(row => ({
+          // Plans solo tiene datos básicos del equipo
+          planes = result.data.map(row => ({
             id: row.ID,
             equipo: row.Equipo,
             centro: row.Centro,
             frecuencia: row.Frecuencia,
-            ultimoMantenimiento: row['Ultimo Mantenimiento'],
-            proximoMantenimiento: row['Proximo Mantenimiento'],
-            tecnico: row.Tecnico,
-            condicionInicial: row['Condición Inicial'] || '',
-            condicionFinal: row['Condición Final'] || ''
+            tiempoRequerido: row['Tiempo Requerido'] || ''
           }));
 
-          // Durante la transición, planes = mantenimientos para mantener compatibilidad
-          // Cuando se complete la separación, planes tendrá solo la definición del plan
-          planes = [...mantenimientos];
-          ejecuciones = []; // Se llenará cuando se implemente la hoja de Ejecuciones
+          // Cargar ejecuciones
+          await cargarEjecucionesGoogleSheets();
 
-          console.log('Mantenimientos cargados:', mantenimientos.length);
-          actualizarEstadosPorFrecuencia();
+          // Calcular último mantenimiento, próximo y estado para cada plan
+          calcularDatosDerivados();
+
+          // Sincronizar con mantenimientos durante la transición
+          mantenimientos = [...planes];
+
+          console.log('Planes cargados:', planes.length);
+          console.log('Ejecuciones cargadas:', ejecuciones.length);
           renderizarTabla();
           actualizarEstadisticas();
           actualizarGraficasConDatos();
-          mostrarToast(`Se cargaron ${mantenimientos.length} mantenimientos`, 'success');
+          mostrarToast(`Se cargaron ${planes.length} equipos y ${ejecuciones.length} ejecuciones`, 'success');
         } else {
           throw new Error(result.error || 'Error desconocido');
         }
@@ -1801,11 +1794,7 @@
           equipo: mantenimiento.equipo,
           centro: mantenimiento.centro,
           frecuencia: mantenimiento.frecuencia,
-          ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
-          proximoMantenimiento: mantenimiento.proximoMantenimiento,
-          tecnico: mantenimiento.tecnico,
-          condicionInicial: mantenimiento.condicionInicial || '',
-          condicionFinal: mantenimiento.condicionFinal || '',
+          tiempoRequerido: mantenimiento.tiempoRequerido,
           token: obtenerToken(),
           usuario: obtenerUsuario()
         };
@@ -1838,11 +1827,7 @@
           equipo: mantenimiento.equipo,
           centro: mantenimiento.centro,
           frecuencia: mantenimiento.frecuencia,
-          ultimoMantenimiento: mantenimiento.ultimoMantenimiento,
-          proximoMantenimiento: mantenimiento.proximoMantenimiento,
-          tecnico: mantenimiento.tecnico,
-          condicionInicial: mantenimiento.condicionInicial || '',
-          condicionFinal: mantenimiento.condicionFinal || '',
+          tiempoRequerido: mantenimiento.tiempoRequerido,
           token: obtenerToken(),
           usuario: obtenerUsuario()
         };
@@ -1871,15 +1856,13 @@
           action: 'addEjecucion',
           id: ejecucion.id,
           planId: ejecucion.planId,
-          fechaReal: ejecucion.fechaReal,
+          fechaEjecucion: ejecucion.fechaEjecucion,
           tecnico: ejecucion.tecnico,
           responsable: ejecucion.responsable,
-          tiempoEstimado: ejecucion.tiempoEstimado,
           tiempoReal: ejecucion.tiempoReal,
           condicionInicial: ejecucion.condicionInicial,
           condicionFinal: ejecucion.condicionFinal,
           fechaProgramada: ejecucion.fechaProgramada,
-          trabajoRealizado: ejecucion.trabajoRealizado || '',
           token: obtenerToken(),
           usuario: obtenerUsuario()
         };
@@ -1926,6 +1909,78 @@
         console.error('Error al eliminar:', error);
         mostrarToast('Error al eliminar: ' + error.message, 'error');
       }
+    }
+
+    async function cargarEjecucionesGoogleSheets() {
+      try {
+        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+        const params = new URLSearchParams({ action: 'getAllEjecuciones' });
+        params.set('token', obtenerToken());
+        params.set('usuario', obtenerUsuario());
+        
+        const response = await fetch(`${url}?${params.toString()}`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          ejecuciones = result.data.map(row => ({
+            id: row.ID,
+            planId: row['Plan ID'],
+            fechaEjecucion: row['Fecha Ejecucion'],
+            tecnico: row.Tecnico,
+            responsable: row.Responsable,
+            tiempoReal: row['Tiempo Real'],
+            condicionInicial: row['Condicion Inicial'] || '',
+            condicionFinal: row['Condicion Final'] || '',
+            fechaProgramada: row['Fecha Programada']
+          }));
+        } else {
+          ejecuciones = [];
+        }
+      } catch (error) {
+        console.error('Error al cargar ejecuciones:', error);
+        ejecuciones = [];
+      }
+    }
+
+    function calcularDatosDerivados() {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      planes.forEach(plan => {
+        // Obtener todas las ejecuciones de este plan
+        const ejecucionesPlan = ejecuciones.filter(e => e.planId === plan.id);
+        
+        if (ejecucionesPlan.length > 0) {
+          // Encontrar la fecha de ejecución más cercana a hoy (último mantenimiento)
+          let ultimaEjecucion = null;
+          let menorDiferencia = Infinity;
+          
+          ejecucionesPlan.forEach(ejec => {
+            const fechaEjec = new Date(ejec.fechaEjecucion);
+            fechaEjec.setHours(0, 0, 0, 0);
+            const diff = Math.abs(hoy - fechaEjec);
+            
+            if (diff < menorDiferencia) {
+              menorDiferencia = diff;
+              ultimaEjecucion = ejec;
+            }
+          });
+          
+          if (ultimaEjecucion) {
+            plan.ultimoMantenimiento = ultimaEjecucion.fechaEjecucion;
+            plan.proximoMantenimiento = calcularProximoMantenimiento(
+              ultimaEjecucion.fechaEjecucion,
+              plan.frecuencia
+            );
+            plan.estado = determinarEstado(plan.proximoMantenimiento, plan.frecuencia);
+          }
+        } else {
+          // Si no hay ejecuciones, no tiene último mantenimiento
+          plan.ultimoMantenimiento = null;
+          plan.proximoMantenimiento = null;
+          plan.estado = 'pendiente';
+        }
+      });
     }
 
     // ===== FUNCIONES DE CÁLCULO =====
@@ -2416,7 +2471,6 @@
       document.getElementById('m-equipo').value = mantenimientoActual.equipo || '';
       document.getElementById('m-centro').value = mantenimientoActual.centro || '';
       document.getElementById('m-frecuencia').value = mantenimientoActual.frecuencia || '';
-      document.getElementById('m-ultimo').value = mantenimientoActual.ultimoMantenimiento || '';
       document.getElementById('m-tecnico').value = mantenimientoActual.tecnico || '';
       
       document.getElementById('modal-modificar').classList.add('visible');
@@ -2426,7 +2480,6 @@
       document.getElementById('m-equipo').value = '';
       document.getElementById('m-centro').value = '';
       document.getElementById('m-frecuencia').value = '';
-      document.getElementById('m-ultimo').value = '';
       document.getElementById('m-tecnico').value = '';
     }
 
@@ -3155,7 +3208,6 @@
       document.getElementById('p-equipo').value = '';
       document.getElementById('p-centro').value = '';
       document.getElementById('p-frecuencia').value = '';
-      document.getElementById('p-ultimo').value = '';
       document.getElementById('p-tiempo-estimado').value = '';
       document.getElementById('p-tecnico').value = '';
     }
@@ -3166,12 +3218,11 @@
       const equipo = sanitizarInput(document.getElementById('p-equipo').value.trim());
       const centro = document.getElementById('p-centro').value;
       const frecuencia = document.getElementById('p-frecuencia').value;
-      const ultimo = document.getElementById('p-ultimo').value;
       const tiempoEstimado = sanitizarInput(document.getElementById('p-tiempo-estimado').value.trim());
       const tecnico = sanitizarInput(document.getElementById('p-tecnico').value.trim());
       
       // Validaciones
-      if (!id || !equipo || !centro || !frecuencia || !ultimo || !tiempoEstimado) {
+      if (!id || !equipo || !centro || !frecuencia || !tiempoEstimado) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
       }
@@ -3182,21 +3233,14 @@
         return;
       }
 
-      // Calcular próximo mantenimiento
-      const proximo = calcularProximoMantenimiento(ultimo, frecuencia);
-      const estado = determinarEstado(proximo);
-
-      // Crear nuevo plan
+      // Crear nuevo plan (solo datos básicos)
       const nuevoPlan = {
         id: id,
         equipo,
         centro,
         frecuencia,
-        ultimoMantenimiento: ultimo,
-        proximoMantenimiento: proximo,
         tiempoRequerido: tiempoEstimado,
-        tecnico,
-        estado
+        tecnico
       };
 
       // Guardar en Google Apps Script
@@ -3204,6 +3248,9 @@
 
       // Agregar a planes
       planes.push(nuevoPlan);
+
+      // Calcular datos derivados (ultimo, proximo, estado)
+      calcularDatosDerivados();
 
       // Sincronizar con mantenimientos durante la transición
       mantenimientos = [...planes];
@@ -3234,22 +3281,20 @@
         return;
       }
       
-      // Actualizar mantenimiento (solo guardar datos básicos en plan principal)
+      // NO modificar el plan principal, solo agregar ejecución
       const index = planes.findIndex(m => String(m.id) === String(mantenimientoActual.id));
       if (index === -1) return;
 
-      planes[index].ultimoMantenimiento = fechaRealizado;
-
+      // Calcular fecha programada basada en el último mantenimiento actual
+      let fechaProgramada;
       if (proximoManual) {
-        planes[index].proximoMantenimiento = proximoManual;
+        fechaProgramada = proximoManual;
       } else {
-        planes[index].proximoMantenimiento = calcularProximoMantenimiento(
+        fechaProgramada = calcularProximoMantenimiento(
           fechaRealizado,
           mantenimientoActual.frecuencia
         );
       }
-
-      planes[index].estado = 'realizado';
 
       // Crear registro de ejecución (guardar todos los datos aquí)
       const nuevaEjecucion = {
@@ -3261,20 +3306,20 @@
         tiempoReal: tiempoReal,
         condicionInicial: condicionInicial,
         condicionFinal: condicionFinal,
-        fechaProgramada: planes[index].proximoMantenimiento // Fecha que estaba programada originalmente
+        fechaProgramada: fechaProgramada // Fecha que estaba programada
       };
       ejecuciones.push(nuevaEjecucion);
 
       // Enviar ejecución al backend via POST
       await agregarEjecucionGoogleSheets(nuevaEjecucion);
 
+      // Recalcular datos derivados (ultimo, proximo, estado) desde ejecuciones
+      calcularDatosDerivados();
+
       // Sincronizar con mantenimientos durante la transición
       mantenimientos = [...planes];
 
-      // Actualizar en Google Apps Script
-      await actualizarMantenimientoGoogleSheets(planes[index]);
-
-      // Actualizar estados según frecuencia y UI
+      // Actualizar UI
       actualizarEstadosPorFrecuencia();
       renderizarTabla();
       actualizarEstadisticas();
@@ -3288,11 +3333,10 @@
       const equipo = sanitizarInput(document.getElementById('m-equipo').value.trim());
       const centro = document.getElementById('m-centro').value;
       const frecuencia = document.getElementById('m-frecuencia').value;
-      const ultimo = document.getElementById('m-ultimo').value;
       const tecnico = sanitizarInput(document.getElementById('m-tecnico').value.trim());
       
       // Validaciones
-      if (!equipo || !centro || !frecuencia || !ultimo) {
+      if (!equipo || !centro || !frecuencia) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
       }
@@ -3304,12 +3348,10 @@
       planes[index].equipo = equipo;
       planes[index].centro = centro;
       planes[index].frecuencia = frecuencia;
-      planes[index].ultimoMantenimiento = ultimo;
       planes[index].tecnico = tecnico;
 
-      // Recalcular próximo mantenimiento
-      planes[index].proximoMantenimiento = calcularProximoMantenimiento(ultimo, frecuencia);
-      planes[index].estado = determinarEstado(planes[index].proximoMantenimiento);
+      // Recalcular datos derivados desde ejecuciones
+      calcularDatosDerivados();
 
       // Sincronizar con mantenimientos durante la transición
       mantenimientos = [...planes];
