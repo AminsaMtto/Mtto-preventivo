@@ -1673,6 +1673,34 @@
       }
     }
 
+     async function fetchAppsScript(url, options = {}, intentos = 3) {
+      let ultimoError = null;
+
+      for (let intento = 1; intento <= intentos; intento++) {
+        try {
+          const response = await fetch(url, options);
+          const texto = await response.text();
+
+          const pareceJSON = texto.trim().startsWith('{') || texto.trim().startsWith('[');
+          if (!pareceJSON) {
+            throw new Error('Respuesta no es JSON (probable error intermitente de Apps Script): ' + texto.substring(0, 80));
+          }
+
+          return JSON.parse(texto);
+        } catch (error) {
+          ultimoError = error;
+          console.warn(`Intento ${intento}/${intentos} falló:`, error.message);
+
+          if (intento < intentos) {
+            const espera = 500 * Math.pow(2, intento - 1);
+            await new Promise(resolve => setTimeout(resolve, espera));
+          }
+        }
+      }
+
+      throw ultimoError;
+    }
+
     // ===== HELPER PARA OBTENER USUARIO DE AUTENTICACIÓN =====
     function obtenerUsuario() {
       try {
