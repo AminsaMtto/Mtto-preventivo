@@ -1732,8 +1732,7 @@
         params.set('token', obtenerToken());
         params.set('usuario', obtenerUsuario());
         
-        const response = await fetch(`${url}?${params.toString()}`);
-        const result = await response.json();
+        const result = await fetchAppsScript(`${url}?${params.toString()}`);
         
         if (result.success && result.data) {
           // Plans solo tiene datos básicos del equipo
@@ -1802,11 +1801,7 @@
         const params = new URLSearchParams();
         Object.keys(data).forEach(key => params.append(key, data[key]));
         
-        const response = await fetch(url + '?' + params.toString(), {
-          method: 'GET'
-        });
-        
-        const result = await response.json();
+        const result = await fetchAppsScript(url + '?' + params.toString(), { method: 'GET' });
         if (result.success) {
           mostrarToast('Mantenimiento guardado', 'success');
         } else {
@@ -1831,14 +1826,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       token: obtenerToken(),
       usuario: obtenerUsuario()
     });
- 
-    const response = await fetch(url, {
-      method: 'POST',
-      body: params
-    });
- 
-    const result = await response.json();
- 
+
+    const result = await fetchAppsScript(url, { method: 'POST', body: params });
+
     if (result.success) {
       mostrarToast('Mantenimiento actualizado', 'success');
     } else {
@@ -1869,14 +1859,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       token: obtenerToken(),
       usuario: obtenerUsuario()
     });
- 
-    const response = await fetch(url, {
-      method: 'POST',
-      body: params
-    });
- 
-    const result = await response.json();
- 
+
+    const result = await fetchAppsScript(url, { method: 'POST', body: params });
+
     if (result.success) {
       console.log('Ejecución guardada en backend');
     } else {
@@ -1889,7 +1874,6 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     return false;
   }
 }
-
     async function eliminarMantenimientoGoogleSheets(id) {
   try {
     const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
@@ -1899,14 +1883,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       token: obtenerToken(),
       usuario: obtenerUsuario()
     });
- 
-    const response = await fetch(url, {
-      method: 'POST',
-      body: params
-    });
- 
-    const result = await response.json();
- 
+
+    const result = await fetchAppsScript(url, { method: 'POST', body: params });
+
     if (result.success) {
       mostrarToast('Mantenimiento eliminado', 'success');
     } else {
@@ -2797,34 +2776,29 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     }
 
     async function cargarChecklistsGoogleSheets() {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({
-          action: 'getAllChecklists'
-        });
-        params.set('token', obtenerToken());
-        params.set('usuario', obtenerUsuario());
+  try {
+    const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+    const params = new URLSearchParams({ action: 'getAllChecklists' });
+    params.set('token', obtenerToken());
+    params.set('usuario', obtenerUsuario());
 
-        const response = await fetch(`${url}?${params.toString()}`);
-        const result = await response.json();
+    const result = await fetchAppsScript(`${url}?${params.toString()}`);
 
-        if (result.success && result.data) {
-          checklists = result.data.map(chk => ({
-            id: chk.ID,
-            nombre: chk.Nombre,
-            frecuencia: chk.Frecuencia,
-            items: chk.Items ? chk.Items.split('\n') : [],
-            activo: chk.Activo === 'true' || chk.Activo === true
-          }));
-          renderizarTablaChecklists();
-        }
-      } catch (error) {
-        console.error('Error al cargar checklists:', error);
-        // Si falla, usar checklists locales
-        renderizarTablaChecklists();
-      }
+    if (result.success && result.data) {
+      checklists = result.data.map(chk => ({
+        id: chk.ID,
+        nombre: chk.Nombre,
+        frecuencia: chk.Frecuencia,
+        items: chk.Items ? chk.Items.split('\n') : [],
+        activo: chk.Activo === 'true' || chk.Activo === true
+      }));
+      renderizarTablaChecklists();
     }
-
+  } catch (error) {
+    console.error('Error al cargar checklists:', error);
+    renderizarTablaChecklists();
+  }
+}
     function abrirModalNuevoChecklist() {
       document.getElementById('chk-nombre').value = '';
       document.getElementById('chk-frecuencia').value = '';
@@ -2875,14 +2849,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       token: obtenerToken(),
       usuario: obtenerUsuario()
     });
- 
-    const response = await fetch(url, {
-      method: 'POST',
-      body: params
-    });
- 
-    const result = await response.json();
- 
+
+    const result = await fetchAppsScript(url, { method: 'POST', body: params });
+
     if (result.success) {
       console.log('Checklist guardado en backend');
     } else {
@@ -3318,10 +3287,17 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       ejecuciones.push(nuevaEjecucion);
 
       // Enviar ejecución al backend via POST
-      await agregarEjecucionGoogleSheets(nuevaEjecucion);
+      const guardadoOk = await agregarEjecucionGoogleSheets(nuevaEjecucion);
+
+      if (!guardadoOk) {
+        ejecuciones.pop(); // revertir push local si falló el guardado real
+        return;
+      }
 
       // Recalcular datos derivados (ultimo, proximo, estado) desde ejecuciones
       calcularDatosDerivados();
+
+      mostrarToast('Mantenimiento completado exitosamente', 'success');
 
       // Sincronizar con mantenimientos durante la transición
       mantenimientos = [...planes];
