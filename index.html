@@ -1539,12 +1539,7 @@
               <tr>
                 <td>ÁREA: <strong id="v-centro-1">-</strong></td>
                 <td>FECHA: <strong id="v-fecha-1">-</strong></td>
-                <td>PRÓXIMO: <strong id="v-proximo-1">-</strong></td>
-              </tr>
-              <tr>
-                <td>ESTADO: <strong id="v-estado-1">-</strong></td>
                 <td>FRECUENCIA: <strong id="v-frecuencia-1">-</strong></td>
-                <td></td>
               </tr>
               <tr>
                 <td colspan="3">
@@ -1561,12 +1556,6 @@
               <tr>
                 <td colspan="3">
                   <strong>NOMBRE DEL RESPONSABLE:</strong> <strong id="v-responsable">-</strong>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="3">
-                  <strong>TRABAJO REALIZADO:</strong>
-                  <div class="condicion-box" id="v-trabajo-1">-</div>
                 </td>
               </tr>
             </table>
@@ -2567,12 +2556,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       document.getElementById('v-frecuencia-1').textContent = datos.frecuencia || '-';
       document.getElementById('v-centro-1').textContent = datos.centro || '-';
       document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-      document.getElementById('v-proximo-1').textContent = datos.proximoMantenimiento ? formatearFecha(datos.proximoMantenimiento) : '-';
-      document.getElementById('v-estado-1').innerHTML = datos.estado ? obtenerEstadoBadge(datos.estado) : '-';
       document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
       document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
       document.getElementById('v-responsable').textContent = datos.responsable || '-';
-      document.getElementById('v-trabajo-1').textContent = datos.trabajoRealizado || datos.observaciones || '-';
 
       // Establecer el ID en el botón de imprimir para evitar null reference
       document.getElementById('btn-imprimir-ver').dataset.id = datos.id;
