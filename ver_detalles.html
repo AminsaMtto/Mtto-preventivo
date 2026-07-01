@@ -134,7 +134,7 @@
         </tr>
         <tr>
           <td id="cell-area" style="width:35%;">ÁREA:</td>
-          <td style="border:none;"></td>
+          <td id="cell-responsable" style="width:65%;">RESPONSABLE:</td>
         </tr>
       </table>
 
@@ -168,11 +168,23 @@
       return new URL(window.location.href).searchParams.get(name);
     }
 
+    function formatearFecha(fecha) {
+      if (!fecha) return '-';
+      try {
+        const [y, m, d] = fecha.split('-');
+        return `${d}/${m}/${y}`;
+      } catch (e) {
+        return fecha;
+      }
+    }
+
     function autocompletar() {
       const tecnico        = getParam('tecnico');
       const equipo         = getParam('equipo');
       const centro         = getParam('centro');
-      const frecuencia     = getParam('frecuencia');
+      const tiempoRequerido = getParam('tiempoRequerido');
+      const responsable    = getParam('responsable');
+      const fecha          = getParam('fecha');
       const condicionInicial = getParam('condicionInicial');
       const condicionFinal   = getParam('condicionFinal');
 
@@ -191,9 +203,19 @@
           `ÁREA: <strong>${centro}</strong>`;
       }
 
-      if (frecuencia) {
+      if (tiempoRequerido) {
         document.getElementById('cell-tiempo').innerHTML =
-          `<span class="red">TIEMPO REQUERIDO: <strong>${frecuencia}</strong></span>`;
+          `<span class="red">TIEMPO REQUERIDO: <strong>${tiempoRequerido}</strong></span>`;
+      }
+
+      if (responsable) {
+        document.getElementById('cell-responsable').innerHTML =
+          `RESPONSABLE: <strong>${responsable}</strong>`;
+      }
+
+      if (fecha) {
+        document.getElementById('cell-fecha').innerHTML =
+          `FECHA: <strong>${formatearFecha(fecha)}</strong>`;
       }
 
       if (condicionInicial) {
