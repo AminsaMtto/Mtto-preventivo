@@ -1899,37 +1899,36 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
   }
 }
 
-    async function cargarEjecucionesGoogleSheets() {
-      try {
-        const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
-        const params = new URLSearchParams({ action: 'getAllEjecuciones' });
-        params.set('token', obtenerToken());
-        params.set('usuario', obtenerUsuario());
-        
-        const response = await fetch(`${url}?${params.toString()}`);
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-          ejecuciones = result.data.map(row => ({
-            id: row.ID,
-            planId: row['Plan ID'],
-            fechaEjecucion: row['Fecha Ejecucion'],
-            tecnico: row.Tecnico,
-            responsable: row.Responsable,
-            tiempoReal: row['Tiempo Real'],
-            condicionInicial: row['Condicion Inicial'] || '',
-            condicionFinal: row['Condicion Final'] || '',
-            fechaProgramada: row['Fecha Programada']
-          }));
-        } else {
-          ejecuciones = [];
-        }
-      } catch (error) {
-        console.error('Error al cargar ejecuciones:', error);
-        ejecuciones = [];
-      }
-    }
+   async function cargarEjecucionesGoogleSheets() {
+  try {
+    const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+    const params = new URLSearchParams({ action: 'getAllEjecuciones' });
+    params.set('token', obtenerToken());
+    params.set('usuario', obtenerUsuario());
 
+    const result = await fetchAppsScript(`${url}?${params.toString()}`);
+
+    if (result.success && result.data) {
+      ejecuciones = result.data.map(row => ({
+        id: row.ID,
+        planId: row['Plan ID'],
+        fechaEjecucion: row['Fecha Ejecucion'],
+        tecnico: row.Tecnico,
+        responsable: row.Responsable,
+        tiempoReal: row['Tiempo Real'],
+        condicionInicial: row['Condicion Inicial'] || '',
+        condicionFinal: row['Condicion Final'] || '',
+        fechaProgramada: row['Fecha Programada']
+      }));
+    } else {
+      ejecuciones = [];
+    }
+  } catch (error) {
+    console.error('Error al cargar ejecuciones:', error);
+    mostrarToast('No se pudieron cargar las ejecuciones, intenta recargar la página', 'error');
+    ejecuciones = [];
+  }
+}
     function calcularDatosDerivados() {
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
