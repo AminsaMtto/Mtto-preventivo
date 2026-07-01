@@ -171,9 +171,14 @@
     function formatearFecha(fecha) {
       if (!fecha) return '-';
       try {
+        // Si es formato ISO con T, extraer solo la fecha
+        if (fecha.includes('T')) {
+          fecha = fecha.split('T')[0];
+        }
         const [y, m, d] = fecha.split('-');
         return `${d}/${m}/${y}`;
       } catch (e) {
+        console.error('Error formateando fecha:', e, fecha);
         return fecha;
       }
     }
