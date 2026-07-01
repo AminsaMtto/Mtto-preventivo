@@ -2542,13 +2542,64 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       mostrarToast('Mantenimiento reprogramado exitosamente', 'success');
     }
 
-    function abrirModalVer(id) {
-      // Usar planes durante la transición
-      mantenimientoActual = planes.find(m => String(m.id) === String(id));
-      if (!mantenimientoActual) return;
+    function abrirModalVer(id, ejecucionId = null) {
+      // Si se proporciona un ID de ejecución específico, usar esa ejecución
+      if (ejecucionId) {
+        const ejecucion = ejecuciones.find(e => String(e.id) === String(ejecucionId));
+        if (!ejecucion) return;
 
-      // Llenar el modal con los datos del PLAN
-      const datos = mantenimientoActual;
+        const plan = planes.find(p => String(p.id) === String(ejecucion.planId));
+        if (!plan) return;
+
+        // Combinar datos del plan con la ejecución específica
+        const datos = {
+          ...plan,
+          tecnico: ejecucion.tecnico || '-',
+          responsable: ejecucion.responsable || '-',
+          condicionInicial: ejecucion.condicionInicial || 'Por revisar al iniciar mantenimiento',
+          condicionFinal: ejecucion.condicionFinal || 'Por revisar al finalizar mantenimiento',
+          ultimoMantenimiento: ejecucion.fechaEjecucion
+        };
+
+        mantenimientoActual = datos;
+
+        document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
+        document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
+        document.getElementById('v-tiempo-1').textContent = datos.tiempoRequerido || '-';
+        document.getElementById('v-frecuencia-1').textContent = datos.frecuencia || '-';
+        document.getElementById('v-centro-1').textContent = datos.centro || '-';
+        document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
+        document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial;
+        document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal;
+        document.getElementById('v-responsable').textContent = datos.responsable || '-';
+
+        document.getElementById('btn-imprimir-ver').dataset.id = datos.id;
+
+        document.getElementById('modal-ver').classList.add('visible');
+        return;
+      }
+
+      // Si no se proporciona ID de ejecución, usar la ejecución más reciente (comportamiento original)
+      const plan = planes.find(m => String(m.id) === String(id));
+      if (!plan) return;
+
+      const ejecucionesPlan = ejecuciones.filter(e => String(e.planId) === String(id));
+      let ejecucionMasReciente = null;
+      if (ejecucionesPlan.length > 0) {
+        ejecucionesPlan.sort((a, b) => new Date(b.fechaEjecucion) - new Date(a.fechaEjecucion));
+        ejecucionMasReciente = ejecucionesPlan[0];
+      }
+
+      const datos = {
+        ...plan,
+        tecnico: ejecucionMasReciente?.tecnico || plan.tecnico || '-',
+        responsable: ejecucionMasReciente?.responsable || '-',
+        condicionInicial: ejecucionMasReciente?.condicionInicial || 'Por revisar al iniciar mantenimiento',
+        condicionFinal: ejecucionMasReciente?.condicionFinal || 'Por revisar al finalizar mantenimiento',
+        ultimoMantenimiento: ejecucionMasReciente?.fechaEjecucion || plan.ultimoMantenimiento
+      };
+
+      mantenimientoActual = datos;
 
       document.getElementById('v-tecnico-1').textContent = datos.tecnico || '-';
       document.getElementById('v-equipo-1').textContent = datos.equipo || '-';
@@ -2556,17 +2607,22 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       document.getElementById('v-frecuencia-1').textContent = datos.frecuencia || '-';
       document.getElementById('v-centro-1').textContent = datos.centro || '-';
       document.getElementById('v-fecha-1').textContent = datos.ultimoMantenimiento ? formatearFecha(datos.ultimoMantenimiento) : '-';
-      document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial || 'Por revisar al iniciar mantenimiento';
-      document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal || 'Por revisar al finalizar mantenimiento';
+      document.getElementById('v-condicion-inicial-1').textContent = datos.condicionInicial;
+      document.getElementById('v-condicion-final-1').textContent = datos.condicionFinal;
       document.getElementById('v-responsable').textContent = datos.responsable || '-';
 
-      // Establecer el ID en el botón de imprimir para evitar null reference
       document.getElementById('btn-imprimir-ver').dataset.id = datos.id;
 
-      // Nota: La sección de ejecuciones históricas se implementará cuando se complete la separación PLAN/EJECUCIÓN
-      // Por ahora, mostramos la información del plan actual
-
       document.getElementById('modal-ver').classList.add('visible');
+    }
+
+    function verDetallesEjecucion(ejecucionId, equipo) {
+      // Buscar el plan asociado a la ejecución
+      const ejecucion = ejecuciones.find(e => String(e.id) === String(ejecucionId));
+      if (!ejecucion) return;
+
+      const planId = ejecucion.planId;
+      abrirModalVer(planId, ejecucionId);
     }
 
     function cambiarArea(area, button) {
@@ -3053,7 +3109,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
             <td>${aTiempo}</td>
             <td>
               <div class="acciones">
-                <button class="btn btn-info btn-sm" onclick="verDetallesEquipo('${equipo}')">Ver Detalles</button>
+                <button class="btn btn-info btn-sm" onclick="verDetallesEjecucion('${mantenimiento.id}', '${equipo}')">Ver Detalles</button>
               </div>
             </td>
         </tr>
@@ -4116,6 +4172,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     window.cargarHistorial = cargarHistorial;
     window.filtrarHistorial = filtrarHistorial;
     window.verDetallesEquipo = verDetallesEquipo;
+    window.verDetallesEjecucion = verDetallesEjecucion;
     window.modificarPreventivo = modificarPreventivo;
     window.inicializarCalendario = inicializarCalendario;
     window.actualizarCalendario = actualizarCalendario;
