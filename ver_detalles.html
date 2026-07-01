@@ -133,8 +133,8 @@
           <td id="cell-tiempo" class="red">TIEMPO REQUERIDO:</td>
         </tr>
         <tr>
-          <td id="cell-area" style="width:35%;">ÁREA:</td>
-          <td id="cell-responsable" style="width:65%;">RESPONSABLE:</td>
+          <td id="cell-area">ÁREA:</td>
+          <td style="border:none;"></td>
         </tr>
       </table>
 
@@ -183,7 +183,6 @@
       const equipo         = getParam('equipo');
       const centro         = getParam('centro');
       const tiempoRequerido = getParam('tiempoRequerido');
-      const responsable    = getParam('responsable');
       const fecha          = getParam('fecha');
       const condicionInicial = getParam('condicionInicial');
       const condicionFinal   = getParam('condicionFinal');
@@ -206,11 +205,6 @@
       if (tiempoRequerido) {
         document.getElementById('cell-tiempo').innerHTML =
           `<span class="red">TIEMPO REQUERIDO: <strong>${tiempoRequerido}</strong></span>`;
-      }
-
-      if (responsable) {
-        document.getElementById('cell-responsable').innerHTML =
-          `RESPONSABLE: <strong>${responsable}</strong>`;
       }
 
       if (fecha) {
