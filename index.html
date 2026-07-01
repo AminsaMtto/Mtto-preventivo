@@ -3169,8 +3169,10 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
           const params = new URLSearchParams({
             equipo: mantenimiento.equipo,
             centro: mantenimiento.centro,
-            frecuencia: mantenimiento.frecuencia,
+            tiempoRequerido: mantenimiento.tiempoRequerido || '',
             tecnico: mantenimiento.tecnico || '',
+            responsable: mantenimiento.responsable || '',
+            fecha: mantenimiento.ultimoMantenimiento || '',
             condicionInicial: mantenimiento.condicionInicial || '',
             condicionFinal: mantenimiento.condicionFinal || ''
           });
@@ -3531,8 +3533,10 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       const params = new URLSearchParams({
         equipo: mantenimiento.equipo,
         centro: mantenimiento.centro,
-        frecuencia: mantenimiento.frecuencia,
+        tiempoRequerido: mantenimiento.tiempoRequerido || '',
         tecnico: mantenimiento.tecnico || '',
+        responsable: mantenimiento.responsable || '',
+        fecha: mantenimiento.ultimoMantenimiento || '',
         condicionInicial: mantenimiento.condicionInicial || '',
         condicionFinal: mantenimiento.condicionFinal || ''
       });
