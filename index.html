@@ -2632,12 +2632,18 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       document.querySelectorAll('.area-tab-button').forEach(btn => btn.classList.remove('active'));
       button.classList.add('active');
       
-      // Actualizar gráficas y tabla
-      actualizarGraficas();
-      actualizarGraficaPorcentajes();
-      actualizarGraficaTiempos();
+      // Actualizar tabla de preventivos
       renderizarTabla();
       actualizarEstadisticas();
+      
+      // Actualizar calendario
+      actualizarCalendario();
+      
+      // Actualizar historial
+      filtrarHistorial();
+      
+      // Actualizar checklist
+      renderizarChecklists();
     }
 
     function cambiarTab(tabName, button) {
@@ -2721,8 +2727,14 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       
       return mantenimientos
         .filter(m => {
-          // Filtrar por centro
+          // Filtrar por centro del dropdown (si está seleccionado)
           if (centroFiltro && m.centro !== centroFiltro) return false;
+          
+          // Filtrar por área seleccionada en las tabs (si no hay filtro específico)
+          if (!centroFiltro && CONFIG.AREA_SELECCIONADA !== 'todos') {
+            const centroMapeado = mapearCentro(m.centro);
+            if (centroMapeado !== CONFIG.AREA_SELECCIONADA) return false;
+          }
           
           // Filtrar por estado
           if (filtroCalendarioEstado !== 'todos' && m.estado !== filtroCalendarioEstado) return false;
@@ -2785,10 +2797,20 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       const historialPorEquipo = {};
 
       datosFuente.forEach(registro => {
-        // Determinar el nombre del equipo
+        // Determinar el nombre del equipo y centro
         const nombreEquipo = registro.planId ?
           (planes.find(p => p.id === registro.planId)?.equipo || 'Desconocido') :
           registro.equipo;
+        
+        const centro = registro.planId ?
+          (planes.find(p => p.id === registro.planId)?.centro || '-') :
+          registro.centro;
+
+        // Filtrar por área seleccionada
+        if (CONFIG.AREA_SELECCIONADA !== 'todos') {
+          const centroMapeado = mapearCentro(centro);
+          if (centroMapeado !== CONFIG.AREA_SELECCIONADA) return;
+        }
 
         if (!historialPorEquipo[nombreEquipo]) {
           historialPorEquipo[nombreEquipo] = {
@@ -2804,7 +2826,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
           equipo.mantenimientos.push({
             id: registro.id,
             equipo: nombreEquipo,
-            centro: planes.find(p => p.id === registro.planId)?.centro || '-',
+            centro: centro,
             frecuencia: planes.find(p => p.id === registro.planId)?.frecuencia || '-',
             ultimoMantenimiento: registro.fechaEjecucion,
             tecnico: registro.tecnico,
@@ -2936,7 +2958,19 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     function renderizarTablaChecklists() {
       const tbody = document.getElementById('tabla-checklists');
 
-      if (checklists.length === 0) {
+      // Filtrar checklists por área seleccionada
+      const checklistsFiltrados = checklists.filter(chk => {
+        if (CONFIG.AREA_SELECCIONADA === 'todos') return true;
+        // Si el checklist tiene un campo centro, usarlo
+        if (chk.centro) {
+          const centroMapeado = mapearCentro(chk.centro);
+          return centroMapeado === CONFIG.AREA_SELECCIONADA;
+        }
+        // Si no tiene centro, mostrar todos
+        return true;
+      });
+
+      if (checklistsFiltrados.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5">
@@ -2953,7 +2987,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         return;
       }
 
-      tbody.innerHTML = checklists.map(chk => {
+      tbody.innerHTML = checklistsFiltrados.map(chk => {
         const cantidadItems = typeof chk.items === 'string'
           ? chk.items.split('\n').filter(Boolean).length
           : (Array.isArray(chk.items) ? chk.items.length : 0);
