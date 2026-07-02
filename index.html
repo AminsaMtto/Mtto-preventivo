@@ -1169,15 +1169,6 @@
           <button class="filtro-btn" onclick="filtrarCalendario('realizado', this)">Realizados</button>
         </div>
       </div>
-      <div class="toolbar-right">
-        <select id="filtro-centro-calendario" onchange="actualizarCalendario()">
-          <option value="">Todos los centros</option>
-          <option value="Zinc">Zinc</option>
-          <option value="Cromo">Cromo</option>
-          <option value="Doblado">Doblado</option>
-          <option value="Gral">Gral</option>
-        </select>
-      </div>
     </div>
 
     <!-- ── CALENDARIO ───────────────────────────────────────────── -->
@@ -1197,18 +1188,6 @@
           </svg>
           <input class="search-input" type="text" placeholder="BUSCAR EQUIPO" id="buscar-equipo" oninput="filtrarHistorial()">
         </div>
-      </div>
-      <div class="toolbar-right">
-        <select id="filtro-centro-historial" onchange="filtrarHistorial()">
-          <option value="">Todos</option>
-          <option value="Zinc">Zinc</option>
-          <option value="Cromo">Cromo</option>
-          <option value="Doblado">Doblado</option>
-          <option value="Gral">Gral</option>
-        </select>
-        <select id="filtro-equipo-historial" onchange="filtrarHistorial()">
-          <option value="">Todos los equipos</option>
-        </select>
       </div>
     </div>
 
@@ -2723,15 +2702,10 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     }
 
     function obtenerEventosCalendario() {
-      const centroFiltro = document.getElementById('filtro-centro-calendario').value;
-      
       return mantenimientos
         .filter(m => {
-          // Filtrar por centro del dropdown (si está seleccionado)
-          if (centroFiltro && m.centro !== centroFiltro) return false;
-          
-          // Filtrar por área seleccionada en las tabs (si no hay filtro específico)
-          if (!centroFiltro && CONFIG.AREA_SELECCIONADA !== 'todos') {
+          // Filtrar por área seleccionada en las tabs
+          if (CONFIG.AREA_SELECCIONADA !== 'todos') {
             const centroMapeado = mapearCentro(m.centro);
             if (centroMapeado !== CONFIG.AREA_SELECCIONADA) return false;
           }
@@ -3969,7 +3943,8 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     }
 
     function actualizarGraficas() {
-      const centroSeleccionado = CONFIG.AREA_SELECCIONADA === 'todos' ? document.getElementById('centro-filter').value : CONFIG.AREA_SELECCIONADA;
+      // Siempre usar 'todos' para las métricas, ignorar CONFIG.AREA_SELECCIONADA
+      const centroSeleccionado = document.getElementById('centro-filter').value;
       const anioSeleccionado = document.getElementById('year-filter').value;
 
       // Actualizar gráfica mensual comparativa
@@ -4079,7 +4054,8 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       if (!chartPorcentajes) return;
       
       const mesSeleccionado = document.getElementById('mes-filter').value;
-      const centroSeleccionado = CONFIG.AREA_SELECCIONADA === 'todos' ? document.getElementById('centro-filter-2').value : CONFIG.AREA_SELECCIONADA;
+      // Siempre usar el filtro de dropdown, ignorar CONFIG.AREA_SELECCIONADA
+      const centroSeleccionado = document.getElementById('centro-filter-2').value;
       
       const datos = calcularPorcentajes(mesSeleccionado, centroSeleccionado);
       
@@ -4111,8 +4087,8 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       // Usar ejecuciones si hay datos, sino usar planes con tiempoReal
       const datosFuente = ejecuciones.length > 0 ? ejecuciones : planes.filter(p => p.tiempoReal && p.tiempoRequerido);
 
-      // Filtrar por área seleccionada (pestañas)
-      const centroSeleccionado = CONFIG.AREA_SELECCIONADA === 'todos' ? (document.getElementById('centro-filter')?.value || '') : CONFIG.AREA_SELECCIONADA;
+      // Siempre usar el filtro de dropdown para métricas, ignorar CONFIG.AREA_SELECCIONADA
+      const centroSeleccionado = document.getElementById('centro-filter')?.value || '';
       let datosFiltrados = datosFuente;
       if (centroSeleccionado !== 'todos') {
         if (ejecuciones.length > 0) {
