@@ -3003,32 +3003,14 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     function renderizarTablaHistorial(historialPorEquipo) {
       const tbody = document.getElementById('tabla-historial');
       const terminoBusqueda = document.getElementById('buscar-equipo').value.toLowerCase();
-      const filtroCentro = document.getElementById('filtro-centro-historial').value;
-      const filtroEquipo = document.getElementById('filtro-equipo-historial').value;
       
       let historialFiltrado = Object.entries(historialPorEquipo);
       
-      // Aplicar filtros
+      // Aplicar filtro de búsqueda
       if (terminoBusqueda) {
         historialFiltrado = historialFiltrado.filter(([equipo]) => 
           equipo.toLowerCase().includes(terminoBusqueda)
         );
-      }
-      
-      if (filtroEquipo) {
-        historialFiltrado = historialFiltrado.filter(([equipo]) => equipo === filtroEquipo);
-      }
-      
-      // Filtrar por centro de negocios
-      if (filtroCentro) {
-        historialFiltrado = historialFiltrado.filter(([equipo, datos]) => {
-          // Verificar si algún mantenimiento del equipo pertenece al centro seleccionado
-          return datos.mantenimientos.some(m => {
-            // Mapear centros a las 4 opciones principales
-            const centroMapeado = mapearCentro(m.centro);
-            return centroMapeado === filtroCentro;
-          });
-        });
       }
       
       if (historialFiltrado.length === 0) {
@@ -3040,7 +3022,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         <p>No se encontraron equipos</p>
-                        <small>${terminoBusqueda || filtroEquipo ? 'CON LOS FILTROS SELECCIONADOS' : 'NO HAY MANTENIMIENTOS REGISTRADOS'}</small>
+                        <small>${terminoBusqueda ? 'CON LOS FILTROS SELECCIONADOS' : 'NO HAY MANTENIMIENTOS REGISTRADOS'}</small>
                     </div>
                 </td>
             </tr>
@@ -3077,7 +3059,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         <p>No se encontraron mantenimientos</p>
-                        <small>${terminoBusqueda || filtroEquipo ? 'CON LOS FILTROS SELECCIONADOS' : 'NO HAY MANTENIMIENTOS REGISTRADOS'}</small>
+                        <small>${terminoBusqueda ? 'CON LOS FILTROS SELECCIONADOS' : 'NO HAY MANTENIMIENTOS REGISTRADOS'}</small>
                     </div>
                 </td>
             </tr>
