@@ -1071,11 +1071,11 @@
   <!-- ── AREA TABS ───────────────────────────────────────────────────── -->
   <div class="area-tabs-container">
     <div class="area-tabs-nav">
-      <button class="area-tab-button active" onclick="cambiarArea('Zinc', this)">Zinc</button>
+      <button class="area-tab-button active" onclick="cambiarArea('todos', this)">Todas las Áreas</button>
+      <button class="area-tab-button" onclick="cambiarArea('Zinc', this)">Zinc</button>
       <button class="area-tab-button" onclick="cambiarArea('Cromo', this)">Cromo</button>
       <button class="area-tab-button" onclick="cambiarArea('Doblado', this)">Doblado</button>
       <button class="area-tab-button" onclick="cambiarArea('Gral', this)">Gral</button>
-      <button class="area-tab-button" onclick="cambiarArea('todos', this)">Todas las Áreas</button>
     </div>
   </div>
 
@@ -1159,18 +1159,6 @@
   <!-- ── TAB CONTENT: CALENDARIO ───────────────────────────────────── -->
   <div id="tab-calendario" class="tab-content">
     <!-- ── TOOLBAR CALENDARIO ───────────────────────────────────── -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="filtros">
-          <button class="filtro-btn activo" onclick="filtrarCalendario('todos', this)">Todos</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('pendiente', this)">Pendientes</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('proximo', this)">Próximos</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('vencido', this)">Vencidos</button>
-          <button class="filtro-btn" onclick="filtrarCalendario('realizado', this)">Realizados</button>
-        </div>
-      </div>
-    </div>
-
     <!-- ── CALENDARIO ───────────────────────────────────────────── -->
     <div class="table-wrap">
       <div id="calendar"></div>
