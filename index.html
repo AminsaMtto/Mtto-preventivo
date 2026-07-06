@@ -2769,7 +2769,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
           registro.centro;
 
         // Filtrar por área seleccionada
-        if (CONFIG.AREA_SELECCIONADA !== 'todos') {
+        if (CONFIG.AREA_SELECCIONADA !== 'todos' && centro !== '-') {
           const centroMapeado = mapearCentro(centro);
           if (centroMapeado !== CONFIG.AREA_SELECCIONADA) return;
         }
