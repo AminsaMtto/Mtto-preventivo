@@ -2869,9 +2869,6 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         }
       });
 
-      // Actualizar filtro de equipos
-      actualizarFiltroEquipos(Object.keys(historialPorEquipo));
-
       // Renderizar tabla de historial
       renderizarTablaHistorial(historialPorEquipo);
     }
@@ -3039,18 +3036,6 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         checklists = checklists.filter(c => c.id !== id);
         renderizarTablaChecklists();
       });
-    }
-
-    function actualizarFiltroEquipos(equipos) {
-      const filtro = document.getElementById('filtro-equipo-historial');
-      const valorActual = filtro.value;
-      
-      filtro.innerHTML = '<option value="">Todos los equipos</option>';
-      equipos.sort().forEach(equipo => {
-        filtro.innerHTML += `<option value="${equipo}">${equipo}</option>`;
-      });
-      
-      filtro.value = valorActual;
     }
 
     function renderizarTablaHistorial(historialPorEquipo) {
