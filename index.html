@@ -3788,25 +3788,29 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         });
       }
 
-      // Inicializar gráfica de tiempos estimado vs real
+      // Inicializar gráfica de tiempos estimado vs real (línea temporal)
       const ctxTiempos = document.getElementById('chart-tiempos');
       if (ctxTiempos) {
         chartTiempos = new Chart(ctxTiempos, {
-          type: 'bar',
+          type: 'line',
           data: {
             labels: [],
             datasets: [{
-              label: 'Tiempo Estimado',
+              label: 'Tiempo Estimado Promedio',
               data: [],
-              backgroundColor: CONFIG.COLORES_GRAFICAS['Cerrados'] + '80',
+              backgroundColor: CONFIG.COLORES_GRAFICAS['Cerrados'] + '20',
               borderColor: CONFIG.COLORES_GRAFICAS['Cerrados'],
-              borderWidth: 2
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4
             }, {
-              label: 'Tiempo Real',
+              label: 'Tiempo Real Promedio',
               data: [],
-              backgroundColor: CONFIG.COLORES_GRAFICAS['Pendientes'] + '80',
+              backgroundColor: CONFIG.COLORES_GRAFICAS['Pendientes'] + '20',
               borderColor: CONFIG.COLORES_GRAFICAS['Pendientes'],
-              borderWidth: 2
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4
             }]
           },
           options: {
@@ -3823,6 +3827,13 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
                 },
                 bodyFont: {
                   family: "'Inconsolata', monospace"
+                },
+                callbacks: {
+                  label: function(context) {
+                    const label = context.dataset.label || '';
+                    const value = context.parsed.y || 0;
+                    return `${label}: ${value.toFixed(2)} horas`;
+                  }
                 }
               }
             },
@@ -3831,7 +3842,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
                 beginAtZero: true,
                 title: {
                   display: true,
-                  text: 'Horas',
+                  text: 'Horas Promedio',
                   font: {
                     family: "'Inconsolata', monospace"
                   }
@@ -3843,6 +3854,13 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
                 }
               },
               x: {
+                title: {
+                  display: true,
+                  text: 'Mes',
+                  font: {
+                    family: "'Inconsolata', monospace"
+                  }
+                },
                 ticks: {
                   font: {
                     family: "'Inconsolata', monospace"
@@ -4111,41 +4129,75 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         }
       }
 
-      // Limitar a los últimos 10 registros para que sea legible
-      datosFiltrados = datosFiltrados.slice(-10);
+      // Agrupar datos por mes para mostrar tendencia temporal
+      const datosPorMes = {};
+      const meses = obtenerMesesAnio();
+      const añoActual = new Date().getFullYear();
 
-      const labels = datosFiltrados.map((item, index) => {
-        if (item.planId) {
-          const plan = planes.find(p => p.id === item.planId);
-          return plan ? plan.equipo : `Ejecución ${index + 1}`;
-        }
-        return item.equipo || `Plan ${index + 1}`;
+      // Inicializar estructura de datos por mes
+      meses.forEach(mes => {
+        datosPorMes[mes] = {
+          tiemposEstimados: [],
+          tiemposReales: [],
+          count: 0
+        };
       });
 
-      const tiemposEstimados = datosFiltrados.map(item => {
-        if (item.planId) {
-          // Get tiempo estimado from the plan associated with the execution
-          const plan = planes.find(p => p.id === item.planId);
-          return plan ? parseFloat(plan.tiempoRequerido) || 0 : 0;
+      // Agrupar tiempos por mes
+      datosFiltrados.forEach(item => {
+        const fecha = item.planId ? item.fechaEjecucion : item.ultimoMantenimiento;
+        if (!fecha) return;
+
+        const fechaNormalizada = normalizarFecha(fecha);
+        const [y, m, d] = fechaNormalizada.split('-').map(Number);
+        const fechaObj = new Date(y, m - 1, d);
+
+        // Solo incluir datos del año actual
+        if (fechaObj.getFullYear() !== añoActual) return;
+
+        const nombreMes = meses[fechaObj.getMonth()];
+        
+        const tiempoEstimado = item.planId ? 
+          (planes.find(p => p.id === item.planId)?.tiempoRequerido || 0) : 
+          (item.tiempoRequerido || 0);
+        const tiempoReal = parseFloat(item.tiempoReal) || 0;
+
+        if (tiempoEstimado > 0 && tiempoReal > 0) {
+          datosPorMes[nombreMes].tiemposEstimados.push(tiempoEstimado);
+          datosPorMes[nombreMes].tiemposReales.push(tiempoReal);
+          datosPorMes[nombreMes].count++;
         }
-        return parseFloat(item.tiempoRequerido) || 0;
       });
 
-      const tiemposReales = datosFiltrados.map(item => parseFloat(item.tiempoReal) || 0);
+      // Calcular promedios por mes
+      const labels = [];
+      const tiemposEstimadosPromedio = [];
+      const tiemposRealesPromedio = [];
+
+      meses.forEach(mes => {
+        const datosMes = datosPorMes[mes];
+        if (datosMes.count > 0) {
+          labels.push(mes);
+          const promEstimado = datosMes.tiemposEstimados.reduce((a, b) => a + b, 0) / datosMes.count;
+          const promReal = datosMes.tiemposReales.reduce((a, b) => a + b, 0) / datosMes.count;
+          tiemposEstimadosPromedio.push(promEstimado);
+          tiemposRealesPromedio.push(promReal);
+        }
+      });
 
       chartTiempos.data.labels = labels;
-      chartTiempos.data.datasets[0].data = tiemposEstimados;
-      chartTiempos.data.datasets[1].data = tiemposReales;
+      chartTiempos.data.datasets[0].data = tiemposEstimadosPromedio;
+      chartTiempos.data.datasets[1].data = tiemposRealesPromedio;
       chartTiempos.update();
 
       // Actualizar leyenda
       actualizarLeyenda('legend-tiempos', [
         {
-          label: 'Tiempo Estimado',
+          label: 'Tiempo Estimado Promedio',
           color: CONFIG.COLORES_GRAFICAS['Cerrados']
         },
         {
-          label: 'Tiempo Real',
+          label: 'Tiempo Real Promedio',
           color: CONFIG.COLORES_GRAFICAS['Pendientes']
         }
       ]);
