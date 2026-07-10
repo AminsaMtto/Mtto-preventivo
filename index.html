@@ -1258,6 +1258,12 @@
           Nuevo Checklist
         </button>
       </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-input" type="text" placeholder="BUSCAR EQUIPO" oninput="buscarChecklist(this.value)">
+      </div>
     </div>
 
     <!-- ── TABLA CHECKLISTS ───────────────────────────────────── -->
@@ -1265,9 +1271,7 @@
       <table>
         <thead>
           <tr>
-            <th>Nombre</th>
             <th>Equipo</th>
-            <th>Frecuencia</th>
             <th>Items</th>
             <th>Estado</th>
             <th>Acciones</th>
@@ -1502,27 +1506,10 @@
       </div>
       <div class="modal-body">
         <div class="form-grid">
-          <div class="form-group">
-            <label for="chk-nombre">Nombre *</label>
-            <input type="text" id="chk-nombre" placeholder="Nombre del checklist">
-          </div>
-          <div class="form-group">
+          <div class="form-group span2">
             <label for="chk-equipo">Equipo *</label>
             <input type="text" id="chk-equipo" placeholder="Nombre del equipo" list="lista-equipos">
             <datalist id="lista-equipos"></datalist>
-          </div>
-          <div class="form-group">
-            <label for="chk-frecuencia">Frecuencia *</label>
-            <select id="chk-frecuencia">
-              <option value="">Seleccionar...</option>
-              <option value="Semanal">Semanal</option>
-              <option value="Quincenal">Quincenal</option>
-              <option value="Mensual">Mensual</option>
-              <option value="Bimestral">Bimestral</option>
-              <option value="Trimestral">Trimestral</option>
-              <option value="Semestral">Semestral</option>
-              <option value="Anual">Anual</option>
-            </select>
           </div>
           <div class="form-group span2">
             <label for="chk-items">Items (uno por línea) *</label>
@@ -1550,19 +1537,9 @@
         <button class="modal-close" onclick="cerrarModal('modal-ver-checklist')">✕</button>
       </div>
       <div class="modal-body">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Nombre:</label>
-            <strong id="v-chk-nombre">-</strong>
-          </div>
-          <div class="form-group">
-            <label>Equipo:</label>
-            <strong id="v-chk-equipo">-</strong>
-          </div>
-          <div class="form-group">
-            <label>Frecuencia:</label>
-            <strong id="v-chk-frecuencia">-</strong>
-          </div>
+        <div class="form-group">
+          <label>Equipo:</label>
+          <strong id="v-chk-equipo">-</strong>
         </div>
         <div class="form-group">
           <label>Items:</label>
@@ -2955,9 +2932,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
   }
 }
     function abrirModalNuevoChecklist() {
-      document.getElementById('chk-nombre').value = '';
       document.getElementById('chk-equipo').value = '';
-      document.getElementById('chk-frecuencia').value = '';
       document.getElementById('chk-items').value = '';
       
       // Actualizar datalist de equipos
@@ -2968,12 +2943,10 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     }
 
     function guardarChecklist() {
-      const nombre = sanitizarInput(document.getElementById('chk-nombre').value.trim());
-      const frecuencia = document.getElementById('chk-frecuencia').value;
       const itemsTexto = document.getElementById('chk-items').value.trim();
       const equipo = document.getElementById('chk-equipo').value.trim();
 
-      if (!nombre || !frecuencia || !itemsTexto || !equipo) {
+      if (!itemsTexto || !equipo) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
       }
@@ -2982,8 +2955,6 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
 
       const nuevoChecklist = {
         id: Date.now().toString(),
-        nombre,
-        frecuencia,
         equipo,
         items: items.join('\n'),
         activo: 'true'
@@ -3005,8 +2976,6 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     const params = new URLSearchParams({
       action: 'addChecklist',
       id: checklist.id,
-      nombre: checklist.nombre,
-      frecuencia: checklist.frecuencia,
       equipo: checklist.equipo,
       items: checklist.items,
       activo: checklist.activo,
@@ -3030,23 +2999,33 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
 }
     function renderizarTablaChecklists() {
       const tbody = document.getElementById('tabla-checklists');
+      const terminoBusqueda = document.getElementById('tabla-checklists').closest('.table-wrap')
+        ?.parentElement.querySelector('.search-input')?.value.toLowerCase() || '';
 
-      // Filtrar checklists por área seleccionada
+      // Filtrar checklists por área seleccionada y búsqueda
       const checklistsFiltrados = checklists.filter(chk => {
+        // Filtro de búsqueda por equipo
+        if (terminoBusqueda && !chk.equipo.toLowerCase().includes(terminoBusqueda)) {
+          return false;
+        }
+
+        // Filtro por área seleccionada
         if (CONFIG.AREA_SELECCIONADA === 'todos') return true;
-        // Si el checklist tiene un campo centro, usarlo
-        if (chk.centro) {
-          const centroMapeado = mapearCentro(chk.centro);
+        
+        // Buscar el centro del equipo en los planes
+        const plan = planes.find(p => p.equipo === chk.equipo);
+        if (plan && plan.centro) {
+          const centroMapeado = mapearCentro(plan.centro);
           return centroMapeado === CONFIG.AREA_SELECCIONADA;
         }
-        // Si no tiene centro, mostrar todos
-        return true;
+        // Si no se encuentra el plan o no tiene centro, no mostrar
+        return false;
       });
 
       if (checklistsFiltrados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5">
+                <td colspan="4">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -3067,9 +3046,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         
         return `
         <tr>
-            <td><strong>${chk.nombre}</strong></td>
-            <td>${chk.equipo || '-'}</td>
-            <td>${chk.frecuencia}</td>
+            <td><strong>${chk.equipo || '-'}</strong></td>
             <td>${cantidadItems} items</td>
             <td>${chk.activo ? '<span class="badge estado-realizado">Activo</span>' : '<span class="badge estado-vencido">Inactivo</span>'}</td>
             <td>
@@ -3105,12 +3082,14 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       const checklist = checklists.find(c => c.id === id);
       if (!checklist) return;
 
-      document.getElementById('v-chk-nombre').textContent = checklist.nombre;
       document.getElementById('v-chk-equipo').textContent = checklist.equipo;
-      document.getElementById('v-chk-frecuencia').textContent = checklist.frecuencia;
       document.getElementById('v-chk-items').textContent = checklist.items;
 
       document.getElementById('modal-ver-checklist').classList.add('visible');
+    }
+
+    function buscarChecklist(termino) {
+      renderizarTablaChecklists();
     }
 
     function renderizarTablaHistorial(historialPorEquipo) {
