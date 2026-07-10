@@ -1271,6 +1271,7 @@
       <table>
         <thead>
           <tr>
+            <th>ID Equipo</th>
             <th>Equipo</th>
             <th>Items</th>
             <th>Estado</th>
@@ -1506,7 +1507,11 @@
       </div>
       <div class="modal-body">
         <div class="form-grid">
-          <div class="form-group span2">
+          <div class="form-group">
+            <label for="chk-id">ID del Equipo *</label>
+            <input type="text" id="chk-id" placeholder="ID del equipo">
+          </div>
+          <div class="form-group">
             <label for="chk-equipo">Equipo *</label>
             <input type="text" id="chk-equipo" placeholder="Nombre del equipo" list="lista-equipos">
             <datalist id="lista-equipos"></datalist>
@@ -1537,6 +1542,10 @@
         <button class="modal-close" onclick="cerrarModal('modal-ver-checklist')">✕</button>
       </div>
       <div class="modal-body">
+        <div class="form-group">
+          <label>ID Equipo:</label>
+          <strong id="v-chk-idequipo">-</strong>
+        </div>
         <div class="form-group">
           <label>Equipo:</label>
           <strong id="v-chk-equipo">-</strong>
@@ -1671,7 +1680,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwXnfAl2rOYeVcZpEaJ4oUDL0_M3l_u9Ju4_uOmVCNZZ2Em8ge628gp9lXNY0j9ULul/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx5dQlmHsGWypoIbBem-r7xmacCB7LGQZFP-5_sA338AyXtg3r8a8Jb5WbDmFnn1wLh/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -2289,9 +2298,11 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       document.getElementById('btn-siguiente').disabled = paginaActual === totalPaginas || totalPaginas === 0;
 
       tbody.innerHTML = registrosPagina.map(mantenimiento => {
-        // Buscar checklist vinculado al equipo
+        // Buscar checklist vinculado al equipo por ID y nombre
         const checklistVinculado = checklists.find(chk => 
-          chk.equipo === mantenimiento.equipo && chk.activo === 'true'
+          chk.idEquipo === mantenimiento.id && 
+          chk.equipo === mantenimiento.equipo && 
+          chk.activo === 'true'
         );
         
         return `
@@ -2305,7 +2316,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
             <td>${obtenerEstadoBadge(mantenimiento.estado)}</td>
             <td>
               ${checklistVinculado ? 
-                `<span class="badge estado-realizado" style="cursor:pointer" onclick="verChecklist('${checklistVinculado.id}')">${checklistVinculado.nombre}</span>` : 
+                `<span class="badge estado-realizado" style="cursor:pointer" onclick="verChecklist('${checklistVinculado.id}')">${checklistVinculado.equipo}</span>` : 
                 '<span class="badge estado-pendiente">Sin checklist</span>'}
             </td>
             <td>
@@ -2919,9 +2930,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     if (result.success && result.data) {
       checklists = result.data.map(chk => ({
         id: chk.ID,
-        nombre: chk.Nombre,
-        frecuencia: chk.Frecuencia,
-        items: chk.Items ? chk.Items.split('\n') : [],
+        idEquipo: chk['ID Equipo'],
+        equipo: chk.Equipo,
+        items: chk.Items ? chk.Items : '',
         activo: chk.Activo === 'true' || chk.Activo === true
       }));
       renderizarTablaChecklists();
@@ -2932,12 +2943,13 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
   }
 }
     function abrirModalNuevoChecklist() {
+      document.getElementById('chk-id').value = '';
       document.getElementById('chk-equipo').value = '';
       document.getElementById('chk-items').value = '';
       
-      // Actualizar datalist de equipos
+      // Actualizar datalist de equipos con ID y nombre
       const datalist = document.getElementById('lista-equipos');
-      datalist.innerHTML = planes.map(p => `<option value="${p.equipo}">`).join('');
+      datalist.innerHTML = planes.map(p => `<option value="${p.equipo}" data-id="${p.id}">${p.id} - ${p.equipo}</option>`).join('');
       
       document.getElementById('modal-nuevo-checklist').classList.add('visible');
     }
@@ -2945,8 +2957,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     function guardarChecklist() {
       const itemsTexto = document.getElementById('chk-items').value.trim();
       const equipo = document.getElementById('chk-equipo').value.trim();
+      const idEquipo = document.getElementById('chk-id').value.trim();
 
-      if (!itemsTexto || !equipo) {
+      if (!itemsTexto || !equipo || !idEquipo) {
         mostrarToast('Por favor completa todos los campos obligatorios', 'error');
         return;
       }
@@ -2955,6 +2968,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
 
       const nuevoChecklist = {
         id: Date.now().toString(),
+        idEquipo,
         equipo,
         items: items.join('\n'),
         activo: 'true'
@@ -2976,6 +2990,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     const params = new URLSearchParams({
       action: 'addChecklist',
       id: checklist.id,
+      idEquipo: checklist.idEquipo,
       equipo: checklist.equipo,
       items: checklist.items,
       activo: checklist.activo,
@@ -3025,7 +3040,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       if (checklistsFiltrados.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="4">
+                <td colspan="5">
                     <div class="empty-state">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -3045,6 +3060,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         
         return `
         <tr>
+            <td><strong>${chk.idEquipo || '-'}</strong></td>
             <td><strong>${chk.equipo || '-'}</strong></td>
             <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${itemsTexto}">${itemsPreview}</td>
             <td>${chk.activo ? '<span class="badge estado-realizado">Activo</span>' : '<span class="badge estado-vencido">Inactivo</span>'}</td>
@@ -3081,6 +3097,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       const checklist = checklists.find(c => c.id === id);
       if (!checklist) return;
 
+      document.getElementById('v-chk-idequipo').textContent = checklist.idEquipo;
       document.getElementById('v-chk-equipo').textContent = checklist.equipo;
       document.getElementById('v-chk-items').textContent = checklist.items;
 
