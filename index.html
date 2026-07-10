@@ -1671,7 +1671,7 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxv5ld5tBw2laOe1O4LjzW1HMXYgpf9-XdH0XLRDa4ZTkM3zvpxkpASMV8ex444LlXz/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwXnfAl2rOYeVcZpEaJ4oUDL0_M3l_u9Ju4_uOmVCNZZ2Em8ge628gp9lXNY0j9ULul/exec',
       FRECUENCIAS: {
         'Semanal': 7,
         'Quincenal': 15,
@@ -3040,14 +3040,13 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       }
 
       tbody.innerHTML = checklistsFiltrados.map(chk => {
-        const cantidadItems = typeof chk.items === 'string'
-          ? chk.items.split('\n').filter(Boolean).length
-          : (Array.isArray(chk.items) ? chk.items.length : 0);
+        const itemsTexto = typeof chk.items === 'string' ? chk.items : (Array.isArray(chk.items) ? chk.items.join('\n') : '');
+        const itemsPreview = itemsTexto.split('\n').slice(0, 2).join(', ') + (itemsTexto.split('\n').length > 2 ? '...' : '');
         
         return `
         <tr>
             <td><strong>${chk.equipo || '-'}</strong></td>
-            <td>${cantidadItems} items</td>
+            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${itemsTexto}">${itemsPreview}</td>
             <td>${chk.activo ? '<span class="badge estado-realizado">Activo</span>' : '<span class="badge estado-vencido">Inactivo</span>'}</td>
             <td>
               <div class="acciones">
