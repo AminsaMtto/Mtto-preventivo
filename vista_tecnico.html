@@ -345,6 +345,20 @@
         <div class="card-header">
           <h2>Checklists Disponibles</h2>
         </div>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <input type="text" id="filtro-equipo" placeholder="Buscar por equipo..." oninput="filtrarChecklists()" style="width: 100%; padding: 0.5rem; border: 1px solid var(--borde); border-radius: 4px;">
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            <select id="filtro-area" onchange="filtrarChecklists()" style="width: 100%; padding: 0.5rem; border: 1px solid var(--borde); border-radius: 4px;">
+              <option value="">Todas las áreas</option>
+              <option value="Zinc">Zinc</option>
+              <option value="Cromo">Cromo</option>
+              <option value="Doblado">Doblado</option>
+              <option value="Gral">General</option>
+            </select>
+          </div>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -375,7 +389,7 @@
   <script>
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwr0VcFCKohFgYxJtV2qqUlZ0QHPDXerdx4UZ6Xy85m6oPSBX32aa0Av_PlKYNJPzxt/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx761zpdSiZWs_tjgcZ-KuxqOinGHXyewHr14pDaMcLOiuvyRDDoRrFpUPAfGaPlZgG/exec',
       RECARGA_AUTOMATICA_MINUTOS: 5
     };
 
@@ -459,6 +473,9 @@
           centro: row.Centro,
           frecuencia: row.Frecuencia
         }));
+        console.log('Planes cargados:', plans.length);
+      } else {
+        console.error('Error al cargar planes:', result.error);
       }
     }
 
@@ -466,6 +483,9 @@
       const result = await fetchGoogleSheets('getAllEjecuciones');
       if (result.success && result.data) {
         ejecuciones = result.data;
+        console.log('Ejecuciones cargadas:', ejecuciones.length);
+      } else {
+        console.error('Error al cargar ejecuciones:', result.error);
       }
     }
 
@@ -479,6 +499,9 @@
           items: chk.Items || '',
           activo: chk.Activo === 'true' || chk.Activo === true
         }));
+        console.log('Checklists cargados:', checklists.length);
+      } else {
+        console.error('Error al cargar checklists:', result.error);
       }
     }
 
@@ -581,15 +604,42 @@
 
     // ===== RENDERIZAR CHECKLISTS =====
     function renderizarChecklists() {
-      const tbody = document.getElementById('tabla-checklists');
-      const checklistsActivos = checklists.filter(chk => chk.activo);
+      filtrarChecklists();
+    }
 
-      if (checklistsActivos.length === 0) {
+    function filtrarChecklists() {
+      const tbody = document.getElementById('tabla-checklists');
+      const filtroEquipo = document.getElementById('filtro-equipo').value.toLowerCase();
+      const filtroArea = document.getElementById('filtro-area').value;
+      
+      const checklistsActivos = checklists.filter(chk => chk.activo);
+      
+      // Filtrar por equipo y área
+      const checklistsFiltrados = checklistsActivos.filter(chk => {
+        // Filtro por equipo
+        if (filtroEquipo && !chk.equipo.toLowerCase().includes(filtroEquipo) && !chk.idEquipo.toLowerCase().includes(filtroEquipo)) {
+          return false;
+        }
+        
+        // Filtro por área
+        if (filtroArea) {
+          const plan = plans.find(p => p.id === chk.idEquipo);
+          if (plan && plan.centro) {
+            const centroMapeado = mapearCentro(plan.centro);
+            return centroMapeado === filtroArea;
+          }
+          return false;
+        }
+        
+        return true;
+      });
+
+      if (checklistsFiltrados.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="4">
               <div class="empty-state">
-                <p>No hay checklists activos</p>
+                <p>No hay checklists que coincidan con los filtros</p>
               </div>
             </td>
           </tr>
@@ -597,7 +647,7 @@
         return;
       }
 
-      tbody.innerHTML = checklistsActivos.map(chk => {
+      tbody.innerHTML = checklistsFiltrados.map(chk => {
         const itemsPreview = chk.items.split('\n').slice(0, 3).join(', ') + (chk.items.split('\n').length > 3 ? '...' : '');
         
         return `
@@ -611,6 +661,17 @@
           </tr>
         `;
       }).join('');
+    }
+
+    function mapearCentro(centro) {
+      const mapeo = {
+        'Zinc': 'Zinc',
+        'Cromo': 'Cromo',
+        'Doblado': 'Doblado',
+        'General': 'Gral',
+        'Gral': 'Gral'
+      };
+      return mapeo[centro] || 'Gral';
     }
 
     function mostrarError(mensaje) {
