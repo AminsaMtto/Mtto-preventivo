@@ -530,7 +530,7 @@
       if (!calendar) return;
 
       const eventos = planes.map(plan => {
-        const ejecucionesPlan = ejecuciones.filter(e => String(e['Plan ID']) === String(plan.ID));
+        const ejecucionesPlan = ejecuciones.filter(e => String(e['Plan ID']) === String(plan.id));
         
         let ultimoMantenimiento = null;
         if (ejecucionesPlan.length > 0) {
@@ -540,7 +540,7 @@
 
         let proximoMantenimiento = null;
         if (ultimoMantenimiento) {
-          proximoMantenimiento = calcularProximoMantenimiento(ultimoMantenimiento, plan.Frecuencia);
+          proximoMantenimiento = calcularProximoMantenimiento(ultimoMantenimiento, plan.frecuencia);
         }
 
         if (!proximoMantenimiento) return null;
@@ -556,6 +556,7 @@
         };
       }).filter(e => e !== null);
 
+      console.log('Eventos generados:', eventos.length);
       calendar.removeAllEvents();
       calendar.addEventSource(eventos);
     }
