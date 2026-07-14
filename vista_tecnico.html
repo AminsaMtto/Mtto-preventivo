@@ -327,19 +327,14 @@
       <div class="card">
         <div class="card-header">
           <h2>Calendario de Mantenimientos</h2>
-          <button class="tab" onclick="mostrarInstruccionesSuscripcion()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
-            📅 Suscribir a calendario personal
-          </button>
-        </div>
-        <div id="instrucciones-suscripcion" style="display: none; background: var(--fondo-alt); padding: 1rem; margin-bottom: 1rem; border-radius: 6px; font-size: 0.9rem;">
-          <h3 style="margin-bottom: 0.5rem; font-family: 'Cormorant SC', serif;">Suscribir a calendario personal:</h3>
-          <p style="margin-bottom: 0.5rem;">Copia esta URL y agrégala a tu calendario:</p>
-          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-            <input type="text" id="url-suscripcion" readonly style="flex: 1; padding: 0.5rem; border: 1px solid var(--borde); border-radius: 4px; font-family: 'Inconsolata', monospace; font-size: 0.85rem;" value="https://script.google.com/macros/s/AKfycbxq4wdUqng6hYUNgpuVNAFf76PVvPLuupjnUso4pgNsHeFfbQbxqXT8X-chvVzu1nbu/exec?action=getICS">
-            <button onclick="copiarURL()" style="padding: 0.5rem 1rem; background: var(--acento); color: var(--blanco); border: none; border-radius: 4px; cursor: pointer;">Copiar</button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="tab" onclick="suscribirGoogleCalendar()" style="padding: 0.5rem 1rem; font-size: 0.9rem; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              📅 Google Calendar
+            </button>
+            <button class="tab" onclick="suscribirOutlook()" style="padding: 0.5rem 1rem; font-size: 0.9rem; background: #0078d4; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              📅 Outlook
+            </button>
           </div>
-          <p style="margin-bottom: 0.5rem;"><strong>Google Calendar:</strong> Configuración > Agregar calendario > Desde URL</p>
-          <p><strong>Outlook:</strong> Calendario > Agregar calendario > Suscribirse desde web</p>
         </div>
         <div id="calendar"></div>
       </div>
@@ -380,7 +375,7 @@
   <script>
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxq4wdUqng6hYUNgpuVNAFf76PVvPLuupjnUso4pgNsHeFfbQbxqXT8X-chvVzu1nbu/exec',
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwr0VcFCKohFgYxJtV2qqUlZ0QHPDXerdx4UZ6Xy85m6oPSBX32aa0Av_PlKYNJPzxt/exec',
       RECARGA_AUTOMATICA_MINUTOS: 5
     };
 
@@ -644,22 +639,77 @@
     }
 
     // ===== SUSCRIPCIÓN A CALENDARIO =====
-    function mostrarInstruccionesSuscripcion() {
-      const instrucciones = document.getElementById('instrucciones-suscripcion');
-      instrucciones.style.display = instrucciones.style.display === 'none' ? 'block' : 'none';
+    async function suscribirGoogleCalendar() {
+      try {
+        mostrarLoading('Generando calendario...');
+        const result = await fetchGoogleSheets('getICS');
+        
+        if (result.success && result.ics) {
+          descargarICS(result.ics, 'aminsa-mantenimientos.ics');
+          mostrarInstrucciones('google');
+        } else {
+          alert('Error al generar el calendario: ' + (result.error || 'desconocido'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al generar el calendario: ' + error.message);
+      } finally {
+        ocultarLoading();
+      }
     }
 
-    function copiarURL() {
-      const urlInput = document.getElementById('url-suscripcion');
-      urlInput.select();
-      urlInput.setSelectionRange(0, 99999);
-      
-      navigator.clipboard.writeText(urlInput.value).then(() => {
-        alert('URL copiada al portapapeles');
-      }).catch(() => {
-        document.execCommand('copy');
-        alert('URL copiada al portapapeles');
-      });
+    async function suscribirOutlook() {
+      try {
+        mostrarLoading('Generando calendario...');
+        const result = await fetchGoogleSheets('getICS');
+        
+        if (result.success && result.ics) {
+          descargarICS(result.ics, 'aminsa-mantenimientos.ics');
+          mostrarInstrucciones('outlook');
+        } else {
+          alert('Error al generar el calendario: ' + (result.error || 'desconocido'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al generar el calendario: ' + error.message);
+      } finally {
+        ocultarLoading();
+      }
+    }
+
+    function descargarICS(contenido, nombre) {
+      const blob = new Blob([contenido], { type: 'text/calendar;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+
+    function mostrarInstrucciones(tipo) {
+      if (tipo === 'google') {
+        alert('Archivo descargado. En Google Calendar:\n1. Configuración > Agregar calendario > Importar\n2. Selecciona el archivo descargado\n3. El calendario se sincronizará automáticamente');
+      } else if (tipo === 'outlook') {
+        alert('Archivo descargado. En Outlook:\n1. Calendario > Agregar calendario > Importar\n2. Selecciona el archivo descargado\n3. El calendario se sincronizará automáticamente');
+      }
+    }
+
+    function mostrarLoading(mensaje) {
+      const loading = document.createElement('div');
+      loading.id = 'loading-overlay';
+      loading.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999; color: white; font-size: 1.2rem;';
+      loading.textContent = mensaje;
+      document.body.appendChild(loading);
+    }
+
+    function ocultarLoading() {
+      const loading = document.getElementById('loading-overlay');
+      if (loading) {
+        loading.remove();
+      }
     }
   </script>
 </body>
