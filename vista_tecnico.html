@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vista Técnico - AMINSA</title>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <link rel="icon" type="image/png" href="LOGO.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cormorant+SC:wght@300;400;500;600;700&family=IM+Fell+DW+Pica&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --negro:       #0e0e0e;
+      --carbono:     #111111;
+      --gris-osc:    #1a1a1a;
+      --gris:        #2e2e2e;
+      --gris-med:    #4a4a4a;
+      --gris-clar:   #7a7a7a;
+      --borde:       #d8d4ce;
+      --borde-suave: #e8e4de;
+      --fondo:       #faf9f7;
+      --fondo-alt:   #f4f2ee;
+      --blanco:      #ffffff;
+      --acento:      #1a1a1a;
+      --rojo:        #8b1a1a;
+      --verde:       #1a4a2a;
+      --verde-clar:  #1e6b35;
+      --texto:       #1a1a1a;
+      --texto-sec:   #4a4a4a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      background: var(--fondo);
+      color: var(--texto);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: var(--negro);
+      color: var(--blanco);
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--acento);
+    }
+
+    .header h1 {
+      font-family: 'Cormorant SC', serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.15em;
+    }
+
+    .header .subtitle {
+      font-size: 0.9rem;
+      color: var(--gris-clar);
+      font-family: 'Inconsolata', monospace;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--borde);
+    }
+
+    .tab {
+      padding: 1rem 2rem;
+      background: transparent;
+      border: none;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--texto-sec);
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab:hover {
+      color: var(--texto);
+      background: var(--fondo-alt);
+    }
+
+    .tab.active {
+      color: var(--texto);
+      border-bottom-color: var(--acento);
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--borde-suave);
+    }
+
+    .card-header h2 {
+      font-family: 'Cormorant SC', serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.1em;
+    }
+
+    #calendar {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    thead {
+      background: var(--gris-osc);
+      color: var(--blanco);
+    }
+
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-family: 'Cormorant SC', serif;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--borde-suave);
+    }
+
+    tr:hover {
+      background: var(--fondo-alt);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .badge.estado-realizado {
+      background: var(--verde-clar);
+      color: var(--blanco);
+    }
+
+    .badge.estado-pendiente {
+      background: var(--gris-med);
+      color: var(--blanco);
+    }
+
+    .badge.estado-vencido {
+      background: var(--rojo);
+      color: var(--blanco);
+    }
+
+    .checklist-items {
+      background: var(--fondo-alt);
+      padding: 1rem;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.9rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--texto-sec);
+    }
+
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--texto-sec);
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--texto-sec);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--borde);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>VISTA TÉCNICO</h1>
+      <div class="subtitle">AMINSA · Mantenimientos Preventivos</div>
+    </div>
+    <div class="subtitle">Solo lectura</div>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('calendario')">Calendario</button>
+      <button class="tab" onclick="showTab('checklists')">Checklists</button>
+    </div>
+
+    <div id="tab-calendario" class="tab-content active">
+      <div class="card">
+        <div class="card-header">
+          <h2>Calendario de Mantenimientos</h2>
+          <button class="tab" onclick="mostrarInstruccionesSuscripcion()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+            📅 Suscribir a calendario personal
+          </button>
+        </div>
+        <div id="instrucciones-suscripcion" style="display: none; background: var(--fondo-alt); padding: 1rem; margin-bottom: 1rem; border-radius: 6px; font-size: 0.9rem;">
+          <h3 style="margin-bottom: 0.5rem; font-family: 'Cormorant SC', serif;">Suscribir a calendario personal:</h3>
+          <p style="margin-bottom: 0.5rem;">Copia esta URL y agrégala a tu calendario:</p>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+            <input type="text" id="url-suscripcion" readonly style="flex: 1; padding: 0.5rem; border: 1px solid var(--borde); border-radius: 4px; font-family: 'Inconsolata', monospace; font-size: 0.85rem;" value="https://script.google.com/macros/s/AKfycbwHzhsgQymxr0Zj1_Bbo3LTXEeWZdCkQBHmxm1rELBxDN3uu-heMbfla8qP6wyCMvJU/exec?action=getICS">
+            <button onclick="copiarURL()" style="padding: 0.5rem 1rem; background: var(--acento); color: var(--blanco); border: none; border-radius: 4px; cursor: pointer;">Copiar</button>
+          </div>
+          <p style="margin-bottom: 0.5rem;"><strong>Google Calendar:</strong> Configuración > Agregar calendario > Desde URL</p>
+          <p><strong>Outlook:</strong> Calendario > Agregar calendario > Suscribirse desde web</p>
+        </div>
+        <div id="calendar"></div>
+      </div>
+    </div>
+
+    <div id="tab-checklists" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2>Checklists Disponibles</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Equipo</th>
+                <th>Equipo</th>
+                <th>Items</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-checklists">
+              <tr>
+                <td colspan="4">
+                  <div class="loading">Cargando checklists</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    © 2026 AMINSA · Vista Técnico · v1.0
+  </div>
+
+  <script>
+    // ===== CONFIGURACIÓN =====
+    const CONFIG = {
+      GOOGLE_APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwHzhsgQymxr0Zj1_Bbo3LTXEeWZdCkQBHmxm1rELBxDN3uu-heMbfla8qP6wyCMvJU/exec',
+      RECARGA_AUTOMATICA_MINUTOS: 5
+    };
+
+    let calendar = null;
+    let planes = [];
+    let ejecuciones = [];
+    let checklists = [];
+
+    // ===== INICIALIZACIÓN =====
+    document.addEventListener('DOMContentLoaded', function() {
+      inicializarCalendario();
+      cargarDatos();
+      configurarRecargaAutomatica();
+    });
+
+    // ===== FUNCIONES DE NAVEGACIÓN =====
+    function showTab(tabName) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    // ===== CALENDARIO =====
+    function inicializarCalendario() {
+      const calendarEl = document.getElementById('calendar');
+      
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,listWeek'
+        },
+        buttonText: {
+          today: 'Hoy',
+          month: 'Mes',
+          week: 'Semana',
+          list: 'Lista'
+        },
+        events: [],
+        eventClick: function(info) {
+          mostrarDetallesEvento(info.event);
+        }
+      });
+
+      calendar.render();
+    }
+
+    function mostrarDetallesEvento(event) {
+      const title = event.title;
+      const date = event.start.toLocaleDateString('es-ES');
+      alert(`${title}\nFecha: ${date}`);
+    }
+
+    // ===== CARGA DE DATOS =====
+    async function cargarDatos() {
+      try {
+        await Promise.all([
+          cargarPlanes(),
+          cargarEjecuciones(),
+          cargarChecklists()
+        ]);
+        
+        actualizarCalendario();
+        renderizarChecklists();
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+        mostrarError('Error al cargar los datos');
+      }
+    }
+
+    async function cargarPlanes() {
+      const result = await fetchGoogleSheets('getAll');
+      if (result.success && result.data) {
+        planes = result.data.map(row => ({
+          id: row.ID,
+          equipo: row.Equipo,
+          centro: row.Centro,
+          frecuencia: row.Frecuencia
+        }));
+      }
+    }
+
+    async function cargarEjecuciones() {
+      const result = await fetchGoogleSheets('getAllEjecuciones');
+      if (result.success && result.data) {
+        ejecuciones = result.data;
+      }
+    }
+
+    async function cargarChecklists() {
+      const result = await fetchGoogleSheets('getAllChecklists');
+      if (result.success && result.data) {
+        checklists = result.data.map(chk => ({
+          id: chk.ID,
+          idEquipo: chk['ID Equipo'],
+          equipo: chk.Equipo,
+          items: chk.Items || '',
+          activo: chk.Activo === 'true' || chk.Activo === true
+        }));
+      }
+    }
+
+    async function fetchGoogleSheets(action) {
+      const url = CONFIG.GOOGLE_APPS_SCRIPT_URL;
+      const params = new URLSearchParams({ action });
+      
+      try {
+        const response = await fetch(`${url}?${params.toString()}`);
+        const text = await response.text();
+        
+        const pareceJSON = text.trim().startsWith('{') || text.trim().startsWith('[');
+        if (!pareceJSON) {
+          throw new Error('Respuesta no es JSON');
+        }
+        
+        return JSON.parse(text);
+      } catch (error) {
+        console.error('Error en fetch:', error);
+        throw error;
+      }
+    }
+
+    // ===== ACTUALIZAR CALENDARIO =====
+    function actualizarCalendario() {
+      if (!calendar) return;
+
+      const eventos = planes.map(plan => {
+        const ejecucionesPlan = ejecuciones.filter(e => String(e['Plan ID']) === String(plan.ID));
+        
+        let ultimoMantenimiento = null;
+        if (ejecucionesPlan.length > 0) {
+          ejecucionesPlan.sort((a, b) => new Date(b['Fecha Ejecucion']) - new Date(a['Fecha Ejecucion']));
+          ultimoMantenimiento = ejecucionesPlan[0]['Fecha Ejecucion'];
+        }
+
+        let proximoMantenimiento = null;
+        if (ultimoMantenimiento) {
+          proximoMantenimiento = calcularProximoMantenimiento(ultimoMantenimiento, plan.Frecuencia);
+        }
+
+        if (!proximoMantenimiento) return null;
+
+        const estado = determinarEstado(proximoMantenimiento);
+        const color = estado === 'vencido' ? '#8b1a1a' : (estado === 'proximo' ? '#b55a00' : '#1e6b35');
+
+        return {
+          title: `${plan.equipo} (${plan.centro})`,
+          start: proximoMantenimiento,
+          backgroundColor: color,
+          borderColor: color
+        };
+      }).filter(e => e !== null);
+
+      calendar.removeAllEvents();
+      calendar.addEventSource(eventos);
+    }
+
+    function calcularProximoMantenimiento(ultimo, frecuencia) {
+      const fecha = new Date(ultimo);
+      
+      switch (frecuencia) {
+        case 'Semanal':
+          fecha.setDate(fecha.getDate() + 7);
+          break;
+        case 'Quincenal':
+          fecha.setDate(fecha.getDate() + 15);
+          break;
+        case 'Mensual':
+          fecha.setMonth(fecha.getMonth() + 1);
+          break;
+        case 'Bimestral':
+          fecha.setMonth(fecha.getMonth() + 2);
+          break;
+        case 'Trimestral':
+          fecha.setMonth(fecha.getMonth() + 3);
+          break;
+        case 'Semestral':
+          fecha.setMonth(fecha.getMonth() + 6);
+          break;
+        case 'Anual':
+          fecha.setFullYear(fecha.getFullYear() + 1);
+          break;
+        default:
+          fecha.setDate(fecha.getDate() + 30);
+      }
+      
+      return fecha.toISOString().split('T')[0];
+    }
+
+    function determinarEstado(proximo) {
+      const hoy = new Date();
+      const proximoDate = new Date(proximo);
+      const diasDiff = Math.floor((proximoDate - hoy) / (1000 * 60 * 60 * 24));
+      
+      if (diasDiff < 0) return 'vencido';
+      if (diasDiff <= 7) return 'proxima';
+      return 'pendiente';
+    }
+
+    // ===== RENDERIZAR CHECKLISTS =====
+    function renderizarChecklists() {
+      const tbody = document.getElementById('tabla-checklists');
+      const checklistsActivos = checklists.filter(chk => chk.activo);
+
+      if (checklistsActivos.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <p>No hay checklists activos</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = checklistsActivos.map(chk => {
+        const itemsPreview = chk.items.split('\n').slice(0, 3).join(', ') + (chk.items.split('\n').length > 3 ? '...' : '');
+        
+        return `
+          <tr>
+            <td><strong>${chk.idEquipo || '-'}</strong></td>
+            <td><strong>${chk.equipo || '-'}</strong></td>
+            <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${chk.items}">${itemsPreview}</td>
+            <td>
+              <span class="badge estado-realizado">Activo</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function mostrarError(mensaje) {
+      document.getElementById('tabla-checklists').innerHTML = `
+        <tr>
+          <td colspan="4">
+            <div class="empty-state">
+              <p>${mensaje}</p>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    // ===== RECARGA AUTOMÁTICA =====
+    function configurarRecargaAutomatica() {
+      const minutos = CONFIG.RECARGA_AUTOMATICA_MINUTOS;
+      const milisegundos = minutos * 60 * 1000;
+      
+      setInterval(() => {
+        console.log(`Recargando datos automáticamente (${minutos} minutos)`);
+        cargarDatos();
+      }, milisegundos);
+      
+      console.log(`Recarga automática configurada cada ${minutos} minutos`);
+    }
+
+    // ===== SUSCRIPCIÓN A CALENDARIO =====
+    function mostrarInstruccionesSuscripcion() {
+      const instrucciones = document.getElementById('instrucciones-suscripcion');
+      instrucciones.style.display = instrucciones.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function copiarURL() {
+      const urlInput = document.getElementById('url-suscripcion');
+      urlInput.select();
+      urlInput.setSelectionRange(0, 99999);
+      
+      navigator.clipboard.writeText(urlInput.value).then(() => {
+        alert('URL copiada al portapapeles');
+      }).catch(() => {
+        document.execCommand('copy');
+        alert('URL copiada al portapapeles');
+      });
+    }
+  </script>
+</body>
+</html>
