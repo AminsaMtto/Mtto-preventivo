@@ -3094,8 +3094,17 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
     }
 
     function verChecklist(id) {
-      const checklist = checklists.find(c => c.id === id);
-      if (!checklist) return;
+      console.log('Buscando checklist con ID:', id);
+      console.log('Checklists disponibles:', checklists.map(c => ({ id: c.id, equipo: c.equipo })));
+      
+      const checklist = checklists.find(c => String(c.id) === String(id));
+      if (!checklist) {
+        console.error('Checklist no encontrado para ID:', id);
+        alert('Checklist no encontrado');
+        return;
+      }
+
+      console.log('Checklist encontrado:', checklist);
 
       document.getElementById('v-chk-idequipo').textContent = checklist.idEquipo;
       document.getElementById('v-chk-equipo').textContent = checklist.equipo;
