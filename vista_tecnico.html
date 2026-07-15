@@ -513,9 +513,11 @@
         const response = await fetch(`${url}?${params.toString()}`);
         const text = await response.text();
         
+        console.log('Respuesta del backend para', action, ':', text.substring(0, 200));
+        
         const pareceJSON = text.trim().startsWith('{') || text.trim().startsWith('[');
         if (!pareceJSON) {
-          throw new Error('Respuesta no es JSON');
+          throw new Error('Respuesta no es JSON: ' + text.substring(0, 100));
         }
         
         return JSON.parse(text);
