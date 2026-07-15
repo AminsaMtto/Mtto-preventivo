@@ -139,6 +139,36 @@
       margin: 0 auto;
     }
 
+    /* Mejoras para calendario en móviles */
+    @media (max-width: 768px) {
+      #calendar {
+        font-size: 0.9rem;
+      }
+      
+      #calendar .fc-list-event-title {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      
+      #calendar .fc-list-event-time {
+        font-size: 0.85rem;
+      }
+      
+      #calendar .fc-daygrid-event {
+        font-size: 0.8rem;
+        padding: 2px 4px;
+      }
+      
+      #calendar .fc-toolbar-title {
+        font-size: 1rem;
+      }
+      
+      #calendar .fc-button {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+      }
+    }
+
     .table-wrap {
       overflow-x: auto;
       border: 1px solid var(--borde);
@@ -435,6 +465,14 @@
         events: [],
         eventClick: function(info) {
           mostrarDetallesEvento(info.event);
+        },
+        eventDidMount: function(info) {
+          // Aumentar tamaño de texto en móviles
+          if (window.innerWidth <= 768) {
+            info.el.style.fontSize = '0.85rem';
+            info.el.style.padding = '0.4rem';
+            info.el.style.lineHeight = '1.2';
+          }
         }
       });
 
