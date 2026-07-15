@@ -467,13 +467,13 @@
     async function cargarPlanes() {
       const result = await fetchGoogleSheets('getAll');
       if (result.success && result.data) {
-        planes = result.data.map(row => ({
+        window.planes = result.data.map(row => ({
           id: row.ID,
           equipo: row.Equipo,
           centro: row.Centro,
           frecuencia: row.Frecuencia
         }));
-        console.log('Planes cargados:', plans.length);
+        console.log('Planes cargados:', window.planes.length);
       } else {
         console.error('Error al cargar planes:', result.error);
       }
@@ -482,8 +482,8 @@
     async function cargarEjecuciones() {
       const result = await fetchGoogleSheets('getAllEjecuciones');
       if (result.success && result.data) {
-        ejecuciones = result.data;
-        console.log('Ejecuciones cargadas:', ejecuciones.length);
+        window.ejecuciones = result.data;
+        console.log('Ejecuciones cargadas:', window.ejecuciones.length);
       } else {
         console.error('Error al cargar ejecuciones:', result.error);
       }
@@ -492,14 +492,14 @@
     async function cargarChecklists() {
       const result = await fetchGoogleSheets('getAllChecklists');
       if (result.success && result.data) {
-        checklists = result.data.map(chk => ({
+        window.checklists = result.data.map(chk => ({
           id: chk.ID,
           idEquipo: chk['ID Equipo'],
           equipo: chk.Equipo,
           items: chk.Items || '',
           activo: chk.Activo === 'true' || chk.Activo === true
         }));
-        console.log('Checklists cargados:', checklists.length);
+        console.log('Checklists cargados:', window.checklists.length);
       } else {
         console.error('Error al cargar checklists:', result.error);
       }
@@ -531,8 +531,8 @@
     function actualizarCalendario() {
       if (!calendar) return;
 
-      const eventos = planes.map(plan => {
-        const ejecucionesPlan = ejecuciones.filter(e => String(e['Plan ID']) === String(plan.id));
+      const eventos = window.planes.map(plan => {
+        const ejecucionesPlan = window.ejecuciones.filter(e => String(e['Plan ID']) === String(plan.id));
         
         let ultimoMantenimiento = null;
         if (ejecucionesPlan.length > 0) {
@@ -615,7 +615,7 @@
       const filtroEquipo = document.getElementById('filtro-equipo').value.toLowerCase();
       const filtroArea = document.getElementById('filtro-area').value;
       
-      const checklistsActivos = checklists.filter(chk => chk.activo);
+      const checklistsActivos = window.checklists.filter(chk => chk.activo);
       
       // Filtrar por equipo y área
       const checklistsFiltrados = checklistsActivos.filter(chk => {
@@ -626,7 +626,7 @@
         
         // Filtro por área
         if (filtroArea) {
-          const plan = plans.find(p => p.id === chk.idEquipo);
+          const plan = window.plans.find(p => p.id === chk.idEquipo);
           if (plan && plan.centro) {
             const centroMapeado = mapearCentro(plan.centro);
             return centroMapeado === filtroArea;
