@@ -586,6 +586,9 @@
 
         if (!proximoMantenimiento) return null;
 
+        // Mover al lunes si cae en domingo
+        proximoMantenimiento = evitarDomingo(proximoMantenimiento);
+
         const estado = determinarEstado(proximoMantenimiento);
         const color = estado === 'vencido' ? '#8b1a1a' : (estado === 'proximo' ? '#b55a00' : '#1e6b35');
         
@@ -595,13 +598,26 @@
           title: `${plan.equipo} - ${plan.centro} (${fechaFormateada})`,
           start: proximoMantenimiento,
           backgroundColor: color,
-          borderColor: color
+          borderColor: color,
+          allDay: false
         };
       }).filter(e => e !== null);
 
       console.log('Eventos generados:', eventos.length);
       calendar.removeAllEvents();
       calendar.addEventSource(eventos);
+    }
+
+    function evitarDomingo(fecha) {
+      const date = new Date(fecha);
+      const day = date.getDay(); // 0 = domingo, 1 = lunes, etc.
+      
+      if (day === 0) {
+        // Si es domingo, mover al lunes (sumar 1 día)
+        date.setDate(date.getDate() + 1);
+      }
+      
+      return date;
     }
 
     function calcularProximoMantenimiento(ultimo, frecuencia) {
