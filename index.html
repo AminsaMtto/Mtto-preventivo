@@ -2765,9 +2765,7 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         allDayText: 'Todo el día',
         events: obtenerEventosCalendario(),
         eventClick: function(info) {
-          const title = info.event.title;
-          const date = info.event.start.toLocaleDateString('es-ES');
-          alert(`${title}\nFecha: ${date}`);
+          mostrarModalEventoCalendario(info.event);
         },
         eventColor: function(info) {
           const estado = info.event.extendedProps.estado;
@@ -2798,38 +2796,19 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
           
           return true;
         })
-        .map(m => {
-          let fechaEvento = m.proximoMantenimiento || m.ultimoMantenimiento;
-          // Mover al lunes si cae en domingo
-          fechaEvento = evitarDomingo(fechaEvento);
-          
-          return {
-            id: m.id,
-            title: `${m.equipo} - ${m.centro}`,
-            start: fechaEvento,
-            backgroundColor: getColorPorEstado(m.estado),
-            borderColor: getColorPorEstado(m.estado),
-            allDay: false,
-            extendedProps: {
-              estado: m.estado,
-              centro: m.centro,
-              equipo: m.equipo
-            }
-          };
-        });
-    }
-
-    function evitarDomingo(fecha) {
-      if (!fecha) return fecha;
-      const date = new Date(fecha);
-      const day = date.getDay(); // 0 = domingo, 1 = lunes, etc.
-      
-      if (day === 0) {
-        // Si es domingo, mover al lunes (sumar 1 día)
-        date.setDate(date.getDate() + 1);
-      }
-      
-      return date;
+        .map(m => ({
+          id: m.id,
+          title: `${m.equipo} - ${m.centro}`,
+          start: m.proximoMantenimiento || m.ultimoMantenimiento,
+          backgroundColor: getColorPorEstado(m.estado),
+          borderColor: getColorPorEstado(m.estado),
+          allDay: true,
+          extendedProps: {
+            estado: m.estado,
+            centro: m.centro,
+            equipo: m.equipo
+          }
+        }));
     }
 
     function getColorPorEstado(estado) {
@@ -2840,6 +2819,29 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         case 'realizado': return '#1a5c30';
         default: return '#2e2e2e';
       }
+    }
+
+    function mostrarModalEventoCalendario(event) {
+      const title = event.title;
+      const date = event.start.toLocaleDateString('es-ES');
+      const estado = event.extendedProps.estado;
+      const equipo = event.extendedProps.equipo;
+      const centro = event.extendedProps.centro;
+
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+      
+      modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+          <h3 style="margin-bottom: 1rem; font-family: 'Cormorant SC', serif;">${title}</h3>
+          <p style="margin-bottom: 0.5rem; color: #666;"><strong>Fecha:</strong> ${date}</p>
+          <p style="margin-bottom: 0.5rem; color: #666;"><strong>Estado:</strong> ${estado}</p>
+          <p style="margin-bottom: 1.5rem; color: #666;"><strong>Centro:</strong> ${centro}</p>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="padding: 0.5rem 1rem; background: var(--acento); color: white; border: none; border-radius: 4px; cursor: pointer;">Cerrar</button>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
     }
 
     function actualizarCalendario() {
