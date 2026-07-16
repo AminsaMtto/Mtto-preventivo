@@ -2300,9 +2300,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
       tbody.innerHTML = registrosPagina.map(mantenimiento => {
         // Buscar checklist vinculado al equipo por ID y nombre
         const checklistVinculado = checklists.find(chk => 
-          chk.idEquipo === mantenimiento.id && 
+          String(chk.idEquipo) === String(mantenimiento.id) && 
           chk.equipo === mantenimiento.equipo && 
-          chk.activo === 'true'
+          chk.activo === true
         );
         
         return `
@@ -3051,8 +3051,8 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         // Filtro por área seleccionada
         if (CONFIG.AREA_SELECCIONADA === 'todos') return true;
         
-        // Buscar el centro del equipo en los planes
-        const plan = planes.find(p => p.equipo === chk.equipo);
+        // Buscar el centro del equipo en los planes usando ID Equipo
+        const plan = plans.find(p => String(p.id) === String(chk.idEquipo));
         if (plan && plan.centro) {
           const centroMapeado = mapearCentro(plan.centro);
           return centroMapeado === CONFIG.AREA_SELECCIONADA;
