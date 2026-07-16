@@ -483,7 +483,19 @@
     function mostrarDetallesEvento(event) {
       const title = event.title;
       const date = event.start.toLocaleDateString('es-ES');
-      alert(`${title}\nFecha: ${date}`);
+
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;';
+      
+      modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+          <h3 style="margin-bottom: 1rem; font-family: 'Cormorant SC', serif;">${title}</h3>
+          <p style="margin-bottom: 1.5rem; color: #666;"><strong>Fecha:</strong> ${date}</p>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="padding: 0.5rem 1rem; background: var(--acento); color: white; border: none; border-radius: 4px; cursor: pointer;">Cerrar</button>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
     }
 
     // ===== CARGA DE DATOS =====
@@ -586,38 +598,21 @@
 
         if (!proximoMantenimiento) return null;
 
-        // Mover al lunes si cae en domingo
-        proximoMantenimiento = evitarDomingo(proximoMantenimiento);
-
         const estado = determinarEstado(proximoMantenimiento);
         const color = estado === 'vencido' ? '#8b1a1a' : (estado === 'proximo' ? '#b55a00' : '#1e6b35');
-        
-        const fechaFormateada = new Date(proximoMantenimiento).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
 
         return {
-          title: `${plan.equipo} - ${plan.centro} (${fechaFormateada})`,
+          title: `${plan.equipo} - ${plan.centro}`,
           start: proximoMantenimiento,
           backgroundColor: color,
           borderColor: color,
-          allDay: false
+          allDay: true
         };
       }).filter(e => e !== null);
 
       console.log('Eventos generados:', eventos.length);
       calendar.removeAllEvents();
       calendar.addEventSource(eventos);
-    }
-
-    function evitarDomingo(fecha) {
-      const date = new Date(fecha);
-      const day = date.getDay(); // 0 = domingo, 1 = lunes, etc.
-      
-      if (day === 0) {
-        // Si es domingo, mover al lunes (sumar 1 día)
-        date.setDate(date.getDate() + 1);
-      }
-      
-      return date;
     }
 
     function calcularProximoMantenimiento(ultimo, frecuencia) {
