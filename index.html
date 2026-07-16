@@ -2765,7 +2765,9 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
         allDayText: 'Todo el día',
         events: obtenerEventosCalendario(),
         eventClick: function(info) {
-          abrirModalVer(info.event.id);
+          const title = info.event.title;
+          const date = info.event.start.toLocaleDateString('es-ES');
+          alert(`${title}\nFecha: ${date}`);
         },
         eventColor: function(info) {
           const estado = info.event.extendedProps.estado;
@@ -2796,18 +2798,38 @@ async function actualizarMantenimientoGoogleSheets(mantenimiento) {
           
           return true;
         })
-        .map(m => ({
-          id: m.id,
-          title: `${m.equipo} - ${m.centro}`,
-          start: m.proximoMantenimiento || m.ultimoMantenimiento,
-          backgroundColor: getColorPorEstado(m.estado),
-          borderColor: getColorPorEstado(m.estado),
-          extendedProps: {
-            estado: m.estado,
-            centro: m.centro,
-            equipo: m.equipo
-          }
-        }));
+        .map(m => {
+          let fechaEvento = m.proximoMantenimiento || m.ultimoMantenimiento;
+          // Mover al lunes si cae en domingo
+          fechaEvento = evitarDomingo(fechaEvento);
+          
+          return {
+            id: m.id,
+            title: `${m.equipo} - ${m.centro}`,
+            start: fechaEvento,
+            backgroundColor: getColorPorEstado(m.estado),
+            borderColor: getColorPorEstado(m.estado),
+            allDay: false,
+            extendedProps: {
+              estado: m.estado,
+              centro: m.centro,
+              equipo: m.equipo
+            }
+          };
+        });
+    }
+
+    function evitarDomingo(fecha) {
+      if (!fecha) return fecha;
+      const date = new Date(fecha);
+      const day = date.getDay(); // 0 = domingo, 1 = lunes, etc.
+      
+      if (day === 0) {
+        // Si es domingo, mover al lunes (sumar 1 día)
+        date.setDate(date.getDate() + 1);
+      }
+      
+      return date;
     }
 
     function getColorPorEstado(estado) {
